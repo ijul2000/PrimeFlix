@@ -235,29 +235,6 @@ a:focus-visible, button:focus-visible, input:focus-visible{
   max-width:1400px;
 }
 
-/* Category tabs */
-.hero-tabs{
-  display:flex;
-  gap:8px;
-  margin-bottom:22px;
-}
-.hero-tab{
-  background:rgba(255,255,255,0.06);
-  border:1px solid var(--line);
-  color:var(--text-muted);
-  font-size:13px;
-  font-weight:700;
-  padding:8px 20px;
-  border-radius:999px;
-  transition:background .2s ease, color .2s ease, border-color .2s ease;
-}
-.hero-tab:hover{ color:var(--text); }
-.hero-tab.active{
-  background:linear-gradient(135deg, var(--gold-soft), var(--gold-deep));
-  border-color:transparent;
-  color:#0a0a0a;
-}
-
 /* Fading text block */
 .hero-text{
   transition:opacity .3s ease;
@@ -512,8 +489,6 @@ a:focus-visible, button:focus-visible, input:focus-visible{
   .hero-content{ padding:0 18px 32px; }
   .hero-title{ max-width:460px; }
   .hero-actions{ flex-wrap:wrap; }
-  .hero-tabs{ margin-bottom:16px; }
-  .hero-tab{ padding:7px 16px; font-size:12.5px; }
   .content{ padding:0 18px 48px; }
   .row-head h2{ font-size:19px; }
   .poster-card, .poster-art{ width:150px; }
@@ -527,7 +502,6 @@ a:focus-visible, button:focus-visible, input:focus-visible{
   .logo-mark{ width:28px; height:28px; }
   .search-form{ width:auto; flex:0 0 auto; }
   .hero{ min-height:50vh; }
-  .hero-tab{ padding:6px 14px; font-size:12px; }
   .hero-eyebrow{ font-size:11.5px; letter-spacing:2px; margin-bottom:8px; }
   .hero-title{ font-size:clamp(26px, 9vw, 38px); margin-bottom:8px; }
   .hero-meta{ font-size:12.5px; margin-bottom:12px; }
