@@ -89,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const heroMeta = document.getElementById('heroMeta');
   const heroDesc = document.getElementById('heroDesc');
   const heroDots = document.getElementById('heroDots');
-  const heroTabs = document.querySelectorAll('.hero-tab');
 
   let heroCategory = 'movie';
   let heroIndex = 0;
@@ -138,21 +137,23 @@ document.addEventListener('DOMContentLoaded', () => {
     heroTimer = setInterval(nextHeroSlide, 6000);
   }
 
-  heroTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const category = tab.getAttribute('data-hero-tab');
-      if (category === heroCategory) return;
-      heroTabs.forEach(t => {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected', 'false');
-      });
-      tab.classList.add('active');
-      tab.setAttribute('aria-selected', 'true');
-      goToHeroSlide(category, 0);
+  const heroSection = document.getElementById('heroSlider');
+
+  function setHeroCategoryFromHref(href) {
+    if (href === '#movies') return 'movie';
+    if (href === '#tvshows') return 'tvshow';
+    return null;
+  }
+
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      const category = setHeroCategoryFromHref(link.getAttribute('href'));
+      if (category && category !== heroCategory) {
+        goToHeroSlide(category, 0);
+      }
     });
   });
 
-  const heroSection = document.getElementById('heroSlider');
   heroSection.addEventListener('mouseenter', () => { if (heroTimer) clearInterval(heroTimer); });
   heroSection.addEventListener('mouseleave', () => { restartHeroAutoplay(); });
 
