@@ -228,11 +228,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  /* ---- Nav active state on click ---- */
-  document.querySelectorAll('.nav-link').forEach(link => {
+  /* ---- Nav active state on click (Movie / TV Show only — Admin excluded) ---- */
+  document.querySelectorAll('.nav-link:not(.admin-link)').forEach(link => {
     link.addEventListener('click', () => {
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      document.querySelectorAll(`.nav-link[href="${link.getAttribute('href')}"]`)
+      document.querySelectorAll('.nav-link:not(.admin-link)').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll(`.nav-link:not(.admin-link)[href="${link.getAttribute('href')}"]`)
         .forEach(l => l.classList.add('active'));
     });
   });
