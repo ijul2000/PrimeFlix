@@ -4,6 +4,161 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  /* ---- Hero slider (Movie / TV Show) ---- */
+  const heroData = {
+    movie: [
+      {
+        eyebrow: 'Baharu Dimuat Naik',
+        title: 'Malam Terakhir di Kota Hujan',
+        meta: '2026 · Thriller',
+        desc: 'Seorang detektif persendirian mempunyai satu malam sahaja untuk menyelamatkan bandar sebelum ribut terakhir melanda. Drama thriller yang menegangkan dari awal hingga akhir.',
+        hue: 4
+      },
+      {
+        eyebrow: 'Baharu Dimuat Naik',
+        title: 'Jejak Sunyi',
+        meta: '2025 · Misteri',
+        desc: 'Seorang wartawan menyiasat kehilangan misteri di sebuah pekan kecil, hanya untuk mendapati bahawa jejak yang dicari membawanya kepada rahsia yang lebih gelap.',
+        hue: 356
+      },
+      {
+        eyebrow: 'Baharu Dimuat Naik',
+        title: 'Cahaya Dari Utara',
+        meta: '2025 · Sci-Fi',
+        desc: 'Satu isyarat aneh dari kutub utara mencetuskan ekspedisi saintifik yang mengubah pemahaman manusia tentang alam semesta — dan diri mereka sendiri.',
+        hue: 8
+      },
+      {
+        eyebrow: 'Baharu Dimuat Naik',
+        title: 'Serangan Senja',
+        meta: '2026 · Aksi',
+        desc: 'Sebuah pasukan tentera elit diberi masa terhad untuk menewaskan ancaman yang menggugat keselamatan bandar sebelum matahari terbenam.',
+        hue: 350
+      },
+      {
+        eyebrow: 'Baharu Dimuat Naik',
+        title: 'Rindu Yang Hilang',
+        meta: '2026 · Drama',
+        desc: 'Kisah sebuah keluarga yang cuba menyatukan semula ikatan yang retak selepas bertahun-tahun berjauhan, dibalut emosi yang mendalam.',
+        hue: 12
+      }
+    ],
+    tvshow: [
+      {
+        eyebrow: 'Baharu Dikemaskini',
+        title: 'Rumah di Hujung Jalan',
+        meta: 'Musim 3 · Episod 8 Baharu',
+        desc: 'Rahsia keluarga yang tertanam sekian lama mula terbongkar apabila seorang ahli keluarga pulang selepas bertahun-tahun menghilangkan diri.',
+        hue: 4
+      },
+      {
+        eyebrow: 'Baharu Dikemaskini',
+        title: 'Unit Siasatan',
+        meta: 'Musim 1 · Episod 10 Baharu',
+        desc: 'Sebuah pasukan siasatan jenayah berdepan kes paling rumit dalam kerjaya mereka, dengan setiap episod mendedahkan lapisan konspirasi baharu.',
+        hue: 355
+      },
+      {
+        eyebrow: 'Baharu Dikemaskini',
+        title: 'Kod Bandar',
+        meta: 'Musim 1 · Episod 6 Baharu',
+        desc: 'Seorang juruteknik IT terperangkap dalam permainan kucing dan tikus digital apabila sistem bandar pintar dicerobohi oleh penggodam misteri.',
+        hue: 6
+      },
+      {
+        eyebrow: 'Baharu Dikemaskini',
+        title: 'Warisan Terpendam',
+        meta: 'Musim 4 · Episod 3 Baharu',
+        desc: 'Perebutan harta pusaka keluarga besar membawa kepada pendedahan rahsia generasi yang mengubah segala-galanya.',
+        hue: 10
+      },
+      {
+        eyebrow: 'Baharu Dikemaskini',
+        title: 'Sekolah Tengah Malam',
+        meta: 'Musim 2 · Episod 5 Baharu',
+        desc: 'Sekumpulan pelajar menyiasat kejadian ganjil yang berlaku setiap tengah malam di sekolah asrama lama mereka.',
+        hue: 350
+      }
+    ]
+  };
+
+  const heroBackdrop = document.getElementById('heroBackdrop');
+  const heroText = document.getElementById('heroText');
+  const heroEyebrow = document.getElementById('heroEyebrow');
+  const heroTitle = document.getElementById('heroTitle');
+  const heroMeta = document.getElementById('heroMeta');
+  const heroDesc = document.getElementById('heroDesc');
+  const heroDots = document.getElementById('heroDots');
+  const heroTabs = document.querySelectorAll('.hero-tab');
+
+  let heroCategory = 'movie';
+  let heroIndex = 0;
+  let heroTimer = null;
+
+  function renderHeroDots() {
+    heroDots.innerHTML = '';
+    heroData[heroCategory].forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'hero-dot' + (i === heroIndex ? ' active' : '');
+      dot.setAttribute('aria-label', `Slaid ${i + 1}`);
+      dot.addEventListener('click', () => goToHeroSlide(heroCategory, i));
+      heroDots.appendChild(dot);
+    });
+  }
+
+  function applyHeroSlide() {
+    const slide = heroData[heroCategory][heroIndex];
+    heroText.classList.add('is-fading');
+    setTimeout(() => {
+      heroEyebrow.textContent = slide.eyebrow;
+      heroTitle.textContent = slide.title;
+      heroMeta.textContent = slide.meta;
+      heroDesc.textContent = slide.desc;
+      heroBackdrop.style.setProperty('--tint', slide.hue);
+      heroText.classList.remove('is-fading');
+    }, 220);
+    renderHeroDots();
+  }
+
+  function goToHeroSlide(category, index) {
+    heroCategory = category;
+    heroIndex = index;
+    applyHeroSlide();
+    restartHeroAutoplay();
+  }
+
+  function nextHeroSlide() {
+    heroIndex = (heroIndex + 1) % heroData[heroCategory].length;
+    applyHeroSlide();
+  }
+
+  function restartHeroAutoplay() {
+    if (heroTimer) clearInterval(heroTimer);
+    heroTimer = setInterval(nextHeroSlide, 6000);
+  }
+
+  heroTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const category = tab.getAttribute('data-hero-tab');
+      if (category === heroCategory) return;
+      heroTabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      goToHeroSlide(category, 0);
+    });
+  });
+
+  const heroSection = document.getElementById('heroSlider');
+  heroSection.addEventListener('mouseenter', () => { if (heroTimer) clearInterval(heroTimer); });
+  heroSection.addEventListener('mouseleave', () => { restartHeroAutoplay(); });
+
+  applyHeroSlide();
+  restartHeroAutoplay();
+
   /* ---- Mobile nav toggle ---- */
   const hamburger = document.getElementById('hamburgerBtn');
   const mobileNav = document.getElementById('mobileNav');
@@ -122,8 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const play = document.createElement('div');
     play.className = 'poster-play';
     play.innerHTML = `<svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-        <circle cx="22" cy="22" r="21" stroke="#F3D27A" stroke-width="1.5" opacity="0.7"/>
-        <path d="M18 14v16l13-8-13-8Z" fill="#F3D27A"/>
+        <circle cx="22" cy="22" r="21" stroke="#FF6B5B" stroke-width="1.5" opacity="0.7"/>
+        <path d="M18 14v16l13-8-13-8Z" fill="#FF6B5B"/>
       </svg>`;
 
     art.appendChild(badgeEl);
