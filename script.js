@@ -148,6 +148,41 @@ document.addEventListener('DOMContentLoaded', () => {
   applyHeroSlide();
   restartHeroAutoplay();
 
+  /* ---- Admin modal ---- */
+  const adminLink = document.querySelector('.admin-link');
+  const adminModal = document.getElementById('adminModal');
+  const adminModalOverlay = document.getElementById('adminModalOverlay');
+  const adminModalClose = document.getElementById('adminModalClose');
+
+  function openAdminModal() {
+    adminModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAdminModal() {
+    adminModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  adminLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    openAdminModal();
+  });
+  adminModalOverlay.addEventListener('click', closeAdminModal);
+  adminModalClose.addEventListener('click', closeAdminModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && adminModal.classList.contains('open')) {
+      closeAdminModal();
+    }
+  });
+
+  document.querySelectorAll('.admin-card').forEach(card => {
+    card.addEventListener('click', () => {
+      console.log('Tindakan admin dipilih:', card.getAttribute('data-admin-action'));
+      // Placeholder: sambungkan ke fungsi admin sebenar di sini
+      closeAdminModal();
+    });
+  });
+
   /* ---- Mobile nav toggle ---- */
   const hamburger = document.getElementById('hamburgerBtn');
   const mobileNav = document.getElementById('mobileNav');
