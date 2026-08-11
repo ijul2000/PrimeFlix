@@ -122,20 +122,7 @@ a:focus-visible, button:focus-visible, input:focus-visible{
 .nav-link.active{ color:var(--text); }
 .nav-link.active::after{ transform:scaleX(1); }
 
-/* Icon button (e.g. Admin) — matches nav-link sizing/colors */
-.icon-btn{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:34px;
-  height:34px;
-  border:none;
-  background:none;
-  color:var(--text-muted);
-  flex-shrink:0;
-  transition:color .2s ease;
-}
-.icon-btn:hover{ color:var(--text); }
+.admin-link{ margin-right:4px; }
 
 /* Header actions (search on the right) */
 .header-actions{
