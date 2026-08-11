@@ -449,6 +449,111 @@ a:focus-visible, button:focus-visible, input:focus-visible{
 }
 
 /* =========================================================
+   ADMIN MODAL
+   ========================================================= */
+.admin-modal{
+  position:fixed;
+  inset:0;
+  z-index:200;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.admin-modal.open{ display:flex; }
+.admin-modal-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(10,10,10,0.78);
+  backdrop-filter:blur(4px);
+}
+.admin-modal-panel{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:640px;
+  max-height:88vh;
+  overflow-y:auto;
+  background:var(--bg-raised);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:28px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.55);
+}
+.admin-modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:22px;
+}
+.admin-modal-head h2{
+  font-family:var(--font-display);
+  font-size:22px;
+  font-weight:400;
+  letter-spacing:0.5px;
+}
+.admin-modal-close{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  background:none;
+  border:none;
+  border-radius:8px;
+  color:var(--text-dim);
+  transition:color .2s ease, background .2s ease;
+}
+.admin-modal-close:hover{
+  color:var(--text);
+  background:rgba(255,255,255,0.06);
+}
+
+.admin-card-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.admin-card{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:10px;
+  width:100%;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:18px;
+  text-align:left;
+  transition:border-color .2s ease, transform .15s ease, background .2s ease;
+}
+.admin-card:hover{
+  border-color:var(--gold-deep);
+  transform:translateY(-3px);
+  background:#212120;
+}
+.admin-card-icon{
+  width:38px;
+  height:38px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg, var(--gold-soft), var(--gold-deep));
+  color:#0a0a0a;
+}
+.admin-card-title{
+  font-size:14.5px;
+  font-weight:700;
+  color:var(--text);
+}
+.admin-card-desc{
+  font-size:12.5px;
+  color:var(--text-dim);
+  line-height:1.5;
+}
+
+/* =========================================================
    RESPONSIVE
    ========================================================= */
 
@@ -510,6 +615,8 @@ a:focus-visible, button:focus-visible, input:focus-visible{
   .card-row{ gap:10px; }
   .footer-inner{ padding:0 14px; }
   .footer-note{ margin-left:0; flex-basis:100%; }
+  .admin-modal-panel{ padding:20px; border-radius:12px; }
+  .admin-card-grid{ grid-template-columns:1fr; }
 }
 
 /* ---- Small phones (≤480px) ---- */
