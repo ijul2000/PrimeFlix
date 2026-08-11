@@ -8,35 +8,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const heroData = {
     movie: [
       {
-        eyebrow: 'Baharu Dimuat Naik',
         title: 'Malam Terakhir di Kota Hujan',
         meta: '2026 · Thriller',
         desc: 'Seorang detektif persendirian mempunyai satu malam sahaja untuk menyelamatkan bandar sebelum ribut terakhir melanda. Drama thriller yang menegangkan dari awal hingga akhir.',
         hue: 4
       },
       {
-        eyebrow: 'Baharu Dimuat Naik',
         title: 'Jejak Sunyi',
         meta: '2025 · Misteri',
         desc: 'Seorang wartawan menyiasat kehilangan misteri di sebuah pekan kecil, hanya untuk mendapati bahawa jejak yang dicari membawanya kepada rahsia yang lebih gelap.',
         hue: 356
       },
       {
-        eyebrow: 'Baharu Dimuat Naik',
         title: 'Cahaya Dari Utara',
         meta: '2025 · Sci-Fi',
         desc: 'Satu isyarat aneh dari kutub utara mencetuskan ekspedisi saintifik yang mengubah pemahaman manusia tentang alam semesta — dan diri mereka sendiri.',
         hue: 8
       },
       {
-        eyebrow: 'Baharu Dimuat Naik',
         title: 'Serangan Senja',
         meta: '2026 · Aksi',
         desc: 'Sebuah pasukan tentera elit diberi masa terhad untuk menewaskan ancaman yang menggugat keselamatan bandar sebelum matahari terbenam.',
         hue: 350
       },
       {
-        eyebrow: 'Baharu Dimuat Naik',
         title: 'Rindu Yang Hilang',
         meta: '2026 · Drama',
         desc: 'Kisah sebuah keluarga yang cuba menyatukan semula ikatan yang retak selepas bertahun-tahun berjauhan, dibalut emosi yang mendalam.',
@@ -45,35 +40,30 @@ document.addEventListener('DOMContentLoaded', () => {
     ],
     tvshow: [
       {
-        eyebrow: 'Baharu Dikemaskini',
         title: 'Rumah di Hujung Jalan',
         meta: 'Musim 3 · Episod 8 Baharu',
         desc: 'Rahsia keluarga yang tertanam sekian lama mula terbongkar apabila seorang ahli keluarga pulang selepas bertahun-tahun menghilangkan diri.',
         hue: 4
       },
       {
-        eyebrow: 'Baharu Dikemaskini',
         title: 'Unit Siasatan',
         meta: 'Musim 1 · Episod 10 Baharu',
         desc: 'Sebuah pasukan siasatan jenayah berdepan kes paling rumit dalam kerjaya mereka, dengan setiap episod mendedahkan lapisan konspirasi baharu.',
         hue: 355
       },
       {
-        eyebrow: 'Baharu Dikemaskini',
         title: 'Kod Bandar',
         meta: 'Musim 1 · Episod 6 Baharu',
         desc: 'Seorang juruteknik IT terperangkap dalam permainan kucing dan tikus digital apabila sistem bandar pintar dicerobohi oleh penggodam misteri.',
         hue: 6
       },
       {
-        eyebrow: 'Baharu Dikemaskini',
         title: 'Warisan Terpendam',
         meta: 'Musim 4 · Episod 3 Baharu',
         desc: 'Perebutan harta pusaka keluarga besar membawa kepada pendedahan rahsia generasi yang mengubah segala-galanya.',
         hue: 10
       },
       {
-        eyebrow: 'Baharu Dikemaskini',
         title: 'Sekolah Tengah Malam',
         meta: 'Musim 2 · Episod 5 Baharu',
         desc: 'Sekumpulan pelajar menyiasat kejadian ganjil yang berlaku setiap tengah malam di sekolah asrama lama mereka.',
@@ -84,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const heroBackdrop = document.getElementById('heroBackdrop');
   const heroText = document.getElementById('heroText');
-  const heroEyebrow = document.getElementById('heroEyebrow');
   const heroTitle = document.getElementById('heroTitle');
   const heroMeta = document.getElementById('heroMeta');
   const heroDesc = document.getElementById('heroDesc');
@@ -110,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const slide = heroData[heroCategory][heroIndex];
     heroText.classList.add('is-fading');
     setTimeout(() => {
-      heroEyebrow.textContent = slide.eyebrow;
       heroTitle.textContent = slide.title;
       heroMeta.textContent = slide.meta;
       heroDesc.textContent = slide.desc;
