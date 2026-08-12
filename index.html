@@ -157,7 +157,10 @@
         <h1>Tambah &amp; kemaskini tajuk</h1>
         <p class="admin-sub">Semua perubahan disimpan terus ke Google Sheet anda.</p>
       </div>
-      <button class="btn btn-primary" id="openAddChooserBtn" type="button">+ Tambah Tajuk</button>
+      <div class="admin-intro-actions">
+        <button class="btn btn-secondary" id="checkLinksBtn" type="button">Semak Pautan Rosak</button>
+        <button class="btn btn-primary" id="openAddChooserBtn" type="button">+ Tambah Tajuk</button>
+      </div>
     </section>
 
     <div class="admin-status" id="apiStatus" hidden></div>
@@ -373,6 +376,26 @@
           <button type="submit" class="btn btn-primary" data-submit-btn>Simpan TV Show</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- BROKEN LINKS MODAL -->
+  <div class="modal-overlay" id="brokenLinksModalOverlay" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="brokenLinksTitle">
+      <div class="modal-head">
+        <h3 id="brokenLinksTitle">Semakan Pautan</h3>
+        <button class="modal-close" type="button" data-close-modal>&times;</button>
+      </div>
+      <p class="broken-links-note">Menyemak setiap pautan Backdrop, Poster dan Movie/TV Show Link bagi semua tajuk dalam Google Sheet.</p>
+      <div class="broken-links-body" id="brokenLinksBody">
+        <div class="admin-loading" id="brokenLinksLoading" hidden>Menyemak pautan... ini mungkin ambil sedikit masa.</div>
+        <div class="admin-empty" id="brokenLinksEmpty" hidden>Semua pautan berfungsi dengan baik.</div>
+        <div class="broken-links-list" id="brokenLinksList"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close-modal>Tutup</button>
+        <button type="button" class="btn btn-primary" id="recheckLinksBtn">Semak Semula</button>
+      </div>
     </div>
   </div>
 
