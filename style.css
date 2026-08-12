@@ -214,6 +214,9 @@ button.nav-link{
   align-items:flex-end;
   overflow:hidden;
 }
+.hero-fullpage{
+  min-height:100vh;
+}
 .hero-backdrop-img{
   position:absolute;
   inset:0;
