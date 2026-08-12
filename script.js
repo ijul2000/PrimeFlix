@@ -4,7 +4,7 @@
 
 // Tampal URL Web App Google Apps Script anda di bawah
 // (lihat arahan pasang di bahagian atas Code.gs).
-const WEBAPP_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
 
 document.addEventListener('DOMContentLoaded', () => {
 
