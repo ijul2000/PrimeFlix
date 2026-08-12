@@ -249,6 +249,16 @@ button.nav-link{
   margin:0 auto;
   width:100%;
   max-width:1400px;
+  opacity:1;
+  transition:opacity 0.35s ease;
+}
+/* Sembunyikan kandungan hero (termasuk teks contoh/statik dalam HTML)
+   selagi movie sebenar dari Google Sheet belum siap dimuatkan, supaya
+   pengguna tak nampak movie yang salah berkelip sebentar semasa
+   refresh / kembali ke laman utama. */
+.hero-content.is-loading{
+  opacity:0;
+  pointer-events:none;
 }
 .hero-eyebrow{
   color:var(--gold);
