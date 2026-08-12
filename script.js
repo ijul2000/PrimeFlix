@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  /* ---- Nav active state on click (tanpa scroll ke bawah) ---- */
+  /* ---- Nav active state (Movie / TV Show) — tukar kategori tanpa reload ---- */
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
       if (link.tagName === 'A') e.preventDefault();
@@ -61,63 +61,86 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.nav-link').forEach(l => {
         l.classList.toggle('active', l.textContent.trim() === label);
       });
+
+      const lower = label.toLowerCase();
+      let category = null;
+      if (lower === 'tv show') category = 'tvshow';
+      else if (lower === 'movie') category = 'movie';
+      if (!category) return; // cth. "Watch List" — tak tukar kategori
+
+      const movieSection = document.getElementById('movies');
+      const tvSection = document.getElementById('tvshows');
+      if (movieSection) movieSection.hidden = category !== 'movie';
+      if (tvSection) tvSection.hidden = category !== 'tvshow';
+
+      document.dispatchEvent(new CustomEvent('primeflix:categorychange', { detail: { category } }));
     });
   });
 
   /* =========================================================
-     DATA MOVIE — dikongsi oleh Hero & Filem Trending
-     Satu fetch sahaja ke Apps Script (bukan 2 request berasingan
-     yang bersaing dan melambatkan kedua-duanya), dengan cache
+     DATA MOVIE & TV SHOW — dikongsi oleh Hero & kedua-dua grid
+     Trending. Satu fetch sahaja ke Apps Script (action=list tanpa
+     "type" memulangkan movie + tvshow serentak), dengan cache
      sessionStorage supaya paparan seterusnya dalam sesi yang sama
      terus laju tanpa tunggu rangkaian.
      ========================================================= */
-  const MOVIES_CACHE_KEY = 'primeflix_movies_cache_v1';
-  let moviesFetchPromise = null;
+  const CONTENT_CACHE_KEY = 'primeflix_content_cache_v1';
+  let contentFetchPromise = null;
 
-  function readMoviesCache() {
+  function sortNewestFirst(arr) {
+    return (arr || []).slice().sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
+  }
+
+  function readContentCache() {
     try {
-      const raw = sessionStorage.getItem(MOVIES_CACHE_KEY);
+      const raw = sessionStorage.getItem(CONTENT_CACHE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) && parsed.length ? parsed : null;
+      if (!parsed || typeof parsed !== 'object') return null;
+      const movie = Array.isArray(parsed.movie) ? parsed.movie : [];
+      const tvshow = Array.isArray(parsed.tvshow) ? parsed.tvshow : [];
+      if (!movie.length && !tvshow.length) return null;
+      return { movie: movie, tvshow: tvshow };
     } catch (err) {
       return null;
     }
   }
 
-  function writeMoviesCache(data) {
+  function writeContentCache(data) {
     try {
-      sessionStorage.setItem(MOVIES_CACHE_KEY, JSON.stringify(data));
+      sessionStorage.setItem(CONTENT_CACHE_KEY, JSON.stringify(data));
     } catch (err) {
       // sessionStorage tak tersedia / penuh — abaikan, tak kritikal.
     }
   }
 
-  function fetchMoviesOnce() {
-    if (!moviesFetchPromise) {
-      moviesFetchPromise = fetch(`${WEBAPP_URL}?action=list&type=movie`)
+  function fetchContentOnce() {
+    if (!contentFetchPromise) {
+      contentFetchPromise = fetch(`${WEBAPP_URL}?action=list`)
         .then(res => res.json())
         .then(json => {
-          if (!json.ok || !Array.isArray(json.data)) {
+          if (!json.ok || !json.data) {
             throw new Error(json.error || 'Gagal memuatkan data.');
           }
-          // Susun ikut CreatedAt terbaharu dahulu sekali sahaja di sini.
-          const sorted = json.data
-            .slice()
-            .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
-          writeMoviesCache(sorted);
-          return sorted;
+          const result = {
+            movie: sortNewestFirst(json.data.movie),
+            tvshow: sortNewestFirst(json.data.tvshow)
+          };
+          writeContentCache(result);
+          return result;
         })
         .catch(err => {
-          moviesFetchPromise = null; // bagi peluang cuba semula pada panggilan seterusnya
+          contentFetchPromise = null; // bagi peluang cuba semula pada panggilan seterusnya
           throw err;
         });
     }
-    return moviesFetchPromise;
+    return contentFetchPromise;
   }
 
   /* =========================================================
-     HERO — papar 5 movie terbaharu yang di-upload dari Google Sheet
+     HERO — papar 5 tajuk terbaharu; kandungan tukar ikut kategori
+     (Movie / TV Show) yang aktif pada navbar. TV Show turut papar
+     Musim & Episod.
      ========================================================= */
   (function initHero() {
     const heroContent = document.getElementById('heroContent');
@@ -136,24 +159,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const ROTATE_MS = 7000;
-    let slides = [];
+    let slidesByCategory = { movie: [], tvshow: [] };
+    let currentCategory = 'movie';
     let currentIndex = 0;
     let rotateTimer = null;
 
-    // Reveal kandungan hero (buang keadaan "loading"/transparent).
     function revealHero() {
       if (heroContent) heroContent.classList.remove('is-loading');
     }
 
+    // Baris meta hero: "Tahun · Genre" untuk movie, tambah
+    // "Musim X · Episod Y" untuk TV Show.
+    function formatMeta(record) {
+      const parts = [record.Year, record.Genre].filter(Boolean);
+      if (currentCategory === 'tvshow') {
+        if (record.Season) parts.push(`Musim ${record.Season}`);
+        if (record.Episode) parts.push(`Episod ${record.Episode}`);
+      }
+      return parts.join(' · ');
+    }
+
     function renderSlide(index) {
-      const movie = slides[index];
-      if (!movie) return;
+      const list = slidesByCategory[currentCategory];
+      const record = list[index];
+      if (!record) return;
       currentIndex = index;
 
-      heroBackdropImg.style.backgroundImage = movie.Backdrop ? `url("${movie.Backdrop}")` : 'none';
-      heroTitle.textContent = movie.Title || '';
-      heroMeta.textContent = [movie.Year, movie.Genre].filter(Boolean).join(' · ');
-      heroDesc.textContent = movie.Description || '';
+      heroBackdropImg.style.backgroundImage = record.Backdrop ? `url("${record.Backdrop}")` : 'none';
+      heroTitle.textContent = record.Title || '';
+      heroMeta.textContent = formatMeta(record);
+      heroDesc.textContent = record.Description || '';
 
       if (heroDots) {
         heroDots.querySelectorAll('.hero-dot').forEach((dot, i) => {
@@ -165,8 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function buildDots() {
       if (!heroDots) return;
       heroDots.innerHTML = '';
-      if (slides.length < 2) return;
-      slides.forEach((_, i) => {
+      const list = slidesByCategory[currentCategory];
+      if (list.length < 2) return;
+      list.forEach((_, i) => {
         const dot = document.createElement('button');
         dot.type = 'button';
         dot.className = 'hero-dot';
@@ -180,60 +216,85 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function nextSlide() {
-      if (slides.length < 2) return;
-      renderSlide((currentIndex + 1) % slides.length);
+      const list = slidesByCategory[currentCategory];
+      if (list.length < 2) return;
+      renderSlide((currentIndex + 1) % list.length);
     }
 
     function resetTimer() {
       clearInterval(rotateTimer);
-      if (slides.length > 1) {
+      const list = slidesByCategory[currentCategory];
+      if (list.length > 1) {
         rotateTimer = setInterval(nextSlide, ROTATE_MS);
       }
     }
 
-    async function loadHeroMovies() {
-      // 1) Jika ada cache dari lawatan sebelum ini dalam sesi yang sama,
-      //    papar terus dahulu — movie yang betul, tiada kelipan.
-      const cached = readMoviesCache();
+    // Papar kategori tertentu. Jika data kategori tu belum sampai lagi,
+    // sembunyikan hero buat sementara (elak papar kandungan kategori
+    // lain yang tak sepadan dengan tab aktif) — ia akan reveal semula
+    // sebaik sahaja data sampai.
+    function showCategory(category) {
+      if (category !== 'movie' && category !== 'tvshow') return;
+      currentCategory = category;
+      currentIndex = 0;
+      const list = slidesByCategory[category];
+      if (!list.length) {
+        if (heroContent) heroContent.classList.add('is-loading');
+        return;
+      }
+      buildDots();
+      renderSlide(0);
+      resetTimer();
+      revealHero();
+    }
+
+    document.addEventListener('primeflix:categorychange', (e) => {
+      if (e.detail && e.detail.category) showCategory(e.detail.category);
+    });
+
+    async function loadHero() {
+      let revealed = false;
+
+      // 1) Cache dahulu (kalau ada) — terus papar, tiada kelipan/lambat.
+      const cached = readContentCache();
       if (cached) {
-        slides = cached.slice(0, 5);
-        buildDots();
-        renderSlide(0);
-        resetTimer();
-        revealHero();
+        slidesByCategory.movie = cached.movie.slice(0, 5);
+        slidesByCategory.tvshow = cached.tvshow.slice(0, 5);
+        if (slidesByCategory[currentCategory].length) {
+          showCategory(currentCategory);
+          revealed = true;
+        }
       }
 
-      // 2) Tetap fetch data terkini di latar belakang (dikongsi dengan
-      //    Filem Trending — satu request sahaja) supaya hero sentiasa
-      //    up-to-date (movie baharu terus terpapar).
+      // 2) Fetch terkini di latar belakang (dikongsi dengan kedua-dua
+      //    grid Trending — satu request sahaja).
       try {
-        const sorted = await fetchMoviesOnce();
-        if (!sorted.length) {
-          if (!cached) revealHero(); // tiada cache & tiada data -> fallback statik
-          return;
+        const data = await fetchContentOnce();
+        slidesByCategory.movie = data.movie.slice(0, 5);
+        slidesByCategory.tvshow = data.tvshow.slice(0, 5);
+        if (slidesByCategory[currentCategory].length) {
+          showCategory(currentCategory);
+        } else if (!revealed) {
+          revealHero(); // tiada cache & tiada data -> fallback kandungan statik
         }
-        slides = sorted.slice(0, 5);
-        buildDots();
-        renderSlide(0);
-        resetTimer();
-        revealHero();
       } catch (err) {
         // Jika gagal muatkan (cth. WEBAPP_URL belum konfigurasi betul / rangkaian gagal),
         // kekalkan kandungan hero statik sedia ada tanpa ranap laman.
-        if (!cached) revealHero();
+        if (!revealed) revealHero();
       }
     }
 
-    loadHeroMovies();
+    loadHero();
   })();
 
   /* =========================================================
-     FILEM TRENDING — grid 7x5 (35 poster), movie terbaharu dahulu
-     Tiada scroll ke tepi; movie baharu diletak di kedudukan pertama
-     dan yang lain teranjak (grid auto-wrap ke baris seterusnya).
+     FILEM TRENDING & TV SHOW TRENDING — grid 7x5 (35 poster),
+     tajuk terbaharu dahulu. Tiada scroll ke tepi; tajuk baharu
+     diletak di kedudukan pertama dan yang lain teranjak (grid
+     auto-wrap ke baris seterusnya).
      ========================================================= */
-  (function initTrendingGrid() {
-    const grid = document.getElementById('trendingGrid');
+  function initTrendingSection(gridId, category) {
+    const grid = document.getElementById(gridId);
     if (!grid) return;
     if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) return;
 
@@ -271,11 +332,12 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'poster-card';
       card.tabIndex = 0;
       card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', `Papar butiran ${record.Title || 'filem'}`);
+      card.setAttribute('aria-label', `Papar butiran ${record.Title || (category === 'tvshow' ? 'TV show' : 'filem')}`);
 
       function goToDetail() {
         if (!record.ID) return;
-        window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}`;
+        const typeParam = category === 'tvshow' ? '&type=tvshow' : '';
+        window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}${typeParam}`;
       }
       card.addEventListener('click', goToDetail);
       card.addEventListener('keydown', (e) => {
@@ -311,7 +373,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const meta = document.createElement('div');
       meta.className = 'poster-meta';
-      const sub = [record.Year, record.Genre].filter(Boolean).join(' · ');
+      const subParts = [record.Year, record.Genre];
+      if (category === 'tvshow') {
+        if (record.Season) subParts.push(`Musim ${record.Season}`);
+        if (record.Episode) subParts.push(`Episod ${record.Episode}`);
+      }
+      const sub = subParts.filter(Boolean).join(' · ');
       meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
 
       card.appendChild(art);
@@ -322,31 +389,36 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadTrending() {
       // 1) Jika ada cache, papar poster BETUL serta-merta — tiada
       //    "lambat" nampak, tiada grid kosong.
-      const cached = readMoviesCache();
-      if (cached) {
+      const cached = readContentCache();
+      const cachedList = cached ? cached[category] : null;
+      if (cachedList && cachedList.length) {
         grid.innerHTML = '';
-        cached.slice(0, MAX_ITEMS).forEach(movie => grid.appendChild(buildPosterCard(movie)));
+        cachedList.slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
       } else {
         // Tiada cache lagi (lawatan pertama) -> papar skeleton dahulu
         // supaya ada maklum balas visual serta-merta semasa data dimuat.
         renderSkeletonGrid();
       }
 
-      // 2) Fetch data terkini di latar belakang (dikongsi dengan Hero —
-      //    satu request sahaja) dan kemas kini grid bila siap.
+      // 2) Fetch data terkini di latar belakang (dikongsi dengan Hero
+      //    dan grid satu lagi — satu request sahaja) dan kemas kini
+      //    grid bila siap.
       try {
-        const sorted = await fetchMoviesOnce();
-        const movies = sorted.slice(0, MAX_ITEMS);
+        const data = await fetchContentOnce();
+        const list = (data[category] || []).slice(0, MAX_ITEMS);
         grid.innerHTML = '';
-        movies.forEach(movie => grid.appendChild(buildPosterCard(movie)));
+        list.forEach(record => grid.appendChild(buildPosterCard(record)));
       } catch (err) {
         // Jika gagal muatkan dan tiada cache, biarkan grid kosong tanpa ranap laman.
-        if (!cached) grid.innerHTML = '';
+        if (!(cachedList && cachedList.length)) grid.innerHTML = '';
       }
     }
 
     loadTrending();
-  })();
+  }
+
+  initTrendingSection('trendingGrid', 'movie');
+  initTrendingSection('tvTrendingGrid', 'tvshow');
 
   /* =========================================================
      ADMIN PANEL
