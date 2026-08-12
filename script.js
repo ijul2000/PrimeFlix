@@ -65,6 +65,58 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* =========================================================
+     DATA MOVIE — dikongsi oleh Hero & Filem Trending
+     Satu fetch sahaja ke Apps Script (bukan 2 request berasingan
+     yang bersaing dan melambatkan kedua-duanya), dengan cache
+     sessionStorage supaya paparan seterusnya dalam sesi yang sama
+     terus laju tanpa tunggu rangkaian.
+     ========================================================= */
+  const MOVIES_CACHE_KEY = 'primeflix_movies_cache_v1';
+  let moviesFetchPromise = null;
+
+  function readMoviesCache() {
+    try {
+      const raw = sessionStorage.getItem(MOVIES_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length ? parsed : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function writeMoviesCache(data) {
+    try {
+      sessionStorage.setItem(MOVIES_CACHE_KEY, JSON.stringify(data));
+    } catch (err) {
+      // sessionStorage tak tersedia / penuh — abaikan, tak kritikal.
+    }
+  }
+
+  function fetchMoviesOnce() {
+    if (!moviesFetchPromise) {
+      moviesFetchPromise = fetch(`${WEBAPP_URL}?action=list&type=movie`)
+        .then(res => res.json())
+        .then(json => {
+          if (!json.ok || !Array.isArray(json.data)) {
+            throw new Error(json.error || 'Gagal memuatkan data.');
+          }
+          // Susun ikut CreatedAt terbaharu dahulu sekali sahaja di sini.
+          const sorted = json.data
+            .slice()
+            .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
+          writeMoviesCache(sorted);
+          return sorted;
+        })
+        .catch(err => {
+          moviesFetchPromise = null; // bagi peluang cuba semula pada panggilan seterusnya
+          throw err;
+        });
+    }
+    return moviesFetchPromise;
+  }
+
+  /* =========================================================
      HERO — papar 5 movie terbaharu yang di-upload dari Google Sheet
      ========================================================= */
   (function initHero() {
@@ -84,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const ROTATE_MS = 7000;
-    const HERO_CACHE_KEY = 'primeflix_hero_cache_v1';
     let slides = [];
     let currentIndex = 0;
     let rotateTimer = null;
@@ -92,29 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reveal kandungan hero (buang keadaan "loading"/transparent).
     function revealHero() {
       if (heroContent) heroContent.classList.remove('is-loading');
-    }
-
-    // Cache movie hero terkini dalam sessionStorage supaya bila
-    // refresh / kembali ke laman utama dalam sesi yang sama, movie
-    // yang BETUL terus dipaparkan tanpa perlu tunggu fetch selesai
-    // (mengelakkan "berkelip" movie salah sebentar).
-    function readHeroCache() {
-      try {
-        const raw = sessionStorage.getItem(HERO_CACHE_KEY);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) && parsed.length ? parsed : null;
-      } catch (err) {
-        return null;
-      }
-    }
-
-    function writeHeroCache(data) {
-      try {
-        sessionStorage.setItem(HERO_CACHE_KEY, JSON.stringify(data));
-      } catch (err) {
-        // sessionStorage tak tersedia / penuh — abaikan sahaja, tak kritikal.
-      }
     }
 
     function renderSlide(index) {
@@ -166,32 +194,25 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadHeroMovies() {
       // 1) Jika ada cache dari lawatan sebelum ini dalam sesi yang sama,
       //    papar terus dahulu — movie yang betul, tiada kelipan.
-      const cached = readHeroCache();
+      const cached = readMoviesCache();
       if (cached) {
-        slides = cached;
+        slides = cached.slice(0, 5);
         buildDots();
         renderSlide(0);
         resetTimer();
         revealHero();
       }
 
-      // 2) Tetap fetch data terkini dari Google Sheet di latar belakang
-      //    supaya hero sentiasa up-to-date (movie baharu terus terpapar).
+      // 2) Tetap fetch data terkini di latar belakang (dikongsi dengan
+      //    Filem Trending — satu request sahaja) supaya hero sentiasa
+      //    up-to-date (movie baharu terus terpapar).
       try {
-        const res = await fetch(`${WEBAPP_URL}?action=list&type=movie`);
-        const json = await res.json();
-        if (!json.ok || !Array.isArray(json.data) || !json.data.length) {
+        const sorted = await fetchMoviesOnce();
+        if (!sorted.length) {
           if (!cached) revealHero(); // tiada cache & tiada data -> fallback statik
           return;
         }
-
-        // Susun ikut CreatedAt terbaharu dahulu, ambil 5 teratas.
-        slides = json.data
-          .slice()
-          .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt))
-          .slice(0, 5);
-
-        writeHeroCache(slides);
+        slides = sorted.slice(0, 5);
         buildDots();
         renderSlide(0);
         resetTimer();
@@ -219,6 +240,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const COLS = 7;
     const ROWS = 5;
     const MAX_ITEMS = COLS * ROWS;
+
+    function buildSkeletonCard() {
+      const card = document.createElement('div');
+      card.className = 'poster-card skeleton';
+
+      const art = document.createElement('div');
+      art.className = 'poster-art skeleton-shimmer';
+
+      const meta = document.createElement('div');
+      meta.className = 'poster-meta';
+      meta.innerHTML = '<div class="poster-title skeleton-shimmer"></div><div class="poster-sub skeleton-shimmer"></div>';
+
+      card.appendChild(art);
+      card.appendChild(meta);
+      return card;
+    }
+
+    // Papar skeleton serta-merta (tanpa tunggu rangkaian) supaya grid
+    // tak nampak kosong/lambat semasa data tengah dimuatkan.
+    function renderSkeletonGrid() {
+      grid.innerHTML = '';
+      for (let i = 0; i < MAX_ITEMS; i++) {
+        grid.appendChild(buildSkeletonCard());
+      }
+    }
 
     function buildPosterCard(record) {
       const card = document.createElement('div');
@@ -274,22 +320,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadTrending() {
+      // 1) Jika ada cache, papar poster BETUL serta-merta — tiada
+      //    "lambat" nampak, tiada grid kosong.
+      const cached = readMoviesCache();
+      if (cached) {
+        grid.innerHTML = '';
+        cached.slice(0, MAX_ITEMS).forEach(movie => grid.appendChild(buildPosterCard(movie)));
+      } else {
+        // Tiada cache lagi (lawatan pertama) -> papar skeleton dahulu
+        // supaya ada maklum balas visual serta-merta semasa data dimuat.
+        renderSkeletonGrid();
+      }
+
+      // 2) Fetch data terkini di latar belakang (dikongsi dengan Hero —
+      //    satu request sahaja) dan kemas kini grid bila siap.
       try {
-        const res = await fetch(`${WEBAPP_URL}?action=list&type=movie`);
-        const json = await res.json();
-        if (!json.ok || !Array.isArray(json.data)) return;
-
-        // Movie terbaharu dahulu — bila ada upload baharu, ia akan
-        // muncul di kedudukan pertama dan yang lain teranjak/turun baris.
-        const movies = json.data
-          .slice()
-          .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt))
-          .slice(0, MAX_ITEMS);
-
+        const sorted = await fetchMoviesOnce();
+        const movies = sorted.slice(0, MAX_ITEMS);
         grid.innerHTML = '';
         movies.forEach(movie => grid.appendChild(buildPosterCard(movie)));
       } catch (err) {
-        // Jika gagal muatkan, biarkan grid kosong tanpa ranap laman.
+        // Jika gagal muatkan dan tiada cache, biarkan grid kosong tanpa ranap laman.
+        if (!cached) grid.innerHTML = '';
       }
     }
 
