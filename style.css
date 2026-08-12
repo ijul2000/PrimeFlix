@@ -655,28 +655,9 @@ body.detail-page .hero-desc{
   .watch-desc{ -webkit-line-clamp:1; }
   .poster-grid{ grid-template-columns:repeat(4, 1fr); }
 
-  /* Movie/TV Show detail page: backdrop kekal tetap (fit 1 page),
-     tapi kandungan (tajuk/desc) boleh scroll dalam kotak tu sendiri
-     kalau ia lebih tinggi dari ruang skrin. Butang "Tonton Sekarang"
-     / "Senarai Saya" dijadikan sticky di bahagian bawah supaya
-     sentiasa kelihatan walaupun tanpa scroll. */
-  body.detail-page .hero-content{
-    max-height:100%;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    padding-top:20px;
-    padding-bottom:0;
-  }
-  body.detail-page .hero-desc{ -webkit-line-clamp:4; }
-  body.detail-page .hero-actions{
-    position:sticky;
-    bottom:0;
-    margin:0 -18px;
-    padding:14px 18px 20px;
-    background:linear-gradient(180deg, transparent 0%, rgba(10,10,10,0.78) 35%, rgba(10,10,10,0.97) 100%);
-    z-index:3;
-    flex-wrap:wrap;
-  }
+  /* Movie/TV Show detail page (mobile): naikkan sedikit maklumat +
+     butang dari tepi bawah skrin. */
+  body.detail-page .hero-content{ padding-bottom:72px; }
 }
 
 @media (max-width: 480px){
@@ -688,7 +669,7 @@ body.detail-page .hero-desc{
   .poster-grid{ grid-template-columns:repeat(2, 1fr); }
   .poster-grid .poster-card,
   .poster-grid .poster-art{ width:100%; height:auto; }
-  body.detail-page .hero-actions{ padding-bottom:24px; }
+  body.detail-page .hero-content{ padding-bottom:88px; }
 }
 /* =========================================================
    ADMIN PANEL (overlay on top of the main site)
