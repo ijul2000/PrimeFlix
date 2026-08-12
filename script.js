@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
      HERO — papar 5 movie terbaharu yang di-upload dari Google Sheet
      ========================================================= */
   (function initHero() {
+    const heroContent = document.getElementById('heroContent');
     const heroBackdropImg = document.getElementById('heroBackdropImg');
     const heroEyebrow = document.getElementById('heroEyebrow');
     const heroTitle = document.getElementById('heroTitle');
@@ -76,12 +77,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroDots = document.getElementById('heroDots');
 
     if (!heroBackdropImg) return;
-    if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) return;
+    if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) {
+      // WEBAPP_URL belum ditetapkan — papar sahaja kandungan statik sedia ada.
+      if (heroContent) heroContent.classList.remove('is-loading');
+      return;
+    }
 
     const ROTATE_MS = 7000;
+    const HERO_CACHE_KEY = 'primeflix_hero_cache_v1';
     let slides = [];
     let currentIndex = 0;
     let rotateTimer = null;
+
+    // Reveal kandungan hero (buang keadaan "loading"/transparent).
+    function revealHero() {
+      if (heroContent) heroContent.classList.remove('is-loading');
+    }
+
+    // Cache movie hero terkini dalam sessionStorage supaya bila
+    // refresh / kembali ke laman utama dalam sesi yang sama, movie
+    // yang BETUL terus dipaparkan tanpa perlu tunggu fetch selesai
+    // (mengelakkan "berkelip" movie salah sebentar).
+    function readHeroCache() {
+      try {
+        const raw = sessionStorage.getItem(HERO_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) && parsed.length ? parsed : null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function writeHeroCache(data) {
+      try {
+        sessionStorage.setItem(HERO_CACHE_KEY, JSON.stringify(data));
+      } catch (err) {
+        // sessionStorage tak tersedia / penuh — abaikan sahaja, tak kritikal.
+      }
+    }
 
     function renderSlide(index) {
       const movie = slides[index];
@@ -130,10 +164,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadHeroMovies() {
+      // 1) Jika ada cache dari lawatan sebelum ini dalam sesi yang sama,
+      //    papar terus dahulu — movie yang betul, tiada kelipan.
+      const cached = readHeroCache();
+      if (cached) {
+        slides = cached;
+        buildDots();
+        renderSlide(0);
+        resetTimer();
+        revealHero();
+      }
+
+      // 2) Tetap fetch data terkini dari Google Sheet di latar belakang
+      //    supaya hero sentiasa up-to-date (movie baharu terus terpapar).
       try {
         const res = await fetch(`${WEBAPP_URL}?action=list&type=movie`);
         const json = await res.json();
-        if (!json.ok || !Array.isArray(json.data) || !json.data.length) return;
+        if (!json.ok || !Array.isArray(json.data) || !json.data.length) {
+          if (!cached) revealHero(); // tiada cache & tiada data -> fallback statik
+          return;
+        }
 
         // Susun ikut CreatedAt terbaharu dahulu, ambil 5 teratas.
         slides = json.data
@@ -141,12 +191,15 @@ document.addEventListener('DOMContentLoaded', () => {
           .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt))
           .slice(0, 5);
 
+        writeHeroCache(slides);
         buildDots();
         renderSlide(0);
         resetTimer();
+        revealHero();
       } catch (err) {
-        // Jika gagal muatkan (cth. WEBAPP_URL belum konfigurasi betul),
+        // Jika gagal muatkan (cth. WEBAPP_URL belum konfigurasi betul / rangkaian gagal),
         // kekalkan kandungan hero statik sedia ada tanpa ranap laman.
+        if (!cached) revealHero();
       }
     }
 
