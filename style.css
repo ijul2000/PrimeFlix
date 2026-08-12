@@ -483,6 +483,30 @@ button.nav-link{
 }
 
 /* =========================================================
+   MOVIE DETAIL PAGE (movie.html) — fix dalam 1 page, tiada scroll
+   ========================================================= */
+body.detail-page{
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+body.detail-page .site-header{
+  position:relative;
+  flex:0 0 auto;
+}
+body.detail-page .hero-fullpage{
+  flex:1 1 auto;
+  min-height:0;
+}
+body.detail-page .hero-desc{
+  display:-webkit-box;
+  -webkit-line-clamp:6;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+/* =========================================================
    RESPONSIVE
    ========================================================= */
 @media (max-width: 860px){
