@@ -208,13 +208,22 @@ a:focus-visible, button:focus-visible, input:focus-visible{
   align-items:flex-end;
   overflow:hidden;
 }
+.hero-backdrop-img{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-color:#141414;
+  transition:background-image 0.5s ease;
+}
 .hero-backdrop{
   position:absolute;
   inset:0;
   background:
     radial-gradient(ellipse 90% 60% at 75% 20%, rgba(185,134,47,0.22), transparent 60%),
     linear-gradient(0deg, var(--bg) 5%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.75) 100%),
-    linear-gradient(120deg, #1c1a15 0%, #141414 45%, #0a0a0a 100%);
+    linear-gradient(120deg, rgba(28,26,21,0.55) 0%, rgba(20,20,20,0.55) 45%, rgba(10,10,10,0.75) 100%);
 }
 .hero-backdrop::after{
   content:"";
@@ -258,6 +267,39 @@ a:focus-visible, button:focus-visible, input:focus-visible{
 .hero-actions{
   display:flex;
   gap:14px;
+}
+.hero-meta{
+  color:var(--gold);
+  font-weight:600;
+  font-size:14px;
+  letter-spacing:0.3px;
+  margin-top:-8px;
+  margin-bottom:16px;
+}
+.hero-dots{
+  display:flex;
+  gap:8px;
+  margin-top:26px;
+}
+.hero-dots:empty{
+  margin-top:0;
+}
+.hero-dot{
+  width:22px;
+  height:4px;
+  border-radius:3px;
+  border:none;
+  padding:0;
+  background:rgba(255,255,255,0.25);
+  cursor:pointer;
+  transition:background 0.25s ease, width 0.25s ease;
+}
+.hero-dot:hover{
+  background:rgba(255,255,255,0.45);
+}
+.hero-dot.active{
+  background:var(--gold);
+  width:34px;
 }
 .btn{
   display:inline-flex;
