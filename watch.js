@@ -99,22 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return { kind: 'iframe', src: url, original: url };
   }
 
-  function buildFallbackLink(originalUrl) {
-    const wrapper = document.createElement('div');
-    const note = document.createElement('p');
-    note.textContent = 'Jika video tak dapat dimainkan di sini:';
-    const link = document.createElement('a');
-    link.href = originalUrl;
-    link.target = '_blank';
-    link.rel = 'noopener';
-    link.className = 'btn btn-secondary btn-sm';
-    link.style.marginTop = '8px';
-    link.textContent = 'Buka pautan tontonan';
-    wrapper.appendChild(note);
-    wrapper.appendChild(link);
-    return wrapper;
-  }
-
   function renderPlayer(record) {
     const link = record.Link;
     playerWrap.innerHTML = '';
@@ -139,8 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playerWrap.innerHTML = '';
         const state = document.createElement('div');
         state.className = 'watch-player-state';
-        state.appendChild(document.createTextNode('Gagal memainkan video ini.'));
-        state.appendChild(buildFallbackLink(link));
+        state.textContent = 'Gagal memainkan video ini.';
         playerWrap.appendChild(state);
       });
       playerWrap.appendChild(video);
@@ -153,12 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
     iframe.allowFullscreen = true;
     iframe.referrerPolicy = 'no-referrer-when-downgrade';
     playerWrap.appendChild(iframe);
-
-    // Sentiasa sediakan pautan fallback di bawah, sebab sesetengah hos
-    // menyekat penyertaan (X-Frame-Options) walaupun URL sah.
-    const fallback = buildFallbackLink(link);
-    fallback.style.marginTop = '14px';
-    playerWrap.parentElement.insertBefore(fallback, playerWrap.nextSibling);
   }
 
   function renderInfo(record) {
