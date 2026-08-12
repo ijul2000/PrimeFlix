@@ -168,15 +168,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (heroContent) heroContent.classList.remove('is-loading');
     }
 
-    // Baris meta hero: "Tahun · Genre" untuk movie, tambah
-    // "Musim X · Episod Y" untuk TV Show.
+    // Baris meta hero: "Tahun · Genre" untuk movie.
+    // TV Show tiada Genre — papar "Tahun · Musim X · Episod Y" sahaja.
     function formatMeta(record) {
-      const parts = [record.Year, record.Genre].filter(Boolean);
       if (currentCategory === 'tvshow') {
+        const parts = [record.Year].filter(Boolean);
         if (record.Season) parts.push(`Musim ${record.Season}`);
         if (record.Episode) parts.push(`Episod ${record.Episode}`);
+        return parts.join(' · ');
       }
-      return parts.join(' · ');
+      return [record.Year, record.Genre].filter(Boolean).join(' · ');
     }
 
     function renderSlide(index) {
@@ -373,7 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const meta = document.createElement('div');
       meta.className = 'poster-meta';
-      const subParts = [record.Year, record.Genre];
+      // TV Show tiada Genre — papar Tahun · Musim · Episod sahaja.
+      const subParts = category === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
       if (category === 'tvshow') {
         if (record.Season) subParts.push(`Musim ${record.Season}`);
         if (record.Episode) subParts.push(`Episod ${record.Episode}`);
