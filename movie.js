@@ -11,10 +11,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const metaEl = document.getElementById('detailMeta');
   const titleEl = document.getElementById('detailTitle');
   const descEl = document.getElementById('detailDesc');
+  const watchNowBtn = document.getElementById('watchNowBtn');
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
   const type = params.get('type') || 'movie';
+
+  // Butang "Tonton Sekarang" — bawa ke pemain (watch.html) dengan id & type
+  // yang sama, supaya watch.html tahu rekod mana nak dimainkan.
+  if (watchNowBtn) {
+    watchNowBtn.addEventListener('click', () => {
+      if (!id) return;
+      const typeParam = type === 'tvshow' ? '&type=tvshow' : '';
+      window.location.href = `watch.html?id=${encodeURIComponent(id)}${typeParam}`;
+    });
+  }
 
   if (!id) {
     titleEl.textContent = 'Rekod tidak dijumpai.';
