@@ -4,7 +4,7 @@
 
 // Tampal URL Web App Google Apps Script anda di bawah
 // (lihat arahan pasang di bahagian atas Code.gs).
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
+const WEBAPP_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -176,6 +176,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteModalOverlay = document.getElementById('deleteModalOverlay');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
+    const checkLinksBtn = document.getElementById('checkLinksBtn');
+    const brokenLinksModalOverlay = document.getElementById('brokenLinksModalOverlay');
+    const brokenLinksLoading = document.getElementById('brokenLinksLoading');
+    const brokenLinksEmpty = document.getElementById('brokenLinksEmpty');
+    const brokenLinksList = document.getElementById('brokenLinksList');
+    const recheckLinksBtn = document.getElementById('recheckLinksBtn');
+
     const libraryGrid = document.getElementById('libraryGrid');
     const libraryLoading = document.getElementById('libraryLoading');
     const libraryEmpty = document.getElementById('libraryEmpty');
@@ -184,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('adminSearchInput');
 
     let pendingDelete = null; // { type, id }
+    const ADMIN_STATE_KEY = 'primeflix_admin_open';
 
     function webAppConfigured() {
       return typeof WEBAPP_URL === 'string' && WEBAPP_URL.indexOf('GANTI_DENGAN') === -1;
@@ -203,10 +211,11 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast._t = setTimeout(() => { toastEl.hidden = true; }, 3200);
     }
 
-    /* ---- Open / close admin panel ---- */
-    openAdminBtn.addEventListener('click', () => {
+    /* ---- Open / close admin panel (kekal terbuka selepas refresh) ---- */
+    function openAdminPanel() {
       adminPanel.hidden = false;
       document.body.style.overflow = 'hidden';
+      try { localStorage.setItem(ADMIN_STATE_KEY, '1'); } catch (err) { /* storan tak tersedia */ }
       if (!adminLoaded) {
         adminLoaded = true;
         if (!webAppConfigured()) {
@@ -217,11 +226,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadLibrary();
       }
-    });
-    closeAdminBtn.addEventListener('click', () => {
+    }
+    function closeAdminPanel() {
       adminPanel.hidden = true;
       document.body.style.overflow = '';
-    });
+      try { localStorage.removeItem(ADMIN_STATE_KEY); } catch (err) { /* storan tak tersedia */ }
+    }
+
+    openAdminBtn.addEventListener('click', openAdminPanel);
+    closeAdminBtn.addEventListener('click', closeAdminPanel);
+
+    // Jika panel admin terbuka sebelum page di-refresh, kekalkan ia terbuka.
+    let wasAdminOpen = false;
+    try { wasAdminOpen = localStorage.getItem(ADMIN_STATE_KEY) === '1'; } catch (err) { /* storan tak tersedia */ }
+    if (wasAdminOpen) openAdminPanel();
 
     /* ---- API helpers ---- */
     async function apiList() {
@@ -242,6 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'Permintaan gagal.');
       return json.data;
+    }
+
+    async function apiCheckLinks() {
+      const res = await fetch(`${WEBAPP_URL}?action=checkLinks`);
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Gagal menyemak pautan.');
+      return json.data; // array of { type, id, title, field, url, status, ok }
     }
 
     /* ---- Modal helpers ---- */
@@ -595,6 +620,110 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmDeleteBtn.textContent = 'Padam';
       }
     });
+
+    /* ---- Semak Pautan Rosak (Backdrop / Poster / Link) ---- */
+    const FIELD_LABELS = {
+      Backdrop: 'Gambar Backdrop',
+      Poster: 'Gambar Poster',
+      Link: 'Pautan Tontonan'
+    };
+
+    function findRecordById(type, id) {
+      const rows = (type === 'movie' ? library.movie : library.tvshow) || [];
+      return rows.find(r => String(r.ID) === String(id));
+    }
+
+    function buildBrokenLinkItem(entry) {
+      const item = document.createElement('div');
+      item.className = 'broken-link-item';
+
+      const info = document.createElement('div');
+      info.className = 'broken-link-info';
+
+      const titleRow = document.createElement('div');
+      titleRow.className = 'broken-link-title';
+
+      const titleText = document.createElement('span');
+      titleText.textContent = entry.title || '(Tiada tajuk)';
+
+      const typeTag = document.createElement('span');
+      typeTag.className = 'broken-link-type';
+      typeTag.textContent = entry.type === 'movie' ? 'MOVIE' : 'TV SHOW';
+
+      const fieldTag = document.createElement('span');
+      fieldTag.className = 'broken-link-field';
+      fieldTag.textContent = FIELD_LABELS[entry.field] || entry.field;
+
+      titleRow.appendChild(titleText);
+      titleRow.appendChild(typeTag);
+      titleRow.appendChild(fieldTag);
+
+      const urlRow = document.createElement('div');
+      urlRow.className = 'broken-link-url';
+      urlRow.textContent = entry.url;
+
+      const statusRow = document.createElement('div');
+      statusRow.className = 'broken-link-status';
+      statusRow.textContent = entry.status && entry.status > 0
+        ? `Status HTTP: ${entry.status}`
+        : 'Gagal disambung / pautan tidak sah';
+
+      info.appendChild(titleRow);
+      info.appendChild(urlRow);
+      info.appendChild(statusRow);
+
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'broken-link-edit';
+      editBtn.textContent = 'Betulkan';
+      editBtn.addEventListener('click', () => {
+        const record = findRecordById(entry.type, entry.id);
+        if (record) {
+          openEdit(Object.assign({ _type: entry.type }, record));
+        } else {
+          showToast('Rekod tidak dijumpai dalam senarai semasa.', 'error');
+        }
+      });
+
+      item.appendChild(info);
+      item.appendChild(editBtn);
+      return item;
+    }
+
+    async function runCheckLinks() {
+      brokenLinksList.innerHTML = '';
+      brokenLinksEmpty.hidden = true;
+      brokenLinksEmpty.textContent = 'Semua pautan berfungsi dengan baik.';
+      brokenLinksLoading.hidden = false;
+      recheckLinksBtn.disabled = true;
+
+      try {
+        const results = await apiCheckLinks();
+        brokenLinksLoading.hidden = true;
+
+        if (!results || results.length === 0) {
+          brokenLinksEmpty.hidden = false;
+          return;
+        }
+        results.forEach(entry => brokenLinksList.appendChild(buildBrokenLinkItem(entry)));
+      } catch (err) {
+        brokenLinksLoading.hidden = true;
+        brokenLinksEmpty.hidden = false;
+        brokenLinksEmpty.textContent = err.message || 'Gagal menyemak pautan.';
+      } finally {
+        recheckLinksBtn.disabled = false;
+      }
+    }
+
+    checkLinksBtn.addEventListener('click', () => {
+      if (!webAppConfigured()) {
+        showToast('WEBAPP_URL belum ditetapkan dalam script.js.', 'error');
+        return;
+      }
+      openModal(brokenLinksModalOverlay);
+      runCheckLinks();
+    });
+    recheckLinksBtn.addEventListener('click', runCheckLinks);
 
     /* ---- Filter tabs + search ---- */
     filterTabs.addEventListener('click', (e) => {
