@@ -28,26 +28,30 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Cache yang sama dipakai oleh index.html (Hero & Filem Trending).
-  // Bila pengguna klik poster dari halaman utama, data ni biasanya
-  // dah ada dalam sessionStorage — jadi butiran movie boleh terpapar
-  // serta-merta tanpa tunggu fetch baharu ke Apps Script.
-  const MOVIES_CACHE_KEY = 'primeflix_movies_cache_v1';
+  // Cache yang sama dipakai oleh index.html (Hero & kedua-dua grid
+  // Trending). Bila pengguna klik poster dari halaman utama, data ni
+  // biasanya dah ada dalam sessionStorage — jadi butiran movie/TV show
+  // boleh terpapar serta-merta tanpa tunggu fetch baharu ke Apps Script.
+  const CONTENT_CACHE_KEY = 'primeflix_content_cache_v1';
 
-  function readMoviesCache() {
+  function readContentCache() {
     try {
-      const raw = sessionStorage.getItem(MOVIES_CACHE_KEY);
+      const raw = sessionStorage.getItem(CONTENT_CACHE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) && parsed.length ? parsed : null;
+      if (!parsed || typeof parsed !== 'object') return null;
+      const movie = Array.isArray(parsed.movie) ? parsed.movie : [];
+      const tvshow = Array.isArray(parsed.tvshow) ? parsed.tvshow : [];
+      if (!movie.length && !tvshow.length) return null;
+      return { movie: movie, tvshow: tvshow };
     } catch (err) {
       return null;
     }
   }
 
-  function writeMoviesCache(data) {
+  function writeContentCache(data) {
     try {
-      sessionStorage.setItem(MOVIES_CACHE_KEY, JSON.stringify(data));
+      sessionStorage.setItem(CONTENT_CACHE_KEY, JSON.stringify(data));
     } catch (err) {
       // sessionStorage tak tersedia / penuh — abaikan, tak kritikal.
     }
@@ -57,14 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1) Cuba papar terus dari cache (kalau ada) — biasanya ada, sebab
     //    pengguna baru sahaja klik poster dari halaman utama.
     let shownFromCache = false;
-    if (type === 'movie') {
-      const cached = readMoviesCache();
-      if (cached) {
-        const cachedRecord = cached.find(r => String(r.ID) === String(id));
-        if (cachedRecord) {
-          renderDetail(cachedRecord);
-          shownFromCache = true;
-        }
+    const cached = readContentCache();
+    if (cached) {
+      const list = cached[type] || [];
+      const cachedRecord = list.find(r => String(r.ID) === String(id));
+      if (cachedRecord) {
+        renderDetail(cachedRecord);
+        shownFromCache = true;
       }
     }
 
@@ -78,13 +81,18 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(json.error || 'Gagal memuatkan data.');
       }
 
-      if (type === 'movie') writeMoviesCache(json.data);
+      // Kemaskan cache bagi kategori ini sahaja, kekalkan kategori lain.
+      writeContentCache(Object.assign(
+        { movie: [], tvshow: [] },
+        cached,
+        { [type]: json.data }
+      ));
 
       const record = json.data.find(r => String(r.ID) === String(id));
       if (!record) {
         if (!shownFromCache) {
           titleEl.textContent = 'Rekod tidak dijumpai.';
-          descEl.textContent = 'Filem yang anda cari mungkin telah dipadam.';
+          descEl.textContent = type === 'tvshow' ? 'TV show yang anda cari mungkin telah dipadam.' : 'Filem yang anda cari mungkin telah dipadam.';
         }
         return;
       }
@@ -101,7 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderDetail(record) {
     backdropImg.style.backgroundImage = record.Backdrop ? `url("${record.Backdrop}")` : 'none';
     titleEl.textContent = record.Title || '';
-    metaEl.textContent = [record.Year, record.Genre].filter(Boolean).join(' · ');
+    const metaParts = [record.Year, record.Genre];
+    if (type === 'tvshow') {
+      if (record.Season) metaParts.push(`Musim ${record.Season}`);
+      if (record.Episode) metaParts.push(`Episod ${record.Episode}`);
+    }
+    metaEl.textContent = metaParts.filter(Boolean).join(' · ');
     descEl.textContent = record.Description || '';
     document.title = `${record.Title || 'Butiran Filem'} — Prime Flix`;
   }
