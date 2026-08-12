@@ -171,6 +171,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'poster-card';
       card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `Papar butiran ${record.Title || 'filem'}`);
+
+      function goToDetail() {
+        if (!record.ID) return;
+        window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}`;
+      }
+      card.addEventListener('click', goToDetail);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goToDetail();
+        }
+      });
 
       const art = document.createElement('div');
       art.className = 'poster-art';
