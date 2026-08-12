@@ -32,6 +32,7 @@
     <nav class="main-nav" id="mainNav">
       <a href="#movies" class="nav-link active">Movie</a>
       <a href="#tvshows" class="nav-link">TV Show</a>
+      <button type="button" class="nav-link" id="watchListBtn">Watch List</button>
     </nav>
 
     <div class="header-actions">
@@ -58,6 +59,7 @@
   <div class="mobile-nav" id="mobileNav">
     <a href="#movies" class="nav-link">Movie</a>
     <a href="#tvshows" class="nav-link">TV Show</a>
+    <button type="button" class="nav-link" id="watchListBtnMobile">Watch List</button>
   </div>
 </header>
 
@@ -89,31 +91,7 @@
       <h2>Filem Trending</h2>
       <a href="#" class="row-see-all">Lihat Semua &rarr;</a>
     </div>
-    <div class="card-row" data-row></div>
-  </section>
-
-  <section class="row-section">
-    <div class="row-head">
-      <h2>Aksi &amp; Pengembaraan</h2>
-      <a href="#" class="row-see-all">Lihat Semua &rarr;</a>
-    </div>
-    <div class="card-row" data-row></div>
-  </section>
-
-  <section class="row-section" id="tvshows">
-    <div class="row-head">
-      <h2>Siri TV Popular</h2>
-      <a href="#" class="row-see-all">Lihat Semua &rarr;</a>
-    </div>
-    <div class="card-row" data-row></div>
-  </section>
-
-  <section class="row-section">
-    <div class="row-head">
-      <h2>Drama &amp; Emosi</h2>
-      <a href="#" class="row-see-all">Lihat Semua &rarr;</a>
-    </div>
-    <div class="card-row" data-row></div>
+    <div class="poster-grid" id="trendingGrid"></div>
   </section>
 
 </main>
