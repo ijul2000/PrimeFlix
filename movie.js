@@ -28,7 +28,49 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  // Cache yang sama dipakai oleh index.html (Hero & Filem Trending).
+  // Bila pengguna klik poster dari halaman utama, data ni biasanya
+  // dah ada dalam sessionStorage — jadi butiran movie boleh terpapar
+  // serta-merta tanpa tunggu fetch baharu ke Apps Script.
+  const MOVIES_CACHE_KEY = 'primeflix_movies_cache_v1';
+
+  function readMoviesCache() {
+    try {
+      const raw = sessionStorage.getItem(MOVIES_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length ? parsed : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function writeMoviesCache(data) {
+    try {
+      sessionStorage.setItem(MOVIES_CACHE_KEY, JSON.stringify(data));
+    } catch (err) {
+      // sessionStorage tak tersedia / penuh — abaikan, tak kritikal.
+    }
+  }
+
   async function loadDetail() {
+    // 1) Cuba papar terus dari cache (kalau ada) — biasanya ada, sebab
+    //    pengguna baru sahaja klik poster dari halaman utama.
+    let shownFromCache = false;
+    if (type === 'movie') {
+      const cached = readMoviesCache();
+      if (cached) {
+        const cachedRecord = cached.find(r => String(r.ID) === String(id));
+        if (cachedRecord) {
+          renderDetail(cachedRecord);
+          shownFromCache = true;
+        }
+      }
+    }
+
+    // 2) Tetap fetch data terkini di latar belakang — untuk kemaskan
+    //    butiran (jika ada perubahan) dan sebagai fallback bila cache
+    //    tiada (cth. pautan dibuka terus tanpa lalui halaman utama).
     try {
       const res = await fetch(`${WEBAPP_URL}?action=list&type=${encodeURIComponent(type)}`);
       const json = await res.json();
@@ -36,17 +78,23 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(json.error || 'Gagal memuatkan data.');
       }
 
+      if (type === 'movie') writeMoviesCache(json.data);
+
       const record = json.data.find(r => String(r.ID) === String(id));
       if (!record) {
-        titleEl.textContent = 'Rekod tidak dijumpai.';
-        descEl.textContent = 'Filem yang anda cari mungkin telah dipadam.';
+        if (!shownFromCache) {
+          titleEl.textContent = 'Rekod tidak dijumpai.';
+          descEl.textContent = 'Filem yang anda cari mungkin telah dipadam.';
+        }
         return;
       }
 
       renderDetail(record);
     } catch (err) {
-      titleEl.textContent = 'Gagal memuatkan butiran.';
-      descEl.textContent = 'Sila cuba semula sebentar lagi.';
+      if (!shownFromCache) {
+        titleEl.textContent = 'Gagal memuatkan butiran.';
+        descEl.textContent = 'Sila cuba semula sebentar lagi.';
+      }
     }
   }
 
