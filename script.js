@@ -62,6 +62,96 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  /* =========================================================
+     HERO — papar 5 movie terbaharu yang di-upload dari Google Sheet
+     ========================================================= */
+  (function initHero() {
+    const heroBackdropImg = document.getElementById('heroBackdropImg');
+    const heroEyebrow = document.getElementById('heroEyebrow');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroMeta = document.getElementById('heroMeta');
+    const heroDesc = document.getElementById('heroDesc');
+    const heroDots = document.getElementById('heroDots');
+
+    if (!heroBackdropImg) return;
+    if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) return;
+
+    const ROTATE_MS = 7000;
+    let slides = [];
+    let currentIndex = 0;
+    let rotateTimer = null;
+
+    function renderSlide(index) {
+      const movie = slides[index];
+      if (!movie) return;
+      currentIndex = index;
+
+      heroBackdropImg.style.backgroundImage = movie.Backdrop ? `url("${movie.Backdrop}")` : 'none';
+      heroEyebrow.textContent = 'Baharu Ditambah';
+      heroTitle.textContent = movie.Title || '';
+      heroMeta.textContent = [movie.Year, movie.Genre].filter(Boolean).join(' · ');
+      heroDesc.textContent = movie.Description || '';
+
+      if (heroDots) {
+        heroDots.querySelectorAll('.hero-dot').forEach((dot, i) => {
+          dot.classList.toggle('active', i === index);
+        });
+      }
+    }
+
+    function buildDots() {
+      if (!heroDots) return;
+      heroDots.innerHTML = '';
+      if (slides.length < 2) return;
+      slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'hero-dot';
+        dot.setAttribute('aria-label', `Papar tajuk ${i + 1}`);
+        dot.addEventListener('click', () => {
+          renderSlide(i);
+          resetTimer();
+        });
+        heroDots.appendChild(dot);
+      });
+    }
+
+    function nextSlide() {
+      if (slides.length < 2) return;
+      renderSlide((currentIndex + 1) % slides.length);
+    }
+
+    function resetTimer() {
+      clearInterval(rotateTimer);
+      if (slides.length > 1) {
+        rotateTimer = setInterval(nextSlide, ROTATE_MS);
+      }
+    }
+
+    async function loadHeroMovies() {
+      try {
+        const res = await fetch(`${WEBAPP_URL}?action=list&type=movie`);
+        const json = await res.json();
+        if (!json.ok || !Array.isArray(json.data) || !json.data.length) return;
+
+        // Susun ikut CreatedAt terbaharu dahulu, ambil 5 teratas.
+        slides = json.data
+          .slice()
+          .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt))
+          .slice(0, 5);
+
+        buildDots();
+        renderSlide(0);
+        resetTimer();
+      } catch (err) {
+        // Jika gagal muatkan (cth. WEBAPP_URL belum konfigurasi betul),
+        // kekalkan kandungan hero statik sedia ada tanpa ranap laman.
+      }
+    }
+
+    loadHeroMovies();
+  })();
+
   /* ---- Populate poster rows with placeholder content ---- */
   const rowData = [
     [
