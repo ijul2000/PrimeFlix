@@ -2,186 +2,11 @@
 // PRIME FLIX — interactions
 // =========================================================
 
+// Tampal URL Web App Google Apps Script anda di bawah
+// (lihat arahan pasang di bahagian atas Code.gs).
+const WEBAPP_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
+
 document.addEventListener('DOMContentLoaded', () => {
-
-  /* ---- Hero slider (Movie / TV Show) ---- */
-  const heroData = {
-    movie: [
-      {
-        title: 'Malam Terakhir di Kota Hujan',
-        meta: '2026 · Thriller',
-        desc: 'Seorang detektif persendirian mempunyai satu malam sahaja untuk menyelamatkan bandar sebelum ribut terakhir melanda. Drama thriller yang menegangkan dari awal hingga akhir.',
-        hue: 4
-      },
-      {
-        title: 'Jejak Sunyi',
-        meta: '2025 · Misteri',
-        desc: 'Seorang wartawan menyiasat kehilangan misteri di sebuah pekan kecil, hanya untuk mendapati bahawa jejak yang dicari membawanya kepada rahsia yang lebih gelap.',
-        hue: 356
-      },
-      {
-        title: 'Cahaya Dari Utara',
-        meta: '2025 · Sci-Fi',
-        desc: 'Satu isyarat aneh dari kutub utara mencetuskan ekspedisi saintifik yang mengubah pemahaman manusia tentang alam semesta — dan diri mereka sendiri.',
-        hue: 8
-      },
-      {
-        title: 'Serangan Senja',
-        meta: '2026 · Aksi',
-        desc: 'Sebuah pasukan tentera elit diberi masa terhad untuk menewaskan ancaman yang menggugat keselamatan bandar sebelum matahari terbenam.',
-        hue: 350
-      },
-      {
-        title: 'Rindu Yang Hilang',
-        meta: '2026 · Drama',
-        desc: 'Kisah sebuah keluarga yang cuba menyatukan semula ikatan yang retak selepas bertahun-tahun berjauhan, dibalut emosi yang mendalam.',
-        hue: 12
-      }
-    ],
-    tvshow: [
-      {
-        title: 'Rumah di Hujung Jalan',
-        meta: 'Musim 3 · Episod 8 Baharu',
-        desc: 'Rahsia keluarga yang tertanam sekian lama mula terbongkar apabila seorang ahli keluarga pulang selepas bertahun-tahun menghilangkan diri.',
-        hue: 4
-      },
-      {
-        title: 'Unit Siasatan',
-        meta: 'Musim 1 · Episod 10 Baharu',
-        desc: 'Sebuah pasukan siasatan jenayah berdepan kes paling rumit dalam kerjaya mereka, dengan setiap episod mendedahkan lapisan konspirasi baharu.',
-        hue: 355
-      },
-      {
-        title: 'Kod Bandar',
-        meta: 'Musim 1 · Episod 6 Baharu',
-        desc: 'Seorang juruteknik IT terperangkap dalam permainan kucing dan tikus digital apabila sistem bandar pintar dicerobohi oleh penggodam misteri.',
-        hue: 6
-      },
-      {
-        title: 'Warisan Terpendam',
-        meta: 'Musim 4 · Episod 3 Baharu',
-        desc: 'Perebutan harta pusaka keluarga besar membawa kepada pendedahan rahsia generasi yang mengubah segala-galanya.',
-        hue: 10
-      },
-      {
-        title: 'Sekolah Tengah Malam',
-        meta: 'Musim 2 · Episod 5 Baharu',
-        desc: 'Sekumpulan pelajar menyiasat kejadian ganjil yang berlaku setiap tengah malam di sekolah asrama lama mereka.',
-        hue: 350
-      }
-    ]
-  };
-
-  const heroBackdrop = document.getElementById('heroBackdrop');
-  const heroText = document.getElementById('heroText');
-  const heroTitle = document.getElementById('heroTitle');
-  const heroMeta = document.getElementById('heroMeta');
-  const heroDesc = document.getElementById('heroDesc');
-  const heroDots = document.getElementById('heroDots');
-
-  let heroCategory = 'movie';
-  let heroIndex = 0;
-  let heroTimer = null;
-
-  function renderHeroDots() {
-    heroDots.innerHTML = '';
-    heroData[heroCategory].forEach((_, i) => {
-      const dot = document.createElement('button');
-      dot.type = 'button';
-      dot.className = 'hero-dot' + (i === heroIndex ? ' active' : '');
-      dot.setAttribute('aria-label', `Slaid ${i + 1}`);
-      dot.addEventListener('click', () => goToHeroSlide(heroCategory, i));
-      heroDots.appendChild(dot);
-    });
-  }
-
-  function applyHeroSlide() {
-    const slide = heroData[heroCategory][heroIndex];
-    heroText.classList.add('is-fading');
-    setTimeout(() => {
-      heroTitle.textContent = slide.title;
-      heroMeta.textContent = slide.meta;
-      heroDesc.textContent = slide.desc;
-      heroBackdrop.style.setProperty('--tint', slide.hue);
-      heroText.classList.remove('is-fading');
-    }, 220);
-    renderHeroDots();
-  }
-
-  function goToHeroSlide(category, index) {
-    heroCategory = category;
-    heroIndex = index;
-    applyHeroSlide();
-    restartHeroAutoplay();
-  }
-
-  function nextHeroSlide() {
-    heroIndex = (heroIndex + 1) % heroData[heroCategory].length;
-    applyHeroSlide();
-  }
-
-  function restartHeroAutoplay() {
-    if (heroTimer) clearInterval(heroTimer);
-    heroTimer = setInterval(nextHeroSlide, 6000);
-  }
-
-  const heroSection = document.getElementById('heroSlider');
-
-  function setHeroCategoryFromHref(href) {
-    if (href === '#movies') return 'movie';
-    if (href === '#tvshows') return 'tvshow';
-    return null;
-  }
-
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      const category = setHeroCategoryFromHref(link.getAttribute('href'));
-      if (category && category !== heroCategory) {
-        goToHeroSlide(category, 0);
-      }
-    });
-  });
-
-  heroSection.addEventListener('mouseenter', () => { if (heroTimer) clearInterval(heroTimer); });
-  heroSection.addEventListener('mouseleave', () => { restartHeroAutoplay(); });
-
-  applyHeroSlide();
-  restartHeroAutoplay();
-
-  /* ---- Admin modal ---- */
-  const adminLink = document.querySelector('.admin-link');
-  const adminModal = document.getElementById('adminModal');
-  const adminModalOverlay = document.getElementById('adminModalOverlay');
-  const adminModalClose = document.getElementById('adminModalClose');
-
-  function openAdminModal() {
-    adminModal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeAdminModal() {
-    adminModal.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  adminLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    openAdminModal();
-  });
-  adminModalOverlay.addEventListener('click', closeAdminModal);
-  adminModalClose.addEventListener('click', closeAdminModal);
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && adminModal.classList.contains('open')) {
-      closeAdminModal();
-    }
-  });
-
-  document.querySelectorAll('.admin-card').forEach(card => {
-    card.addEventListener('click', () => {
-      console.log('Tindakan admin dipilih:', card.getAttribute('data-admin-action'));
-      // Placeholder: sambungkan ke fungsi admin sebenar di sini
-      closeAdminModal();
-    });
-  });
 
   /* ---- Mobile nav toggle ---- */
   const hamburger = document.getElementById('hamburgerBtn');
@@ -228,11 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  /* ---- Nav active state on click (Movie / TV Show only — Admin excluded) ---- */
-  document.querySelectorAll('.nav-link:not(.admin-link)').forEach(link => {
+  /* ---- Nav active state on click ---- */
+  document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
-      document.querySelectorAll('.nav-link:not(.admin-link)').forEach(l => l.classList.remove('active'));
-      document.querySelectorAll(`.nav-link:not(.admin-link)[href="${link.getAttribute('href')}"]`)
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll(`.nav-link[href="${link.getAttribute('href')}"]`)
         .forEach(l => l.classList.add('active'));
     });
   });
@@ -301,8 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const play = document.createElement('div');
     play.className = 'poster-play';
     play.innerHTML = `<svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-        <circle cx="22" cy="22" r="21" stroke="#FF6B5B" stroke-width="1.5" opacity="0.7"/>
-        <path d="M18 14v16l13-8-13-8Z" fill="#FF6B5B"/>
+        <circle cx="22" cy="22" r="21" stroke="#F3D27A" stroke-width="1.5" opacity="0.7"/>
+        <path d="M18 14v16l13-8-13-8Z" fill="#F3D27A"/>
       </svg>`;
 
     art.appendChild(badgeEl);
@@ -315,6 +140,477 @@ document.addEventListener('DOMContentLoaded', () => {
     card.appendChild(art);
     card.appendChild(meta);
     return card;
+  }
+
+  /* =========================================================
+     ADMIN PANEL
+     ========================================================= */
+
+  const adminPanel = document.getElementById('adminPanel');
+  const openAdminBtn = document.getElementById('openAdminBtn');
+  const closeAdminBtn = document.getElementById('closeAdminBtn');
+
+  if (adminPanel && openAdminBtn) {
+
+    let library = { movie: [], tvshow: [] };
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let adminLoaded = false;
+
+    const apiStatus = document.getElementById('apiStatus');
+    const toastEl = document.getElementById('toast');
+
+    const chooserOverlay = document.getElementById('chooserOverlay');
+    const openAddChooserBtn = document.getElementById('openAddChooserBtn');
+    const chooseMovieBtn = document.getElementById('chooseMovieBtn');
+    const chooseTvBtn = document.getElementById('chooseTvBtn');
+
+    const movieModalOverlay = document.getElementById('movieModalOverlay');
+    const movieForm = document.getElementById('movieForm');
+    const movieModalTitle = document.getElementById('movieModalTitle');
+
+    const tvModalOverlay = document.getElementById('tvModalOverlay');
+    const tvForm = document.getElementById('tvForm');
+    const tvModalTitle = document.getElementById('tvModalTitle');
+
+    const deleteModalOverlay = document.getElementById('deleteModalOverlay');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    const libraryGrid = document.getElementById('libraryGrid');
+    const libraryLoading = document.getElementById('libraryLoading');
+    const libraryEmpty = document.getElementById('libraryEmpty');
+    const filterTabs = document.getElementById('filterTabs');
+    const searchForm = document.getElementById('adminSearchForm');
+    const searchInput = document.getElementById('adminSearchInput');
+
+    let pendingDelete = null; // { type, id }
+
+    function webAppConfigured() {
+      return typeof WEBAPP_URL === 'string' && WEBAPP_URL.indexOf('GANTI_DENGAN') === -1;
+    }
+
+    function showStatus(message, type) {
+      apiStatus.textContent = message;
+      apiStatus.hidden = false;
+      apiStatus.className = 'admin-status status-' + (type || 'info');
+    }
+
+    function showToast(message, type) {
+      toastEl.textContent = message;
+      toastEl.className = 'toast toast-' + (type || 'success');
+      toastEl.hidden = false;
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => { toastEl.hidden = true; }, 3200);
+    }
+
+    /* ---- Open / close admin panel ---- */
+    openAdminBtn.addEventListener('click', () => {
+      adminPanel.hidden = false;
+      document.body.style.overflow = 'hidden';
+      if (!adminLoaded) {
+        adminLoaded = true;
+        if (!webAppConfigured()) {
+          showStatus(
+            'WEBAPP_URL belum ditetapkan dalam script.js. Tampal URL Web App Google Apps Script anda pada baris atas fail ini untuk aktifkan panel admin.',
+            'error'
+          );
+        }
+        loadLibrary();
+      }
+    });
+    closeAdminBtn.addEventListener('click', () => {
+      adminPanel.hidden = true;
+      document.body.style.overflow = '';
+    });
+
+    /* ---- API helpers ---- */
+    async function apiList() {
+      const res = await fetch(`${WEBAPP_URL}?action=list`);
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Gagal memuatkan senarai.');
+      return json.data; // { movie: [...], tvshow: [...] }
+    }
+
+    // Dihantar sebagai text/plain supaya Apps Script Web App tidak
+    // menyekat permintaan dengan CORS preflight (OPTIONS).
+    async function apiMutate(action, type, data) {
+      const res = await fetch(WEBAPP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, type, data })
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Permintaan gagal.');
+      return json.data;
+    }
+
+    /* ---- Modal helpers ---- */
+    function openModal(overlay) {
+      document.querySelectorAll('.modal-overlay').forEach(o => { o.hidden = true; });
+      overlay.hidden = false;
+    }
+    function closeAllModals() {
+      document.querySelectorAll('.modal-overlay').forEach(o => { o.hidden = true; });
+      pendingDelete = null;
+    }
+
+    document.querySelectorAll('[data-close-modal]').forEach(btn => {
+      btn.addEventListener('click', closeAllModals);
+    });
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeAllModals();
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAllModals();
+      }
+    });
+
+    openAddChooserBtn.addEventListener('click', () => openModal(chooserOverlay));
+
+    chooseMovieBtn.addEventListener('click', () => {
+      resetForm(movieForm, 'movieGenre');
+      movieModalTitle.textContent = 'Tambah Movie';
+      movieForm.querySelector('[data-submit-btn]').textContent = 'Simpan Movie';
+      openModal(movieModalOverlay);
+    });
+
+    chooseTvBtn.addEventListener('click', () => {
+      resetForm(tvForm, 'tvGenre');
+      tvModalTitle.textContent = 'Tambah TV Show';
+      tvForm.querySelector('[data-submit-btn]').textContent = 'Simpan TV Show';
+      openModal(tvModalOverlay);
+    });
+
+    /* ---- Tag input (genre — boleh banyak) ---- */
+    const tagState = {};
+
+    function initTagInput(key) {
+      const wrap = document.querySelector(`[data-tag-input="${key}"]`);
+      const list = wrap.querySelector('[data-tag-list]');
+      const input = wrap.querySelector('.tag-input-field');
+      tagState[key] = [];
+
+      function render() {
+        list.innerHTML = '';
+        tagState[key].forEach((tag, i) => {
+          const chip = document.createElement('span');
+          chip.className = 'tag-chip';
+          chip.innerHTML = `<span></span><button type="button" aria-label="Buang ${tag}">&times;</button>`;
+          chip.querySelector('span').textContent = tag;
+          chip.querySelector('button').addEventListener('click', () => {
+            tagState[key].splice(i, 1);
+            render();
+          });
+          list.appendChild(chip);
+        });
+      }
+
+      function addTag(raw) {
+        const value = raw.trim().replace(/,+$/, '');
+        if (!value) return;
+        if (tagState[key].some(t => t.toLowerCase() === value.toLowerCase())) return;
+        tagState[key].push(value);
+        render();
+      }
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          addTag(input.value);
+          input.value = '';
+        } else if (e.key === 'Backspace' && !input.value && tagState[key].length) {
+          tagState[key].pop();
+          render();
+        }
+      });
+      input.addEventListener('blur', () => {
+        if (input.value.trim()) {
+          addTag(input.value);
+          input.value = '';
+        }
+      });
+
+      wrap.addEventListener('click', () => input.focus());
+
+      return {
+        set(genresArray) { tagState[key] = genresArray.slice(); render(); },
+        get() { return tagState[key]; },
+        clear() { tagState[key] = []; render(); }
+      };
+    }
+
+    const movieGenreTags = initTagInput('movieGenre');
+    const tvGenreTags = initTagInput('tvGenre');
+
+    /* ---- Image preview ---- */
+    function wirePreview(form) {
+      const posterInput = form.querySelector('[name="Poster"]');
+      const backdropInput = form.querySelector('[name="Backdrop"]');
+      const posterPreview = form.querySelector('[data-preview-poster]');
+      const backdropPreview = form.querySelector('[data-preview-backdrop]');
+
+      function update(input, previewEl) {
+        const url = input.value.trim();
+        previewEl.style.backgroundImage = url ? `url("${url}")` : '';
+      }
+      posterInput.addEventListener('input', () => update(posterInput, posterPreview));
+      backdropInput.addEventListener('input', () => update(backdropInput, backdropPreview));
+    }
+    wirePreview(movieForm);
+    wirePreview(tvForm);
+
+    /* ---- Form reset / fill ---- */
+    function resetForm(form, tagKey) {
+      form.reset();
+      form.querySelector('[name="ID"]').value = '';
+      form.querySelectorAll('[data-preview] > div').forEach(el => { el.style.backgroundImage = ''; });
+      hideFormError(form);
+      if (tagKey === 'movieGenre') movieGenreTags.clear();
+      if (tagKey === 'tvGenre') tvGenreTags.clear();
+    }
+
+    function fillForm(form, record, tagKey) {
+      form.querySelector('[name="ID"]').value = record.ID || '';
+      ['Title', 'Year', 'Description', 'Backdrop', 'Poster', 'Link', 'Badge', 'Season', 'Episode'].forEach(field => {
+        const el = form.querySelector(`[name="${field}"]`);
+        if (el && record[field] !== undefined) el.value = record[field];
+      });
+      const genres = String(record.Genre || '').split(',').map(g => g.trim()).filter(Boolean);
+      if (tagKey === 'movieGenre') movieGenreTags.set(genres);
+      if (tagKey === 'tvGenre') tvGenreTags.set(genres);
+
+      form.querySelectorAll('[data-preview] > div').forEach(el => { el.style.backgroundImage = ''; });
+      const posterPreview = form.querySelector('[data-preview-poster]');
+      const backdropPreview = form.querySelector('[data-preview-backdrop]');
+      if (record.Poster) posterPreview.style.backgroundImage = `url("${record.Poster}")`;
+      if (record.Backdrop) backdropPreview.style.backgroundImage = `url("${record.Backdrop}")`;
+      hideFormError(form);
+    }
+
+    function showFormError(form, message) {
+      const el = form.querySelector('[data-form-error]');
+      el.textContent = message;
+      el.hidden = false;
+    }
+    function hideFormError(form) {
+      const el = form.querySelector('[data-form-error]');
+      el.hidden = true;
+      el.textContent = '';
+    }
+
+    /* ---- Form submit (add / edit) ---- */
+    function formToData(form, genreTags) {
+      const fd = new FormData(form);
+      const data = {};
+      fd.forEach((value, key) => { data[key] = value; });
+      data.Genre = genreTags.get().join(', ');
+      if (!data.ID) delete data.ID;
+      return data;
+    }
+
+    async function handleSubmit(e, form, type, genreTags) {
+      e.preventDefault();
+      hideFormError(form);
+
+      if (!webAppConfigured()) {
+        showFormError(form, 'WEBAPP_URL belum ditetapkan dalam script.js.');
+        return;
+      }
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      if (genreTags.get().length === 0) {
+        showFormError(form, 'Sila masukkan sekurang-kurangnya satu genre.');
+        return;
+      }
+
+      const data = formToData(form, genreTags);
+      const isEdit = !!data.ID;
+      const submitBtn = form.querySelector('[data-submit-btn]');
+      const originalLabel = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Menyimpan...';
+
+      try {
+        await apiMutate(isEdit ? 'edit' : 'add', type, data);
+        showToast(isEdit ? 'Kemaskini berjaya disimpan.' : 'Tajuk baharu berjaya ditambah.', 'success');
+        closeAllModals();
+        loadLibrary();
+      } catch (err) {
+        showFormError(form, err.message || 'Sesuatu tidak kena. Cuba lagi.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+      }
+    }
+
+    movieForm.addEventListener('submit', (e) => handleSubmit(e, movieForm, 'movie', movieGenreTags));
+    tvForm.addEventListener('submit', (e) => handleSubmit(e, tvForm, 'tvshow', tvGenreTags));
+
+    /* ---- Library: load / render / filter / search ---- */
+    async function loadLibrary() {
+      if (!webAppConfigured()) {
+        libraryLoading.hidden = true;
+        libraryEmpty.hidden = false;
+        libraryEmpty.textContent = 'Sambungkan WEBAPP_URL untuk memaparkan senarai.';
+        return;
+      }
+      libraryLoading.hidden = false;
+      libraryEmpty.hidden = true;
+      libraryGrid.innerHTML = '';
+      try {
+        library = await apiList();
+        renderLibrary();
+      } catch (err) {
+        libraryLoading.hidden = true;
+        showStatus('Gagal memuatkan senarai: ' + err.message, 'error');
+      }
+    }
+
+    function combinedRecords() {
+      const movies = (library.movie || []).map(r => Object.assign({ _type: 'movie' }, r));
+      const shows = (library.tvshow || []).map(r => Object.assign({ _type: 'tvshow' }, r));
+      return movies.concat(shows);
+    }
+
+    function renderLibrary() {
+      libraryLoading.hidden = true;
+      let records = combinedRecords();
+
+      if (currentFilter !== 'all') {
+        records = records.filter(r => r._type === currentFilter);
+      }
+      if (currentSearch.trim()) {
+        const q = currentSearch.trim().toLowerCase();
+        records = records.filter(r => String(r.Title || '').toLowerCase().includes(q));
+      }
+
+      records.sort((a, b) => String(a.Title || '').localeCompare(String(b.Title || '')));
+
+      libraryGrid.innerHTML = '';
+      if (records.length === 0) {
+        libraryEmpty.hidden = false;
+        libraryEmpty.textContent = 'Tiada tajuk dijumpai.';
+        return;
+      }
+      libraryEmpty.hidden = true;
+
+      records.forEach(record => libraryGrid.appendChild(buildLibraryCard(record)));
+    }
+
+    function buildLibraryCard(record) {
+      const card = document.createElement('div');
+      card.className = 'admin-card';
+
+      const art = document.createElement('div');
+      art.className = 'admin-card-art';
+      if (record.Poster) art.style.backgroundImage = `url("${record.Poster}")`;
+
+      const typeTag = document.createElement('span');
+      typeTag.className = 'admin-card-type';
+      typeTag.textContent = record._type === 'movie' ? 'MOVIE' : 'TV SHOW';
+      art.appendChild(typeTag);
+
+      const body = document.createElement('div');
+      body.className = 'admin-card-body';
+
+      const title = document.createElement('div');
+      title.className = 'admin-card-title';
+      title.textContent = record.Title || '(Tiada tajuk)';
+
+      const meta = document.createElement('div');
+      meta.className = 'admin-card-meta';
+      meta.textContent = record._type === 'movie'
+        ? [record.Year, record.Badge].filter(Boolean).join(' · ')
+        : [record.Year, record.Season ? `Musim ${record.Season}` : '', record.Episode ? `Ep ${record.Episode}` : ''].filter(Boolean).join(' · ');
+
+      const genres = document.createElement('div');
+      genres.className = 'admin-card-genres';
+      genres.textContent = record.Genre || '';
+
+      const actions = document.createElement('div');
+      actions.className = 'admin-card-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'btn-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => openEdit(record));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'btn-delete';
+      deleteBtn.textContent = 'Padam';
+      deleteBtn.addEventListener('click', () => openDeleteConfirm(record));
+
+      actions.appendChild(editBtn);
+      actions.appendChild(deleteBtn);
+
+      body.appendChild(title);
+      body.appendChild(meta);
+      body.appendChild(genres);
+      body.appendChild(actions);
+
+      card.appendChild(art);
+      card.appendChild(body);
+      return card;
+    }
+
+    function openEdit(record) {
+      if (record._type === 'movie') {
+        fillForm(movieForm, record, 'movieGenre');
+        movieModalTitle.textContent = 'Edit Movie';
+        movieForm.querySelector('[data-submit-btn]').textContent = 'Kemaskini Movie';
+        openModal(movieModalOverlay);
+      } else {
+        fillForm(tvForm, record, 'tvGenre');
+        tvModalTitle.textContent = 'Edit TV Show';
+        tvForm.querySelector('[data-submit-btn]').textContent = 'Kemaskini TV Show';
+        openModal(tvModalOverlay);
+      }
+    }
+
+    function openDeleteConfirm(record) {
+      pendingDelete = { type: record._type, id: record.ID };
+      openModal(deleteModalOverlay);
+    }
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (!pendingDelete) return;
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.textContent = 'Memadam...';
+      try {
+        await apiMutate('delete', pendingDelete.type, { ID: pendingDelete.id });
+        showToast('Rekod berjaya dipadam.', 'success');
+        closeAllModals();
+        loadLibrary();
+      } catch (err) {
+        showToast(err.message || 'Gagal memadam rekod.', 'error');
+      } finally {
+        confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.textContent = 'Padam';
+      }
+    });
+
+    /* ---- Filter tabs + search ---- */
+    filterTabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-tab');
+      if (!btn) return;
+      filterTabs.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderLibrary();
+    });
+
+    searchForm.addEventListener('submit', (e) => e.preventDefault());
+    searchInput.addEventListener('input', () => {
+      currentSearch = searchInput.value;
+      renderLibrary();
+    });
   }
 
 });
