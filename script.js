@@ -53,9 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  /* ---- Nav active state on click ---- */
+  /* ---- Nav active state on click (tanpa scroll ke bawah) ---- */
   document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
       document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
       document.querySelectorAll(`.nav-link[href="${link.getAttribute('href')}"]`)
         .forEach(l => l.classList.add('active'));
@@ -87,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
       currentIndex = index;
 
       heroBackdropImg.style.backgroundImage = movie.Backdrop ? `url("${movie.Backdrop}")` : 'none';
-      heroEyebrow.textContent = 'Baharu Ditambah';
       heroTitle.textContent = movie.Title || '';
       heroMeta.textContent = [movie.Year, movie.Genre].filter(Boolean).join(' · ');
       heroDesc.textContent = movie.Description || '';
