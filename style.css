@@ -534,26 +534,33 @@ button.nav-link{
 }
 
 /* =========================================================
-   WATCH PAGE (watch.html) — pemain video/iframe
+   WATCH PAGE (watch.html) — pemain video/iframe, fit dalam 1 page
    ========================================================= */
 body.watch-page{
-  min-height:100vh;
+  height:100vh;
+  overflow:hidden;
   display:flex;
   flex-direction:column;
 }
+body.watch-page .site-header{
+  flex:0 0 auto;
+}
 .watch-main{
   flex:1 1 auto;
+  min-height:0;
   display:flex;
   flex-direction:column;
   max-width:1400px;
   width:100%;
   margin:0 auto;
-  padding:28px 32px 48px;
+  padding:20px 32px 24px;
+  overflow:hidden;
 }
 .watch-player-wrap{
   position:relative;
   width:100%;
-  aspect-ratio:16/9;
+  flex:1 1 auto;
+  min-height:0;
   background:#000;
   border-radius:10px;
   overflow:hidden;
@@ -583,25 +590,30 @@ body.watch-page{
 }
 .watch-player-state.is-hidden{ display:none; }
 .watch-info{
-  margin-top:22px;
+  flex:0 0 auto;
+  margin-top:18px;
 }
 .watch-title{
   font-family:var(--font-display);
-  font-size:clamp(24px, 3.6vw, 36px);
+  font-size:clamp(20px, 2.6vw, 30px);
   letter-spacing:0.5px;
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 .watch-meta{
   color:var(--gold);
   font-weight:600;
   font-size:14px;
-  margin-bottom:14px;
+  margin-bottom:8px;
 }
 .watch-desc{
   color:var(--text-muted);
-  font-size:15px;
-  line-height:1.6;
+  font-size:14px;
+  line-height:1.5;
   max-width:760px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }
 
 /* =========================================================
@@ -639,7 +651,8 @@ body.detail-page .hero-desc{
   .hero{ min-height:64vh; }
   .hero-content{ padding:0 18px 48px; }
   .content{ padding:0 18px 48px; }
-  .watch-main{ padding:20px 18px 40px; }
+  .watch-main{ padding:14px 18px 18px; }
+  .watch-desc{ -webkit-line-clamp:1; }
   .poster-grid{ grid-template-columns:repeat(4, 1fr); }
 }
 
