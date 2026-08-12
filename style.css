@@ -205,13 +205,21 @@ button.nav-link{
 .mobile-nav{
   display:none;
   flex-direction:column;
+  position:absolute;
+  top:100%;
+  left:0;
+  right:0;
   background:var(--bg-raised);
   border-bottom:1px solid var(--line);
   padding:8px 24px 16px;
+  max-height:calc(100vh - var(--header-h));
+  overflow-y:auto;
 }
 .mobile-nav .nav-link{
   padding:12px 0;
   border-bottom:1px solid var(--line);
+  text-align:left;
+  width:100%;
 }
 .mobile-nav.open{ display:flex; }
 
