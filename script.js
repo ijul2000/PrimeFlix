@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('adminSearchInput');
 
     let pendingDelete = null; // { type, id }
-    const ADMIN_STATE_KEY = 'primeflix_admin_open';
+    const ADMIN_HASH = '#admin';
 
     function webAppConfigured() {
       return typeof WEBAPP_URL === 'string' && WEBAPP_URL.indexOf('GANTI_DENGAN') === -1;
@@ -211,11 +211,23 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast._t = setTimeout(() => { toastEl.hidden = true; }, 3200);
     }
 
-    /* ---- Open / close admin panel (kekal terbuka selepas refresh) ---- */
-    function openAdminPanel() {
+    /* ---------------------------------------------------------
+       BUKA / TUTUP PANEL ADMIN
+       - Guna hash URL "#admin" sebagai penanda status, disokong
+         oleh history.pushState/popstate. Sebab URL itu sendiri
+         yang kekal selepas refresh (bukan localStorage), panel
+         admin automatik terbuka semula bila page di-refresh.
+       - Tekan butang "Kembali ke Laman" ATAU butang Back browser
+         kedua-duanya akan keluar dari panel admin ke laman utama,
+         sebab kedua-duanya melalui mekanisme history yang sama.
+    --------------------------------------------------------- */
+
+    // Fungsi "UI sahaja" — tukar paparan tanpa sentuh history.
+    // Dipanggil terus oleh popstate (bila user dah tekan Back/Forward)
+    // supaya kita tak push/pop history entry berganda.
+    function openAdminPanelUI() {
       adminPanel.hidden = false;
       document.body.style.overflow = 'hidden';
-      try { localStorage.setItem(ADMIN_STATE_KEY, '1'); } catch (err) { /* storan tak tersedia */ }
       if (!adminLoaded) {
         adminLoaded = true;
         if (!webAppConfigured()) {
@@ -227,19 +239,47 @@ document.addEventListener('DOMContentLoaded', () => {
         loadLibrary();
       }
     }
-    function closeAdminPanel() {
+    function closeAdminPanelUI() {
       adminPanel.hidden = true;
       document.body.style.overflow = '';
-      try { localStorage.removeItem(ADMIN_STATE_KEY); } catch (err) { /* storan tak tersedia */ }
+    }
+
+    // Dipanggil bila USER klik butang "Admin" — cipta history entry baharu.
+    function openAdminPanel() {
+      if (window.location.hash !== ADMIN_HASH) {
+        history.pushState({ admin: true }, '', ADMIN_HASH);
+      }
+      openAdminPanelUI();
+    }
+
+    // Dipanggil bila USER klik butang "Kembali ke Laman" — guna history.back()
+    // supaya kelakuannya sama macam tekan butang Back browser.
+    function closeAdminPanel() {
+      if (window.location.hash === ADMIN_HASH) {
+        history.back();
+      } else {
+        closeAdminPanelUI();
+      }
     }
 
     openAdminBtn.addEventListener('click', openAdminPanel);
     closeAdminBtn.addEventListener('click', closeAdminPanel);
 
-    // Jika panel admin terbuka sebelum page di-refresh, kekalkan ia terbuka.
-    let wasAdminOpen = false;
-    try { wasAdminOpen = localStorage.getItem(ADMIN_STATE_KEY) === '1'; } catch (err) { /* storan tak tersedia */ }
-    if (wasAdminOpen) openAdminPanel();
+    // Butang Back / Forward browser (atau history.back() di atas) akan
+    // memicu event ini — sinkronkan paparan panel admin dengan hash semasa.
+    window.addEventListener('popstate', function () {
+      if (window.location.hash === ADMIN_HASH) {
+        openAdminPanelUI();
+      } else {
+        closeAdminPanelUI();
+      }
+    });
+
+    // Jika page dibuka/refresh dengan hash #admin dalam URL, terus
+    // paparkan panel admin (tanpa push history entry baharu).
+    if (window.location.hash === ADMIN_HASH) {
+      openAdminPanelUI();
+    }
 
     /* ---- API helpers ---- */
     async function apiList() {
