@@ -534,6 +534,77 @@ button.nav-link{
 }
 
 /* =========================================================
+   WATCH PAGE (watch.html) — pemain video/iframe
+   ========================================================= */
+body.watch-page{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+.watch-main{
+  flex:1 1 auto;
+  display:flex;
+  flex-direction:column;
+  max-width:1400px;
+  width:100%;
+  margin:0 auto;
+  padding:28px 32px 48px;
+}
+.watch-player-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#000;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid var(--line);
+}
+.watch-player-wrap video,
+.watch-player-wrap iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:none;
+  display:block;
+}
+.watch-player-state{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:14px;
+  text-align:center;
+  padding:24px;
+  color:var(--text-muted);
+  font-size:14px;
+}
+.watch-player-state.is-hidden{ display:none; }
+.watch-info{
+  margin-top:22px;
+}
+.watch-title{
+  font-family:var(--font-display);
+  font-size:clamp(24px, 3.6vw, 36px);
+  letter-spacing:0.5px;
+  margin-bottom:10px;
+}
+.watch-meta{
+  color:var(--gold);
+  font-weight:600;
+  font-size:14px;
+  margin-bottom:14px;
+}
+.watch-desc{
+  color:var(--text-muted);
+  font-size:15px;
+  line-height:1.6;
+  max-width:760px;
+}
+
+/* =========================================================
    MOVIE DETAIL PAGE (movie.html) — fix dalam 1 page, tiada scroll
    ========================================================= */
 body.detail-page{
@@ -568,6 +639,7 @@ body.detail-page .hero-desc{
   .hero{ min-height:64vh; }
   .hero-content{ padding:0 18px 48px; }
   .content{ padding:0 18px 48px; }
+  .watch-main{ padding:20px 18px 40px; }
   .poster-grid{ grid-template-columns:repeat(4, 1fr); }
 }
 
