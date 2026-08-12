@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroMeta = document.getElementById('heroMeta');
     const heroDesc = document.getElementById('heroDesc');
     const heroDots = document.getElementById('heroDots');
+    const heroWatchNowBtn = document.getElementById('heroWatchNowBtn');
 
     if (!heroBackdropImg) return;
     if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) {
@@ -163,6 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCategory = 'movie';
     let currentIndex = 0;
     let rotateTimer = null;
+    let currentRecord = null;
+
+    if (heroWatchNowBtn) {
+      heroWatchNowBtn.addEventListener('click', () => {
+        if (!currentRecord || !currentRecord.ID) return;
+        const typeParam = currentCategory === 'tvshow' ? '&type=tvshow' : '';
+        window.location.href = `watch.html?id=${encodeURIComponent(currentRecord.ID)}${typeParam}`;
+      });
+    }
 
     function revealHero() {
       if (heroContent) heroContent.classList.remove('is-loading');
@@ -185,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const record = list[index];
       if (!record) return;
       currentIndex = index;
+      currentRecord = record;
 
       heroBackdropImg.style.backgroundImage = record.Backdrop ? `url("${record.Backdrop}")` : 'none';
       heroTitle.textContent = record.Title || '';
