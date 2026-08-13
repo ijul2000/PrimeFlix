@@ -665,19 +665,35 @@ body.detail-page .hero-desc{
      (asal), dikumpulkan sebagai satu "kad" terapung atas backdrop,
      dan boleh scroll dalam dirinya sendiri tanpa scrollbar
      kelihatan di tepi skrin. */
+  /* Movie/TV Show detail page (tablet/mobile): maklumat diletakkan di
+     TENGAH (bukan kad terapung) — tiada latar belakang/border, hanya
+     tulisan & butang kelihatan terus atas backdrop. */
+  body.detail-page .hero-fullpage{
+    align-items:center;
+  }
   body.detail-page .hero-content{
     width:auto;
-    margin:16px 12px 0;
-    max-height:60vh;
+    margin:0 auto;
+    max-width:560px;
+    text-align:center;
+    max-height:70vh;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
     scrollbar-width:none;
     -ms-overflow-style:none;
-    background:rgba(10,10,10,0.55);
-    backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
-    border-radius:16px;
-    padding:22px 18px 26px;
+    background:none;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    border-radius:0;
+    padding:0 18px;
+  }
+  body.detail-page .hero-title,
+  body.detail-page .hero-desc{
+    margin-left:auto;
+    margin-right:auto;
+  }
+  body.detail-page .hero-actions{
+    justify-content:center;
   }
   body.detail-page .hero-content::-webkit-scrollbar{ display:none; }
 }
@@ -691,7 +707,7 @@ body.detail-page .hero-desc{
   .poster-grid{ grid-template-columns:repeat(2, 1fr); }
   .poster-grid .poster-card,
   .poster-grid .poster-art{ width:100%; height:auto; }
-  body.detail-page .hero-content{ margin:12px 10px 0; max-height:64vh; }
+  body.detail-page .hero-content{ max-width:100%; max-height:74vh; }
 }
 /* =========================================================
    ADMIN PANEL (overlay on top of the main site)
