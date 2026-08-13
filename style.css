@@ -660,14 +660,13 @@ body.detail-page .hero-desc{
   .watch-main{ padding:14px 18px 18px; }
   .watch-desc{ -webkit-line-clamp:1; }
   .poster-grid{ grid-template-columns:repeat(4, 1fr); }
+}
 
-  /* Movie/TV Show detail page (mobile): kandungan kembali di bawah
-     (asal), dikumpulkan sebagai satu "kad" terapung atas backdrop,
-     dan boleh scroll dalam dirinya sendiri tanpa scrollbar
-     kelihatan di tepi skrin. */
-  /* Movie/TV Show detail page (tablet/mobile): maklumat diletakkan di
-     TENGAH (bukan kad terapung) — tiada latar belakang/border, hanya
-     tulisan & butang kelihatan terus atas backdrop. */
+/* Movie/TV Show detail page (tablet + mobile, up to 1024px so it also
+   covers tablets in landscape): maklumat diletakkan di TENGAH (bukan
+   kad terapung) — tiada latar belakang/border, hanya tulisan & butang
+   kelihatan terus atas backdrop. */
+@media (max-width: 1024px){
   body.detail-page .hero-fullpage{
     align-items:center;
   }
@@ -694,6 +693,7 @@ body.detail-page .hero-desc{
   }
   body.detail-page .hero-actions{
     justify-content:center;
+
   }
   body.detail-page .hero-content::-webkit-scrollbar{ display:none; }
 }
