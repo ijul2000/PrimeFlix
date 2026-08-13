@@ -137,6 +137,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return contentFetchPromise;
   }
 
+  // Senarai fungsi refresh Hero & setiap grid Trending — didaftar oleh
+  // masing-masing di bawah, dan dipanggil semula selepas Admin berjaya
+  // tambah/kemaskini/padam tajuk, supaya Hero & Trending terus papar
+  // data terkini tanpa perlu reload halaman.
+  const homeRefreshCallbacks = [];
+
+  function refreshHomeContent() {
+    contentFetchPromise = null; // paksa fetch baharu (bukan guna hasil lama yang tersimpan)
+    homeRefreshCallbacks.forEach(fn => fn());
+  }
+
   /* =========================================================
      HERO — papar 5 tajuk terbaharu; kandungan tukar ikut kategori
      (Movie / TV Show) yang aktif pada navbar. TV Show turut papar
@@ -296,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    homeRefreshCallbacks.push(loadHero);
     loadHero();
   })();
 
@@ -446,6 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    homeRefreshCallbacks.push(loadTrending);
     loadTrending();
   }
 
@@ -816,6 +829,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(isEdit ? 'Kemaskini berjaya disimpan.' : 'Tajuk baharu berjaya ditambah.', 'success');
         closeAllModals();
         loadLibrary();
+        refreshHomeContent();
       } catch (err) {
         showFormError(form, err.message || 'Sesuatu tidak kena. Cuba lagi.');
       } finally {
@@ -964,6 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Rekod berjaya dipadam.', 'success');
         closeAllModals();
         loadLibrary();
+        refreshHomeContent();
       } catch (err) {
         showToast(err.message || 'Gagal memadam rekod.', 'error');
       } finally {
