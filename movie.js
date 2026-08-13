@@ -120,8 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initTvPicker(record, fullList) {
     if (!tvActions) return;
-    if (movieActions) movieActions.hidden = true;
+    if (movieActions) {
+      movieActions.hidden = true;
+      movieActions.classList.add('is-hidden');
+    }
     tvActions.hidden = false;
+    tvActions.classList.remove('is-hidden');
 
     const episodes = (fullList || []).filter(r => normalizeTitle(r.Title) === normalizeTitle(record.Title));
     if (!episodes.length) episodes.push(record);
