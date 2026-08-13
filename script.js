@@ -314,6 +314,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const ROWS = 5;
     const MAX_ITEMS = COLS * ROWS;
 
+    // TV Show: satu rekod disimpan bagi SETIAP episod. Untuk paparan
+    // grid, kumpulkan ikut Tajuk + Musim supaya hanya SATU poster
+    // dipaparkan bagi setiap musim (guna poster episod pertama yang
+    // dijumpai dalam kumpulan itu) — episod baharu dengan tajuk & musim
+    // yang sama tidak akan cipta kad poster berasingan.
+    function dedupeByTitleSeason(list) {
+      if (category !== 'tvshow') return list;
+      const seen = new Set();
+      const result = [];
+      (list || []).forEach(record => {
+        const key = `${(record.Title || '').trim().toLowerCase()}|||${record.Season || ''}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        result.push(record);
+      });
+      return result;
+    }
+
     function buildSkeletonCard() {
       const card = document.createElement('div');
       card.className = 'poster-card skeleton';
@@ -385,11 +403,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const meta = document.createElement('div');
       meta.className = 'poster-meta';
-      // TV Show tiada Genre — papar Tahun · Musim · Episod sahaja.
+      // TV Show tiada Genre — papar Tahun · Musim sahaja (tiada
+      // maklumat episod pada poster, sebab satu poster mewakili
+      // keseluruhan musim, bukan episod tertentu).
       const subParts = category === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
-      if (category === 'tvshow') {
-        if (record.Season) subParts.push(`Musim ${record.Season}`);
-        if (record.Episode) subParts.push(`Episod ${record.Episode}`);
+      if (category === 'tvshow' && record.Season) {
+        subParts.push(`Musim ${record.Season}`);
       }
       const sub = subParts.filter(Boolean).join(' · ');
       meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
@@ -406,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cachedList = cached ? cached[category] : null;
       if (cachedList && cachedList.length) {
         grid.innerHTML = '';
-        cachedList.slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
+        dedupeByTitleSeason(cachedList).slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
       } else {
         // Tiada cache lagi (lawatan pertama) -> papar skeleton dahulu
         // supaya ada maklum balas visual serta-merta semasa data dimuat.
@@ -418,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
       //    grid bila siap.
       try {
         const data = await fetchContentOnce();
-        const list = (data[category] || []).slice(0, MAX_ITEMS);
+        const list = dedupeByTitleSeason(data[category] || []).slice(0, MAX_ITEMS);
         grid.innerHTML = '';
         list.forEach(record => grid.appendChild(buildPosterCard(record)));
       } catch (err) {
@@ -432,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initTrendingSection('trendingGrid', 'movie');
   initTrendingSection('tvTrendingGrid', 'tvshow');
+
 
   /* =========================================================
      ADMIN PANEL
