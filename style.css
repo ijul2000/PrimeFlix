@@ -305,7 +305,61 @@ button.nav-link{
 .hero-actions{
   display:flex;
   gap:14px;
+  flex-wrap:wrap;
 }
+
+/* TV Show — butang pilih Musim & Episod (dropdown) */
+.select-btn-wrap{
+  position:relative;
+}
+.select-btn{
+  gap:8px;
+}
+.select-btn svg:last-child{
+  transition:transform .2s ease;
+}
+.select-btn[aria-expanded="true"] svg:last-child{
+  transform:rotate(180deg);
+}
+.select-dropdown{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  z-index:20;
+  min-width:150px;
+  max-height:260px;
+  overflow-y:auto;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:6px;
+  box-shadow:0 16px 36px rgba(0,0,0,0.55);
+}
+.select-dropdown[hidden]{ display:none; }
+.select-option{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:none;
+  border:none;
+  color:var(--text);
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:600;
+  padding:9px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease;
+}
+.select-option:hover{
+  background:rgba(217,178,92,0.12);
+  color:var(--gold-soft);
+}
+.select-option.active{
+  color:var(--gold-soft);
+  background:rgba(217,178,92,0.08);
+}
+
 .hero-meta{
   color:var(--gold);
   font-weight:600;
