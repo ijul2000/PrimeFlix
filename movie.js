@@ -11,19 +11,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const metaEl = document.getElementById('detailMeta');
   const titleEl = document.getElementById('detailTitle');
   const descEl = document.getElementById('detailDesc');
+
+  const movieActions = document.getElementById('movieActions');
   const watchNowBtn = document.getElementById('watchNowBtn');
+
+  const tvActions = document.getElementById('tvActions');
+  const seasonSelectBtn = document.getElementById('seasonSelectBtn');
+  const seasonSelectLabel = document.getElementById('seasonSelectLabel');
+  const seasonDropdown = document.getElementById('seasonDropdown');
+  const episodeSelectBtn = document.getElementById('episodeSelectBtn');
+  const episodeSelectLabel = document.getElementById('episodeSelectLabel');
+  const episodeDropdown = document.getElementById('episodeDropdown');
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
   const type = params.get('type') || 'movie';
 
-  // Butang "Tonton Sekarang" — bawa ke pemain (watch.html) dengan id & type
-  // yang sama, supaya watch.html tahu rekod mana nak dimainkan.
+  // Butang "Tonton Sekarang" (movie sahaja) — bawa ke pemain (watch.html)
+  // dengan id yang sama.
   if (watchNowBtn) {
     watchNowBtn.addEventListener('click', () => {
       if (!id) return;
-      const typeParam = type === 'tvshow' ? '&type=tvshow' : '';
-      window.location.href = `watch.html?id=${encodeURIComponent(id)}${typeParam}`;
+      window.location.href = `watch.html?id=${encodeURIComponent(id)}`;
     });
   }
 
@@ -68,6 +77,119 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* =========================================================
+     TV SHOW — pilih Musim & Episod
+     Setiap episod disimpan sebagai satu rekod berasingan dalam Sheet.
+     Kumpulkan semua rekod dengan Tajuk yang sama, susun ikut Musim,
+     supaya pengguna boleh pilih musim & episod mana nak ditonton.
+     ========================================================= */
+  let closeOpenDropdown = null;
+
+  function normalizeTitle(t) {
+    return String(t || '').trim().toLowerCase();
+  }
+
+  function toggleDropdown(btn, dropdown, openIt) {
+    const willOpen = openIt !== undefined ? openIt : dropdown.hidden;
+    if (closeOpenDropdown) closeOpenDropdown();
+    if (!willOpen) return;
+    dropdown.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    closeOpenDropdown = () => {
+      dropdown.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      closeOpenDropdown = null;
+    };
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!closeOpenDropdown) return;
+    if (e.target.closest('.select-btn-wrap')) return;
+    closeOpenDropdown();
+  });
+
+  function buildDropdownOption(label, onSelect, isActive) {
+    const opt = document.createElement('button');
+    opt.type = 'button';
+    opt.className = 'select-option' + (isActive ? ' active' : '');
+    opt.setAttribute('role', 'option');
+    opt.textContent = label;
+    opt.addEventListener('click', () => onSelect());
+    return opt;
+  }
+
+  function initTvPicker(record, fullList) {
+    if (!tvActions) return;
+    if (movieActions) movieActions.hidden = true;
+    tvActions.hidden = false;
+
+    const episodes = (fullList || []).filter(r => normalizeTitle(r.Title) === normalizeTitle(record.Title));
+    if (!episodes.length) episodes.push(record);
+
+    const seasons = Array.from(new Set(episodes.map(r => Number(r.Season) || 0))).sort((a, b) => a - b);
+    let currentSeason = Number(record.Season) || seasons[0];
+
+    function episodesInSeason(season) {
+      return episodes
+        .filter(r => (Number(r.Season) || 0) === season)
+        .sort((a, b) => (Number(a.Episode) || 0) - (Number(b.Episode) || 0));
+    }
+
+    function playEpisode(ep) {
+      if (!ep || !ep.ID) return;
+      window.location.href = `watch.html?id=${encodeURIComponent(ep.ID)}&type=tvshow`;
+    }
+
+    function renderEpisodeDropdown(season, activeEpisodeNum) {
+      const list = episodesInSeason(season);
+      episodeDropdown.innerHTML = '';
+      list.forEach(ep => {
+        const epNum = Number(ep.Episode) || 0;
+        episodeDropdown.appendChild(buildDropdownOption(
+          `Episod ${epNum}`,
+          () => {
+            episodeSelectLabel.textContent = epNum;
+            toggleDropdown(episodeSelectBtn, episodeDropdown, false);
+            playEpisode(ep);
+          },
+          epNum === activeEpisodeNum
+        ));
+      });
+      const active = list.find(ep => (Number(ep.Episode) || 0) === activeEpisodeNum) || list[0];
+      episodeSelectLabel.textContent = active ? (Number(active.Episode) || 0) : '—';
+    }
+
+    function renderSeasonDropdown() {
+      seasonDropdown.innerHTML = '';
+      seasons.forEach(season => {
+        seasonDropdown.appendChild(buildDropdownOption(
+          `Musim ${season}`,
+          () => {
+            currentSeason = season;
+            seasonSelectLabel.textContent = season;
+            toggleDropdown(seasonSelectBtn, seasonDropdown, false);
+            const firstEp = episodesInSeason(season)[0];
+            renderEpisodeDropdown(season, firstEp ? (Number(firstEp.Episode) || 0) : 0);
+          },
+          season === currentSeason
+        ));
+      });
+    }
+
+    seasonSelectLabel.textContent = currentSeason || '—';
+    renderSeasonDropdown();
+    renderEpisodeDropdown(currentSeason, Number(record.Episode) || 0);
+
+    seasonSelectBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleDropdown(seasonSelectBtn, seasonDropdown, seasonDropdown.hidden);
+    };
+    episodeSelectBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleDropdown(episodeSelectBtn, episodeDropdown, episodeDropdown.hidden);
+    };
+  }
+
   async function loadDetail() {
     // 1) Cuba papar terus dari cache (kalau ada) — biasanya ada, sebab
     //    pengguna baru sahaja klik poster dari halaman utama.
@@ -77,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const list = cached[type] || [];
       const cachedRecord = list.find(r => String(r.ID) === String(id));
       if (cachedRecord) {
-        renderDetail(cachedRecord);
+        renderDetail(cachedRecord, list);
         shownFromCache = true;
       }
     }
@@ -108,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      renderDetail(record);
+      renderDetail(record, json.data);
     } catch (err) {
       if (!shownFromCache) {
         titleEl.textContent = 'Gagal memuatkan butiran.';
@@ -117,17 +239,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function renderDetail(record) {
+  function renderDetail(record, fullList) {
     backdropImg.style.backgroundImage = record.Backdrop ? `url("${record.Backdrop}")` : 'none';
     titleEl.textContent = record.Title || '';
+    // Maklumat musim/episod kini dipilih melalui butang Musim & Episod
+    // (bukan dipaparkan statik di sini).
     const metaParts = [record.Year, record.Genre];
-    if (type === 'tvshow') {
-      if (record.Season) metaParts.push(`Musim ${record.Season}`);
-      if (record.Episode) metaParts.push(`Episod ${record.Episode}`);
-    }
     metaEl.textContent = metaParts.filter(Boolean).join(' · ');
     descEl.textContent = record.Description || '';
     document.title = `${record.Title || 'Butiran Filem'} — Prime Flix`;
+
+    if (type === 'tvshow') {
+      initTvPicker(record, fullList);
+    }
   }
 
   loadDetail();
