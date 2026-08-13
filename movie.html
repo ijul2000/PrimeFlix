@@ -44,11 +44,30 @@
     <h1 class="hero-title" id="detailTitle">Memuatkan...</h1>
     <p class="hero-meta" id="detailMeta"></p>
     <p class="hero-desc" id="detailDesc"></p>
-    <div class="hero-actions">
+    <div class="hero-actions" id="movieActions">
       <button class="btn btn-primary" id="watchNowBtn" type="button">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
         Tonton Sekarang
       </button>
+      <button class="btn btn-secondary">+ Senarai Saya</button>
+    </div>
+
+    <div class="hero-actions tv-select-actions" id="tvActions" hidden>
+      <div class="select-btn-wrap">
+        <button class="btn btn-secondary select-btn" id="seasonSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+          Musim <span id="seasonSelectLabel">—</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="select-dropdown" id="seasonDropdown" role="listbox" hidden></div>
+      </div>
+      <div class="select-btn-wrap">
+        <button class="btn btn-primary select-btn" id="episodeSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
+          Episod <span id="episodeSelectLabel">—</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="select-dropdown" id="episodeDropdown" role="listbox" hidden></div>
+      </div>
       <button class="btn btn-secondary">+ Senarai Saya</button>
     </div>
   </div>
