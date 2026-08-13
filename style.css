@@ -307,6 +307,13 @@ button.nav-link{
   gap:14px;
   flex-wrap:wrap;
 }
+/* PENTING: kaedah paling kukuh untuk sembunyi #movieActions / #tvActions
+   — guna class .is-hidden dengan !important supaya TIDAK akan ditindih
+   oleh mana-mana peraturan display lain dalam stylesheet ini. */
+.hero-actions.is-hidden,
+.hero-actions[hidden]{
+  display:none !important;
+}
 
 /* TV Show — butang pilih Musim & Episod (dropdown) */
 .select-btn-wrap{
