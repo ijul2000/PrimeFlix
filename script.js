@@ -275,6 +275,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.detail && e.detail.category) showCategory(e.detail.category);
     });
 
+    // TV Show: satu rekod = satu episod. Untuk Hero, kalau tajuk & musim
+    // sama tapi ada beberapa episod (cth. Episod 1 & Episod 2), papar
+    // SATU slaid sahaja bagi tajuk+musim tu — guna episod yang PALING
+    // BAHARU dimuat naik (senarai sudah disusun terbaharu dahulu ikut
+    // CreatedAt, jadi ambil kemunculan PERTAMA bagi setiap tajuk+musim).
+    function dedupeTvByTitleSeason(list) {
+      const seen = new Set();
+      const result = [];
+      (list || []).forEach(record => {
+        const key = `${(record.Title || '').trim().toLowerCase()}|||${record.Season || ''}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        result.push(record);
+      });
+      return result;
+    }
+
     async function loadHero() {
       let revealed = false;
 
@@ -282,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cached = readContentCache();
       if (cached) {
         slidesByCategory.movie = cached.movie.slice(0, 5);
-        slidesByCategory.tvshow = cached.tvshow.slice(0, 5);
+        slidesByCategory.tvshow = dedupeTvByTitleSeason(cached.tvshow).slice(0, 5);
         if (slidesByCategory[currentCategory].length) {
           showCategory(currentCategory);
           revealed = true;
@@ -294,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const data = await fetchContentOnce();
         slidesByCategory.movie = data.movie.slice(0, 5);
-        slidesByCategory.tvshow = data.tvshow.slice(0, 5);
+        slidesByCategory.tvshow = dedupeTvByTitleSeason(data.tvshow).slice(0, 5);
         if (slidesByCategory[currentCategory].length) {
           showCategory(currentCategory);
         } else if (!revealed) {
