@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function syncWatchlistBtn(btn, wlType, wlId) {
     if (!btn) return;
     const saved = isInWatchlist(wlType, wlId);
-    btn.textContent = saved ? '✓ Dalam Senarai Saya' : '+ Senarai Saya';
+    btn.textContent = saved ? '✓ In My List' : '+ My List';
     btn.classList.toggle('in-watchlist', saved);
   }
 
@@ -126,14 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (!id) {
-    titleEl.textContent = 'Rekod tidak dijumpai.';
-    descEl.textContent = 'Tiada ID diberikan dalam pautan.';
+    titleEl.textContent = 'Record not found.';
+    descEl.textContent = 'No ID provided in the link.';
     return;
   }
 
   if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) {
-    titleEl.textContent = 'WEBAPP_URL belum ditetapkan.';
-    descEl.textContent = 'Sila tetapkan WEBAPP_URL dalam movie.js untuk papar butiran filem.';
+    titleEl.textContent = 'WEBAPP_URL is not set.';
+    descEl.textContent = 'Please set WEBAPP_URL in movie.js to display movie details.';
     return;
   }
 
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
       episodes.forEach(ep => {
         const epNum = Number(ep.Episode) || 0;
         episodeDropdown.appendChild(buildDropdownOption(
-          `Episod ${epNum}`,
+          `Episode ${epNum}`,
           () => {
             episodeSelectLabel.textContent = epNum;
             toggleDropdown(episodeSelectBtn, episodeDropdown, false);
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch(`${WEBAPP_URL}?action=list&type=${encodeURIComponent(type)}`);
       const json = await res.json();
       if (!json.ok || !Array.isArray(json.data)) {
-        throw new Error(json.error || 'Gagal memuatkan data.');
+        throw new Error(json.error || 'Failed to load data.');
       }
 
       // Kemaskan cache bagi kategori ini sahaja, kekalkan kategori lain.
@@ -293,8 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const record = json.data.find(r => String(r.ID) === String(id));
       if (!record) {
         if (!shownFromCache) {
-          titleEl.textContent = 'Rekod tidak dijumpai.';
-          descEl.textContent = type === 'tvshow' ? 'TV show yang anda cari mungkin telah dipadam.' : 'Filem yang anda cari mungkin telah dipadam.';
+          titleEl.textContent = 'Record not found.';
+          descEl.textContent = type === 'tvshow' ? 'The TV show you are looking for may have been deleted.' : 'The movie you are looking for may have been deleted.';
         }
         return;
       }
@@ -302,8 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
       renderDetail(record, json.data);
     } catch (err) {
       if (!shownFromCache) {
-        titleEl.textContent = 'Gagal memuatkan butiran.';
-        descEl.textContent = 'Sila cuba semula sebentar lagi.';
+        titleEl.textContent = 'Failed to load details.';
+        descEl.textContent = 'Please try again shortly.';
       }
     }
   }
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const metaParts = [record.Year, record.Genre];
     metaEl.textContent = metaParts.filter(Boolean).join(' · ');
     descEl.textContent = record.Description || '';
-    document.title = `${record.Title || 'Butiran Filem'} — Prime Flix`;
+    document.title = `${record.Title || 'Movie Details'} — Prime Flix`;
 
     if (type === 'tvshow') {
       initTvPicker(record, fullList);
