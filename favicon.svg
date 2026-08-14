@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0Z" fill="url(#pfGrad)"/>
+  <path d="M196 143 376 256l-180 113V143Z" fill="#0A0A0A"/>
+  <defs>
+    <linearGradient id="pfGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3D27A"/>
+      <stop offset="1" stop-color="#B9862F"/>
+    </linearGradient>
+  </defs>
+</svg>
