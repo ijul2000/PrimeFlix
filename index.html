@@ -77,7 +77,7 @@
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
         Tonton Sekarang
       </button>
-      <button class="btn btn-secondary">+ Senarai Saya</button>
+      <button class="btn btn-secondary" id="heroWatchlistBtn" type="button">+ Senarai Saya</button>
     </div>
     <div class="hero-dots" id="heroDots"></div>
   </div>
@@ -121,6 +121,29 @@
     <p class="footer-note">Laman demo sahaja. Semua tajuk dan poster adalah rekaan.</p>
   </div>
 </footer>
+
+<!-- =========================================================
+     WATCH LIST MODAL — dipapar bila butang "Watch List" pada
+     navbar ditekan. Movie & TV Show diasingkan melalui tab.
+     ========================================================= -->
+<div class="modal-overlay" id="watchlistModalOverlay" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="watchlistModalTitle">
+    <div class="modal-head">
+      <h3 id="watchlistModalTitle">Senarai Saya</h3>
+      <button class="modal-close" type="button" id="watchlistCloseBtn">&times;</button>
+    </div>
+
+    <div class="admin-filter-tabs" id="watchlistTabs">
+      <button type="button" class="filter-tab active" data-wl-tab="movie">Movie</button>
+      <button type="button" class="filter-tab" data-wl-tab="tvshow">TV Show</button>
+    </div>
+
+    <div class="admin-table-wrap">
+      <div class="admin-empty" id="watchlistEmpty" hidden>Tiada tajuk dalam Senarai Saya lagi.</div>
+      <div class="poster-grid watchlist-grid" id="watchlistGrid"></div>
+    </div>
+  </div>
+</div>
 
 <!-- =========================================================
      ADMIN PANEL (overlay, hidden until "Admin" button clicked)
