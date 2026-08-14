@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Year: record.Year || '',
       Genre: record.Genre || '',
       Season: record.Season || '',
+      Episode: record.Episode || '',
       Poster: record.Poster || '',
       Badge: record.Badge || ''
     });
