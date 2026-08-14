@@ -16,9 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const watchNowBtn = document.getElementById('watchNowBtn');
 
   const tvActions = document.getElementById('tvActions');
-  const seasonSelectBtn = document.getElementById('seasonSelectBtn');
   const seasonSelectLabel = document.getElementById('seasonSelectLabel');
-  const seasonDropdown = document.getElementById('seasonDropdown');
   const episodeSelectBtn = document.getElementById('episodeSelectBtn');
   const episodeSelectLabel = document.getElementById('episodeSelectLabel');
   const episodeDropdown = document.getElementById('episodeDropdown');
@@ -127,27 +125,26 @@ document.addEventListener('DOMContentLoaded', () => {
     tvActions.hidden = false;
     tvActions.classList.remove('is-hidden');
 
-    const episodes = (fullList || []).filter(r => normalizeTitle(r.Title) === normalizeTitle(record.Title));
+    // Setiap poster mewakili SATU musim sahaja (lihat dedupeByTitleSeason
+    // dalam script.js), jadi di sini musim hanya dipaparkan sebagai kotak
+    // statik (bukan dropdown boleh tukar musim) — hanya episod yang boleh
+    // dipilih, terhad kepada musim semasa sahaja.
+    const currentSeason = Number(record.Season) || 0;
+    seasonSelectLabel.textContent = currentSeason || '—';
+
+    const episodes = (fullList || [])
+      .filter(r => normalizeTitle(r.Title) === normalizeTitle(record.Title) && (Number(r.Season) || 0) === currentSeason)
+      .sort((a, b) => (Number(a.Episode) || 0) - (Number(b.Episode) || 0));
     if (!episodes.length) episodes.push(record);
-
-    const seasons = Array.from(new Set(episodes.map(r => Number(r.Season) || 0))).sort((a, b) => a - b);
-    let currentSeason = Number(record.Season) || seasons[0];
-
-    function episodesInSeason(season) {
-      return episodes
-        .filter(r => (Number(r.Season) || 0) === season)
-        .sort((a, b) => (Number(a.Episode) || 0) - (Number(b.Episode) || 0));
-    }
 
     function playEpisode(ep) {
       if (!ep || !ep.ID) return;
       window.location.href = `watch.html?id=${encodeURIComponent(ep.ID)}&type=tvshow`;
     }
 
-    function renderEpisodeDropdown(season, activeEpisodeNum) {
-      const list = episodesInSeason(season);
+    function renderEpisodeDropdown(activeEpisodeNum) {
       episodeDropdown.innerHTML = '';
-      list.forEach(ep => {
+      episodes.forEach(ep => {
         const epNum = Number(ep.Episode) || 0;
         episodeDropdown.appendChild(buildDropdownOption(
           `Episod ${epNum}`,
@@ -159,35 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
           epNum === activeEpisodeNum
         ));
       });
-      const active = list.find(ep => (Number(ep.Episode) || 0) === activeEpisodeNum) || list[0];
+      const active = episodes.find(ep => (Number(ep.Episode) || 0) === activeEpisodeNum) || episodes[0];
       episodeSelectLabel.textContent = active ? (Number(active.Episode) || 0) : '—';
     }
 
-    function renderSeasonDropdown() {
-      seasonDropdown.innerHTML = '';
-      seasons.forEach(season => {
-        seasonDropdown.appendChild(buildDropdownOption(
-          `Musim ${season}`,
-          () => {
-            currentSeason = season;
-            seasonSelectLabel.textContent = season;
-            toggleDropdown(seasonSelectBtn, seasonDropdown, false);
-            const firstEp = episodesInSeason(season)[0];
-            renderEpisodeDropdown(season, firstEp ? (Number(firstEp.Episode) || 0) : 0);
-          },
-          season === currentSeason
-        ));
-      });
-    }
+    renderEpisodeDropdown(Number(record.Episode) || 0);
 
-    seasonSelectLabel.textContent = currentSeason || '—';
-    renderSeasonDropdown();
-    renderEpisodeDropdown(currentSeason, Number(record.Episode) || 0);
-
-    seasonSelectBtn.onclick = (e) => {
-      e.stopPropagation();
-      toggleDropdown(seasonSelectBtn, seasonDropdown, seasonDropdown.hidden);
-    };
     episodeSelectBtn.onclick = (e) => {
       e.stopPropagation();
       toggleDropdown(episodeSelectBtn, episodeDropdown, episodeDropdown.hidden);
