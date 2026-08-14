@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const descEl = document.getElementById('watchDesc');
   const backLink = document.getElementById('backLink');
   const watchlistBtn = document.getElementById('watchWatchlistBtn');
+  const prevEpisodeBtn = document.getElementById('prevEpisodeBtn');
+  const nextEpisodeBtn = document.getElementById('nextEpisodeBtn');
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
@@ -232,11 +234,49 @@ document.addEventListener('DOMContentLoaded', () => {
     document.title = `${record.Title || 'Tonton'} — Prime Flix`;
   }
 
-  function renderRecord(record) {
+  // Panah "Episod Sebelum" / "Episod Seterusnya" — hanya untuk TV show.
+  // Dikira daripada rekod lain dengan Tajuk & Musim yang sama, disusun
+  // ikut nombor Episod. Jika tiada episod sebelum/selepas (cth. episod
+  // pertama atau terakhir dalam musim itu), panah berkaitan disembunyikan.
+  function normalizeTitle(t) {
+    return String(t || '').trim().toLowerCase();
+  }
+
+  function updateEpisodeNav(record, fullList) {
+    if (type !== 'tvshow' || !Array.isArray(fullList)) {
+      prevEpisodeBtn.hidden = true;
+      nextEpisodeBtn.hidden = true;
+      prevEpisodeBtn.onclick = null;
+      nextEpisodeBtn.onclick = null;
+      return;
+    }
+
+    const season = Number(record.Season) || 0;
+    const episodes = fullList
+      .filter(r => normalizeTitle(r.Title) === normalizeTitle(record.Title) && (Number(r.Season) || 0) === season)
+      .sort((a, b) => (Number(a.Episode) || 0) - (Number(b.Episode) || 0));
+
+    const currentIndex = episodes.findIndex(r => String(r.ID) === String(record.ID));
+    const prevEp = currentIndex > 0 ? episodes[currentIndex - 1] : null;
+    const nextEp = currentIndex !== -1 && currentIndex < episodes.length - 1 ? episodes[currentIndex + 1] : null;
+
+    prevEpisodeBtn.hidden = !prevEp;
+    nextEpisodeBtn.hidden = !nextEp;
+
+    prevEpisodeBtn.onclick = prevEp
+      ? () => { window.location.href = `watch.html?id=${encodeURIComponent(prevEp.ID)}&type=tvshow`; }
+      : null;
+    nextEpisodeBtn.onclick = nextEp
+      ? () => { window.location.href = `watch.html?id=${encodeURIComponent(nextEp.ID)}&type=tvshow`; }
+      : null;
+  }
+
+  function renderRecord(record, fullList) {
     currentDetailRecord = record;
     renderInfo(record);
     renderPlayer(record);
     syncWatchlistBtn(watchlistBtn, type, record.ID);
+    updateEpisodeNav(record, fullList);
   }
 
   async function loadAndPlay() {
@@ -247,13 +287,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const list = cached[type] || [];
       const record = list.find(r => String(r.ID) === String(id));
       if (record) {
-        renderRecord(record);
+        renderRecord(record, list);
         shown = true;
       }
     }
 
-    if (shown) return;
-
+    // Tetap fetch data terkini di latar belakang — untuk kemaskan
+    // pautan tontonan (jika berubah) dan senarai penuh episod supaya
+    // panah episod sebelum/seterusnya sentiasa tepat, walaupun rekod
+    // dah terpapar serta-merta daripada cache. Kalau rekod sama seperti
+    // yang dah dipaparkan, jangan render semula pemain (elak video
+    // start semula) — cukup kemaskan panah episod & butang senarai saya.
     try {
       const res = await fetch(`${WEBAPP_URL}?action=list&type=${encodeURIComponent(type)}`);
       const json = await res.json();
@@ -262,14 +306,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const record = json.data.find(r => String(r.ID) === String(id));
       if (!record) {
-        showState('Rekod tidak dijumpai.');
-        titleEl.textContent = 'Rekod tidak dijumpai.';
+        if (!shown) {
+          showState('Rekod tidak dijumpai.');
+          titleEl.textContent = 'Rekod tidak dijumpai.';
+        }
         return;
       }
-      renderRecord(record);
+      if (shown && currentDetailRecord && String(currentDetailRecord.ID) === String(record.ID)) {
+        updateEpisodeNav(record, json.data);
+        syncWatchlistBtn(watchlistBtn, type, record.ID);
+      } else {
+        renderRecord(record, json.data);
+      }
     } catch (err) {
-      showState('Gagal memuatkan pemain. Sila cuba semula sebentar lagi.');
-      titleEl.textContent = 'Gagal memuatkan.';
+      if (!shown) {
+        showState('Gagal memuatkan pemain. Sila cuba semula sebentar lagi.');
+        titleEl.textContent = 'Gagal memuatkan.';
+      }
     }
   }
 
