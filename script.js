@@ -199,6 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Year: record.Year || '',
       Genre: record.Genre || '',
       Season: record.Season || '',
+      Episode: record.Episode || '',
       Poster: record.Poster || '',
       Badge: record.Badge || ''
     });
@@ -1275,8 +1276,17 @@ document.addEventListener('DOMContentLoaded', () => {
       card.setAttribute('role', 'button');
       card.setAttribute('aria-label', `Papar butiran ${record.Title || ''}`);
 
+      // Rekod episod tertentu (ada Episode disimpan, cth. dari butang
+      // "+ Senarai Saya" pada watch.html) -> terus ke pemain (watch.html)
+      // supaya pengguna boleh sambung tonton dari episod yang sama.
+      // Rekod peringkat musim (dari movie.html, tiada Episode) -> ke
+      // page butiran (movie.html) seperti sebelum ini.
       function goToDetail() {
         if (!record.ID) return;
+        if (type === 'tvshow' && record.Episode) {
+          window.location.href = `watch.html?id=${encodeURIComponent(record.ID)}&type=tvshow`;
+          return;
+        }
         const typeParam = type === 'tvshow' ? '&type=tvshow' : '';
         window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}${typeParam}`;
       }
@@ -1320,6 +1330,7 @@ document.addEventListener('DOMContentLoaded', () => {
       meta.className = 'poster-meta';
       const subParts = type === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
       if (type === 'tvshow' && record.Season) subParts.push(`Musim ${record.Season}`);
+      if (type === 'tvshow' && record.Episode) subParts.push(`Episod ${record.Episode}`);
       const sub = subParts.filter(Boolean).join(' · ');
       meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
 
