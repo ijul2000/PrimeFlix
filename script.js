@@ -58,15 +58,16 @@ document.addEventListener('DOMContentLoaded', () => {
     link.addEventListener('click', (e) => {
       if (link.tagName === 'A') e.preventDefault();
       const label = link.textContent.trim();
-      document.querySelectorAll('.nav-link').forEach(l => {
-        l.classList.toggle('active', l.textContent.trim() === label);
-      });
 
       const lower = label.toLowerCase();
       let category = null;
       if (lower === 'tv show') category = 'tvshow';
       else if (lower === 'movie') category = 'movie';
-      if (!category) return; // cth. "Watch List" — tak tukar kategori
+      if (!category) return; // cth. "Watch List" — tak tukar kategori/active state
+
+      document.querySelectorAll('.nav-link').forEach(l => {
+        l.classList.toggle('active', l.textContent.trim() === label);
+      });
 
       const movieSection = document.getElementById('movies');
       const tvSection = document.getElementById('tvshows');
@@ -149,6 +150,87 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* =========================================================
+     SENARAI SAYA (Watch List) — disimpan dalam localStorage
+     (kekal walaupun tab ditutup), diasingkan ikut kategori
+     'movie' & 'tvshow'. Digunakan oleh butang "+ Senarai Saya"
+     pada Hero & page butiran (movie.js), dan dipaparkan melalui
+     modal "Watch List" pada navbar.
+     ========================================================= */
+  const WATCHLIST_KEY = 'primeflix_watchlist_v1';
+  const watchlistRefreshCallbacks = [];
+
+  function readWatchlist() {
+    try {
+      const raw = localStorage.getItem(WATCHLIST_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return {
+        movie: Array.isArray(parsed && parsed.movie) ? parsed.movie : [],
+        tvshow: Array.isArray(parsed && parsed.tvshow) ? parsed.tvshow : []
+      };
+    } catch (err) {
+      return { movie: [], tvshow: [] };
+    }
+  }
+
+  function writeWatchlist(data) {
+    try {
+      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(data));
+    } catch (err) {
+      // localStorage tak tersedia / penuh — abaikan, tak kritikal.
+    }
+    watchlistRefreshCallbacks.forEach(fn => fn());
+  }
+
+  function isInWatchlist(type, id) {
+    if (!id) return false;
+    const wl = readWatchlist();
+    return (wl[type] || []).some(r => String(r.ID) === String(id));
+  }
+
+  // Simpan hanya medan yang perlu untuk papar kad poster + navigasi.
+  function addToWatchlist(type, record) {
+    if (!record || !record.ID) return;
+    const wl = readWatchlist();
+    if (!wl[type]) wl[type] = [];
+    if (wl[type].some(r => String(r.ID) === String(record.ID))) return;
+    wl[type].unshift({
+      ID: record.ID,
+      Title: record.Title || '',
+      Year: record.Year || '',
+      Genre: record.Genre || '',
+      Season: record.Season || '',
+      Poster: record.Poster || '',
+      Badge: record.Badge || ''
+    });
+    writeWatchlist(wl);
+  }
+
+  function removeFromWatchlist(type, id) {
+    const wl = readWatchlist();
+    wl[type] = (wl[type] || []).filter(r => String(r.ID) !== String(id));
+    writeWatchlist(wl);
+  }
+
+  // Toggle & pulangkan status BAHARU (true = baru ditambah, false = baru dibuang).
+  function toggleWatchlist(type, record) {
+    if (!record || !record.ID) return false;
+    if (isInWatchlist(type, record.ID)) {
+      removeFromWatchlist(type, record.ID);
+      return false;
+    }
+    addToWatchlist(type, record);
+    return true;
+  }
+
+  // Kemaskan rupa mana-mana butang "+ Senarai Saya" ikut status semasa.
+  function syncWatchlistBtn(btn, type, id) {
+    if (!btn) return;
+    const saved = isInWatchlist(type, id);
+    btn.textContent = saved ? '✓ Dalam Senarai Saya' : '+ Senarai Saya';
+    btn.classList.toggle('in-watchlist', saved);
+  }
+
+  /* =========================================================
      HERO — papar 5 tajuk terbaharu; kandungan tukar ikut kategori
      (Movie / TV Show) yang aktif pada navbar. TV Show turut papar
      Musim & Episod.
@@ -162,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroDesc = document.getElementById('heroDesc');
     const heroDots = document.getElementById('heroDots');
     const heroWatchNowBtn = document.getElementById('heroWatchNowBtn');
+    const heroWatchlistBtn = document.getElementById('heroWatchlistBtn');
 
     if (!heroBackdropImg) return;
     if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) {
@@ -182,6 +265,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentRecord || !currentRecord.ID) return;
         const typeParam = currentCategory === 'tvshow' ? '&type=tvshow' : '';
         window.location.href = `watch.html?id=${encodeURIComponent(currentRecord.ID)}${typeParam}`;
+      });
+    }
+
+    if (heroWatchlistBtn) {
+      heroWatchlistBtn.addEventListener('click', () => {
+        if (!currentRecord || !currentRecord.ID) return;
+        toggleWatchlist(currentCategory, currentRecord);
+        syncWatchlistBtn(heroWatchlistBtn, currentCategory, currentRecord.ID);
+      });
+      watchlistRefreshCallbacks.push(() => {
+        if (currentRecord) syncWatchlistBtn(heroWatchlistBtn, currentCategory, currentRecord.ID);
       });
     }
 
@@ -212,6 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
       heroTitle.textContent = record.Title || '';
       heroMeta.textContent = formatMeta(record);
       heroDesc.textContent = record.Description || '';
+      syncWatchlistBtn(heroWatchlistBtn, currentCategory, record.ID);
 
       if (heroDots) {
         heroDots.querySelectorAll('.hero-dot').forEach((dot, i) => {
@@ -1124,5 +1219,134 @@ document.addEventListener('DOMContentLoaded', () => {
       renderLibrary();
     });
   }
+
+  /* =========================================================
+     WATCH LIST MODAL — dipapar bila butang "Watch List" pada
+     navbar (desktop & mobile) ditekan. Tab Movie / TV Show
+     diasingkan; setiap kad boleh dibuang terus dari modal.
+     ========================================================= */
+  (function initWatchlistModal() {
+    const overlay = document.getElementById('watchlistModalOverlay');
+    const closeBtn = document.getElementById('watchlistCloseBtn');
+    const tabsWrap = document.getElementById('watchlistTabs');
+    const grid = document.getElementById('watchlistGrid');
+    const emptyEl = document.getElementById('watchlistEmpty');
+    const openBtn = document.getElementById('watchListBtn');
+    const openBtnMobile = document.getElementById('watchListBtnMobile');
+
+    if (!overlay || !grid) return;
+
+    let currentTab = 'movie';
+
+    function closeModal() {
+      overlay.hidden = true;
+    }
+    function openModalUI() {
+      overlay.hidden = false;
+      renderGrid();
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlay.hidden) closeModal();
+    });
+
+    if (openBtn) openBtn.addEventListener('click', openModalUI);
+    if (openBtnMobile) openBtnMobile.addEventListener('click', openModalUI);
+
+    if (tabsWrap) {
+      tabsWrap.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-wl-tab]');
+        if (!btn) return;
+        tabsWrap.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.wlTab;
+        renderGrid();
+      });
+    }
+
+    function buildCard(record, type) {
+      const card = document.createElement('div');
+      card.className = 'poster-card watchlist-card';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `Papar butiran ${record.Title || ''}`);
+
+      function goToDetail() {
+        if (!record.ID) return;
+        const typeParam = type === 'tvshow' ? '&type=tvshow' : '';
+        window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}${typeParam}`;
+      }
+      card.addEventListener('click', goToDetail);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goToDetail();
+        }
+      });
+
+      const art = document.createElement('div');
+      art.className = 'poster-art';
+      if (record.Poster) {
+        art.style.backgroundImage = `url("${record.Poster}")`;
+        art.style.backgroundSize = 'cover';
+        art.style.backgroundPosition = 'center';
+      } else {
+        art.style.background = 'linear-gradient(160deg, #1c1a15 0%, #141414 55%, #0a0a0a 100%)';
+      }
+
+      const badgeEl = document.createElement('span');
+      badgeEl.className = 'poster-badge';
+      badgeEl.textContent = record.Badge || 'HD';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'watchlist-remove-btn';
+      removeBtn.setAttribute('aria-label', `Buang ${record.Title || ''} dari Senarai Saya`);
+      removeBtn.innerHTML = '&times;';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeFromWatchlist(type, record.ID);
+        renderGrid();
+      });
+
+      art.appendChild(badgeEl);
+      art.appendChild(removeBtn);
+
+      const meta = document.createElement('div');
+      meta.className = 'poster-meta';
+      const subParts = type === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
+      if (type === 'tvshow' && record.Season) subParts.push(`Musim ${record.Season}`);
+      const sub = subParts.filter(Boolean).join(' · ');
+      meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
+
+      card.appendChild(art);
+      card.appendChild(meta);
+      return card;
+    }
+
+    function renderGrid() {
+      const wl = readWatchlist();
+      const list = wl[currentTab] || [];
+      grid.innerHTML = '';
+      if (!list.length) {
+        emptyEl.hidden = false;
+        grid.hidden = true;
+        return;
+      }
+      emptyEl.hidden = true;
+      grid.hidden = false;
+      list.forEach(record => grid.appendChild(buildCard(record, currentTab)));
+    }
+
+    // Bila watchlist berubah dari tempat lain (cth. butang pada Hero /
+    // page butiran), kemaskan grid ini juga jika modal sedang terbuka.
+    watchlistRefreshCallbacks.push(() => {
+      if (!overlay.hidden) renderGrid();
+    });
+  })();
 
 });
