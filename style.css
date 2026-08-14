@@ -315,7 +315,22 @@ button.nav-link{
   display:none !important;
 }
 
-/* TV Show — butang pilih Musim & Episod (dropdown) */
+/* TV Show — kotak statik papar Musim (tiada dropdown, sebab satu
+   poster = satu musim sahaja). Episod kekal sebagai dropdown. */
+.season-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:13px 24px;
+  border-radius:6px;
+  font-size:14px;
+  font-weight:700;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.06);
+  color:var(--text);
+}
+
+/* TV Show — butang pilih Episod (dropdown) */
 .select-btn-wrap{
   position:relative;
 }
