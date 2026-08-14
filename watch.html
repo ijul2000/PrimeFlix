@@ -38,8 +38,16 @@
 
 <main class="watch-main">
 
-  <div class="watch-player-wrap" id="playerWrap">
-    <div class="watch-player-state" id="playerState">Memuatkan pemain...</div>
+  <div class="watch-player-outer" id="playerOuter">
+    <div class="watch-player-wrap" id="playerWrap">
+      <div class="watch-player-state" id="playerState">Memuatkan pemain...</div>
+    </div>
+    <button class="watch-nav-btn watch-nav-prev" id="prevEpisodeBtn" type="button" aria-label="Episod sebelum" hidden>
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="none"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="watch-nav-btn watch-nav-next" id="nextEpisodeBtn" type="button" aria-label="Episod seterusnya" hidden>
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
   </div>
 
   <div class="watch-info">
