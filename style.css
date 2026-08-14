@@ -862,6 +862,8 @@ body.detail-page .hero-desc{
   .header-inner{ gap:16px; padding:0 18px; }
   .main-nav{ display:none; }
   .search-form{ width:150px; }
+  .search-input,
+  .admin-search-form .search-input{ font-size:16px; }
   .hamburger{ display:flex; }
   .hero{ min-height:64vh; }
   .hero-content{ padding:0 18px 48px; }
