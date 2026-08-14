@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tonton — Prime Flix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="watch-page">
+
+<!-- HEADER (ringkas — logo & pautan kembali) -->
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+
+    <a href="index.html" class="logo" aria-label="Prime Flix - Laman Utama">
+      <svg class="logo-mark" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17 0C7.6 0 0 7.6 0 17s7.6 17 17 17 17-7.6 17-17S26.4 0 17 0Z" fill="url(#pfGrad)"/>
+        <path d="M13 9.5 25 17l-12 7.5V9.5Z" fill="#0A0A0A"/>
+        <defs>
+          <linearGradient id="pfGrad" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#F3D27A"/>
+            <stop offset="1" stop-color="#B9862F"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="logo-word">PRIME<span class="logo-word-accent">FLIX</span></span>
+    </a>
+
+    <div class="header-actions">
+      <a href="#" class="btn btn-secondary btn-sm" id="backLink">&larr; Kembali</a>
+    </div>
+
+  </div>
+</header>
+
+<main class="watch-main">
+
+  <div class="watch-player-wrap" id="playerWrap">
+    <div class="watch-player-state" id="playerState">Memuatkan pemain...</div>
+  </div>
+
+  <div class="watch-info">
+    <h1 class="watch-title" id="watchTitle">Memuatkan...</h1>
+    <p class="watch-meta" id="watchMeta"></p>
+    <p class="watch-desc" id="watchDesc"></p>
+  </div>
+
+</main>
+
+<script src="watch.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime Flix — Butiran Filem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="detail-page">
+
+<!-- HEADER (ringkas — logo & pautan kembali) -->
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+
+    <a href="index.html" class="logo" aria-label="Prime Flix - Laman Utama">
+      <svg class="logo-mark" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17 0C7.6 0 0 7.6 0 17s7.6 17 17 17 17-7.6 17-17S26.4 0 17 0Z" fill="url(#pfGrad)"/>
+        <path d="M13 9.5 25 17l-12 7.5V9.5Z" fill="#0A0A0A"/>
+        <defs>
+          <linearGradient id="pfGrad" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#F3D27A"/>
+            <stop offset="1" stop-color="#B9862F"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="logo-word">PRIME<span class="logo-word-accent">FLIX</span></span>
+    </a>
+
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-secondary btn-sm">&larr; Kembali ke Laman</a>
+    </div>
+
+  </div>
+</header>
+
+<!-- BUTIRAN MOVIE — backdrop penuh halaman -->
+<section class="hero hero-fullpage" id="movieDetailHero">
+  <div class="hero-backdrop-img" id="detailBackdropImg"></div>
+  <div class="hero-backdrop"></div>
+  <div class="hero-content">
+    <h1 class="hero-title" id="detailTitle">Memuatkan...</h1>
+    <p class="hero-meta" id="detailMeta"></p>
+    <p class="hero-desc" id="detailDesc"></p>
+    <div class="hero-actions" id="movieActions">
+      <button class="btn btn-primary" id="watchNowBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
+        Tonton Sekarang
+      </button>
+      <button class="btn btn-secondary" id="movieWatchlistBtn" type="button">+ Senarai Saya</button>
+    </div>
+
+    <div class="hero-actions tv-select-actions is-hidden" id="tvActions" hidden>
+      <div class="season-badge" id="seasonBadge">
+        Musim <span id="seasonSelectLabel">—</span>
+      </div>
+      <div class="select-btn-wrap">
+        <button class="btn btn-primary select-btn" id="episodeSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
+          Episod <span id="episodeSelectLabel">—</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="select-dropdown" id="episodeDropdown" role="listbox" hidden></div>
+      </div>
+      <button class="btn btn-secondary" id="tvWatchlistBtn" type="button">+ Senarai Saya</button>
+    </div>
+  </div>
+</section>
+
+<script src="movie.js"></script>
+</body>
+</html>
