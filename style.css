@@ -1371,8 +1371,8 @@ body.detail-page .hero-desc{
   justify-content:center;
   text-align:center;
 }
-.form-preview-poster::before{ content:"Pratonton poster"; }
-.form-preview-backdrop::before{ content:"Pratonton backdrop"; }
+.form-preview-poster::before{ content:"Poster preview"; }
+.form-preview-backdrop::before{ content:"Backdrop preview"; }
 .form-preview-poster[style*="background-image"]::before,
 .form-preview-backdrop[style*="background-image"]::before{ content:""; }
 
