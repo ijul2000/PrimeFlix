@@ -437,6 +437,10 @@ button.nav-link{
   color:var(--text);
 }
 .btn-secondary:hover{ border-color:var(--gold-deep); }
+.btn-secondary.in-watchlist{
+  border-color:var(--gold-deep);
+  color:var(--gold-soft);
+}
 
 /* =========================================================
    CONTENT ROWS
@@ -988,6 +992,38 @@ body.detail-page .hero-desc{
 .admin-card-actions .btn-delete:hover{ color:#e88276; border-color:#a4443a; }
 
 /* Modal */
+/* Watch List modal — grid poster lebih kecil sesuai lebar modal,
+   dengan butang buang (×) pada setiap kad. */
+.watchlist-grid{
+  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+}
+.poster-card.watchlist-card{
+  position:relative;
+}
+.watchlist-remove-btn{
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:2;
+  width:26px;
+  height:26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.25);
+  background:rgba(10,10,10,0.65);
+  color:var(--text);
+  font-size:15px;
+  line-height:1;
+  transition:background .2s ease, border-color .2s ease, color .2s ease;
+}
+.watchlist-remove-btn:hover{
+  background:rgba(214,88,74,0.85);
+  border-color:transparent;
+  color:#fff;
+}
+
 .modal-overlay{
   position:fixed;
   inset:0;
