@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!items.length) {
       const empty = document.createElement('div');
       empty.className = 'search-result-empty';
-      empty.textContent = `Tiada padanan untuk "${query}".`;
+      empty.textContent = `No matches for "${query}".`;
       searchResults.appendChild(empty);
       searchResults.hidden = false;
       searchInput.setAttribute('aria-expanded', 'true');
@@ -116,8 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const subEl = document.createElement('div');
       subEl.className = 'search-result-sub';
       const subParts = item.type === 'tvshow'
-        ? [record.Year, record.Season ? `Musim ${record.Season}` : null, 'TV Show']
-        : [record.Year, record.Genre, 'Filem'];
+        ? [record.Year, record.Season ? `Season ${record.Season}` : null, 'TV Show']
+        : [record.Year, record.Genre, 'Movie'];
       subEl.textContent = subParts.filter(Boolean).join(' · ');
       info.appendChild(titleEl);
       info.appendChild(subEl);
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(json => {
           if (!json.ok || !json.data) {
-            throw new Error(json.error || 'Gagal memuatkan data.');
+            throw new Error(json.error || 'Failed to load data.');
           }
           const result = {
             movie: sortNewestFirst(json.data.movie),
@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function syncWatchlistBtn(btn, type, id) {
     if (!btn) return;
     const saved = isInWatchlist(type, id);
-    btn.textContent = saved ? '✓ Dalam Senarai Saya' : '+ Senarai Saya';
+    btn.textContent = saved ? '✓ In My List' : '+ My List';
     btn.classList.toggle('in-watchlist', saved);
   }
 
@@ -455,8 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatMeta(record) {
       if (currentCategory === 'tvshow') {
         const parts = [record.Year].filter(Boolean);
-        if (record.Season) parts.push(`Musim ${record.Season}`);
-        if (record.Episode) parts.push(`Episod ${record.Episode}`);
+        if (record.Season) parts.push(`Season ${record.Season}`);
+        if (record.Episode) parts.push(`Episode ${record.Episode}`);
         return parts.join(' · ');
       }
       return [record.Year, record.Genre].filter(Boolean).join(' · ');
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dot = document.createElement('button');
         dot.type = 'button';
         dot.className = 'hero-dot';
-        dot.setAttribute('aria-label', `Papar tajuk ${i + 1}`);
+        dot.setAttribute('aria-label', `Show title ${i + 1}`);
         dot.addEventListener('click', () => {
           renderSlide(i);
           resetTimer();
@@ -745,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'poster-card';
       card.tabIndex = 0;
       card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', `Papar butiran ${record.Title || (category === 'tvshow' ? 'TV show' : 'filem')}`);
+      card.setAttribute('aria-label', `View details for ${record.Title || (category === 'tvshow' ? 'TV show' : 'movie')}`);
 
       function goToDetail() {
         if (!record.ID) return;
@@ -791,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // keseluruhan musim, bukan episod tertentu).
       const subParts = category === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
       if (category === 'tvshow' && record.Season) {
-        subParts.push(`Musim ${record.Season}`);
+        subParts.push(`Season ${record.Season}`);
       }
       const sub = subParts.filter(Boolean).join(' · ');
       meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
@@ -927,7 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adminLoaded = true;
         if (!webAppConfigured()) {
           showStatus(
-            'WEBAPP_URL belum ditetapkan dalam script.js. Tampal URL Web App Google Apps Script anda pada baris atas fail ini untuk aktifkan panel admin.',
+            'WEBAPP_URL is not set in script.js. Paste your Google Apps Script Web App URL at the top of this file to activate the admin panel.',
             'error'
           );
         }
@@ -980,7 +980,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function apiList() {
       const res = await fetch(`${WEBAPP_URL}?action=list`);
       const json = await res.json();
-      if (!json.ok) throw new Error(json.error || 'Gagal memuatkan senarai.');
+      if (!json.ok) throw new Error(json.error || 'Failed to load the list.');
       return json.data; // { movie: [...], tvshow: [...] }
     }
 
@@ -993,14 +993,14 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ action, type, data })
       });
       const json = await res.json();
-      if (!json.ok) throw new Error(json.error || 'Permintaan gagal.');
+      if (!json.ok) throw new Error(json.error || 'Request failed.');
       return json.data;
     }
 
     async function apiCheckLinks() {
       const res = await fetch(`${WEBAPP_URL}?action=checkLinks`);
       const json = await res.json();
-      if (!json.ok) throw new Error(json.error || 'Gagal menyemak pautan.');
+      if (!json.ok) throw new Error(json.error || 'Failed to check links.');
       return json.data; // array of { type, id, title, field, url, status, ok }
     }
 
@@ -1032,15 +1032,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chooseMovieBtn.addEventListener('click', () => {
       resetForm(movieForm, 'movieGenre');
-      movieModalTitle.textContent = 'Tambah Movie';
-      movieForm.querySelector('[data-submit-btn]').textContent = 'Simpan Movie';
+      movieModalTitle.textContent = 'Add Movie';
+      movieForm.querySelector('[data-submit-btn]').textContent = 'Save Movie';
       openModal(movieModalOverlay);
     });
 
     chooseTvBtn.addEventListener('click', () => {
       resetForm(tvForm, 'tvGenre');
-      tvModalTitle.textContent = 'Tambah TV Show';
-      tvForm.querySelector('[data-submit-btn]').textContent = 'Simpan TV Show';
+      tvModalTitle.textContent = 'Add TV Show';
+      tvForm.querySelector('[data-submit-btn]').textContent = 'Save TV Show';
       openModal(tvModalOverlay);
     });
 
@@ -1058,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tagState[key].forEach((tag, i) => {
           const chip = document.createElement('span');
           chip.className = 'tag-chip';
-          chip.innerHTML = `<span></span><button type="button" aria-label="Buang ${tag}">&times;</button>`;
+          chip.innerHTML = `<span></span><button type="button" aria-label="Remove ${tag}">&times;</button>`;
           chip.querySelector('span').textContent = tag;
           chip.querySelector('button').addEventListener('click', () => {
             tagState[key].splice(i, 1);
@@ -1176,7 +1176,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hideFormError(form);
 
       if (!webAppConfigured()) {
-        showFormError(form, 'WEBAPP_URL belum ditetapkan dalam script.js.');
+        showFormError(form, 'WEBAPP_URL is not set in script.js.');
         return;
       }
       if (!form.checkValidity()) {
@@ -1184,7 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       if (genreTags.get().length === 0) {
-        showFormError(form, 'Sila masukkan sekurang-kurangnya satu genre.');
+        showFormError(form, 'Please enter at least one genre.');
         return;
       }
 
@@ -1193,11 +1193,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const submitBtn = form.querySelector('[data-submit-btn]');
       const originalLabel = submitBtn.textContent;
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Menyimpan...';
+      submitBtn.textContent = 'Saving...';
 
       try {
         await apiMutate(isEdit ? 'edit' : 'add', type, data);
-        showToast(isEdit ? 'Kemaskini berjaya disimpan.' : 'Tajuk baharu berjaya ditambah.', 'success');
+        showToast(isEdit ? 'Update saved successfully.' : 'New title added successfully.', 'success');
         closeAllModals();
         loadLibrary();
         refreshHomeContent();
@@ -1217,7 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!webAppConfigured()) {
         libraryLoading.hidden = true;
         libraryEmpty.hidden = false;
-        libraryEmpty.textContent = 'Sambungkan WEBAPP_URL untuk memaparkan senarai.';
+        libraryEmpty.textContent = 'Connect WEBAPP_URL to display the list.';
         return;
       }
       libraryLoading.hidden = false;
@@ -1228,7 +1228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLibrary();
       } catch (err) {
         libraryLoading.hidden = true;
-        showStatus('Gagal memuatkan senarai: ' + err.message, 'error');
+        showStatus('Failed to load list: ' + err.message, 'error');
       }
     }
 
@@ -1255,7 +1255,7 @@ document.addEventListener('DOMContentLoaded', () => {
       libraryGrid.innerHTML = '';
       if (records.length === 0) {
         libraryEmpty.hidden = false;
-        libraryEmpty.textContent = 'Tiada tajuk dijumpai.';
+        libraryEmpty.textContent = 'No titles found.';
         return;
       }
       libraryEmpty.hidden = true;
@@ -1281,13 +1281,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const title = document.createElement('div');
       title.className = 'admin-card-title';
-      title.textContent = record.Title || '(Tiada tajuk)';
+      title.textContent = record.Title || '(No title)';
 
       const meta = document.createElement('div');
       meta.className = 'admin-card-meta';
       meta.textContent = record._type === 'movie'
         ? [record.Year, record.Badge].filter(Boolean).join(' · ')
-        : [record.Year, record.Season ? `Musim ${record.Season}` : '', record.Episode ? `Ep ${record.Episode}` : ''].filter(Boolean).join(' · ');
+        : [record.Year, record.Season ? `Season ${record.Season}` : '', record.Episode ? `Ep ${record.Episode}` : ''].filter(Boolean).join(' · ');
 
       const genres = document.createElement('div');
       genres.className = 'admin-card-genres';
@@ -1305,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
       deleteBtn.className = 'btn-delete';
-      deleteBtn.textContent = 'Padam';
+      deleteBtn.textContent = 'Delete';
       deleteBtn.addEventListener('click', () => openDeleteConfirm(record));
 
       actions.appendChild(editBtn);
@@ -1325,12 +1325,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (record._type === 'movie') {
         fillForm(movieForm, record, 'movieGenre');
         movieModalTitle.textContent = 'Edit Movie';
-        movieForm.querySelector('[data-submit-btn]').textContent = 'Kemaskini Movie';
+        movieForm.querySelector('[data-submit-btn]').textContent = 'Update Movie';
         openModal(movieModalOverlay);
       } else {
         fillForm(tvForm, record, 'tvGenre');
         tvModalTitle.textContent = 'Edit TV Show';
-        tvForm.querySelector('[data-submit-btn]').textContent = 'Kemaskini TV Show';
+        tvForm.querySelector('[data-submit-btn]').textContent = 'Update TV Show';
         openModal(tvModalOverlay);
       }
     }
@@ -1343,26 +1343,26 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmDeleteBtn.addEventListener('click', async () => {
       if (!pendingDelete) return;
       confirmDeleteBtn.disabled = true;
-      confirmDeleteBtn.textContent = 'Memadam...';
+      confirmDeleteBtn.textContent = 'Deleting...';
       try {
         await apiMutate('delete', pendingDelete.type, { ID: pendingDelete.id });
-        showToast('Rekod berjaya dipadam.', 'success');
+        showToast('Record deleted successfully.', 'success');
         closeAllModals();
         loadLibrary();
         refreshHomeContent();
       } catch (err) {
-        showToast(err.message || 'Gagal memadam rekod.', 'error');
+        showToast(err.message || 'Failed to delete record.', 'error');
       } finally {
         confirmDeleteBtn.disabled = false;
-        confirmDeleteBtn.textContent = 'Padam';
+        confirmDeleteBtn.textContent = 'Delete';
       }
     });
 
     /* ---- Semak Pautan Rosak (Backdrop / Poster / Link) ---- */
     const FIELD_LABELS = {
-      Backdrop: 'Gambar Backdrop',
-      Poster: 'Gambar Poster',
-      Link: 'Pautan Tontonan'
+      Backdrop: 'Backdrop Image',
+      Poster: 'Poster Image',
+      Link: 'Watch Link'
     };
 
     function findRecordById(type, id) {
@@ -1381,7 +1381,7 @@ document.addEventListener('DOMContentLoaded', () => {
       titleRow.className = 'broken-link-title';
 
       const titleText = document.createElement('span');
-      titleText.textContent = entry.title || '(Tiada tajuk)';
+      titleText.textContent = entry.title || '(No title)';
 
       const typeTag = document.createElement('span');
       typeTag.className = 'broken-link-type';
@@ -1402,8 +1402,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const statusRow = document.createElement('div');
       statusRow.className = 'broken-link-status';
       statusRow.textContent = entry.status && entry.status > 0
-        ? `Status HTTP: ${entry.status}`
-        : 'Gagal disambung / pautan tidak sah';
+        ? `HTTP Status: ${entry.status}`
+        : 'Connection failed / invalid link';
 
       info.appendChild(titleRow);
       info.appendChild(urlRow);
@@ -1412,13 +1412,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const editBtn = document.createElement('button');
       editBtn.type = 'button';
       editBtn.className = 'broken-link-edit';
-      editBtn.textContent = 'Betulkan';
+      editBtn.textContent = 'Fix';
       editBtn.addEventListener('click', () => {
         const record = findRecordById(entry.type, entry.id);
         if (record) {
           openEdit(Object.assign({ _type: entry.type }, record));
         } else {
-          showToast('Rekod tidak dijumpai dalam senarai semasa.', 'error');
+          showToast('Record not found in the current list.', 'error');
         }
       });
 
@@ -1430,7 +1430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function runCheckLinks() {
       brokenLinksList.innerHTML = '';
       brokenLinksEmpty.hidden = true;
-      brokenLinksEmpty.textContent = 'Semua pautan berfungsi dengan baik.';
+      brokenLinksEmpty.textContent = 'All links are working fine.';
       brokenLinksLoading.hidden = false;
       recheckLinksBtn.disabled = true;
 
@@ -1446,7 +1446,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         brokenLinksLoading.hidden = true;
         brokenLinksEmpty.hidden = false;
-        brokenLinksEmpty.textContent = err.message || 'Gagal menyemak pautan.';
+        brokenLinksEmpty.textContent = err.message || 'Failed to check links.';
       } finally {
         recheckLinksBtn.disabled = false;
       }
@@ -1454,7 +1454,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     checkLinksBtn.addEventListener('click', () => {
       if (!webAppConfigured()) {
-        showToast('WEBAPP_URL belum ditetapkan dalam script.js.', 'error');
+        showToast('WEBAPP_URL is not set in script.js.', 'error');
         return;
       }
       openModal(brokenLinksModalOverlay);
@@ -1532,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'poster-card watchlist-card';
       card.tabIndex = 0;
       card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', `Papar butiran ${record.Title || ''}`);
+      card.setAttribute('aria-label', `View details for ${record.Title || ''}`);
 
       function goToDetail() {
         if (!record.ID) return;
@@ -1564,7 +1564,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'watchlist-remove-btn';
-      removeBtn.setAttribute('aria-label', `Buang ${record.Title || ''} dari Senarai Saya`);
+      removeBtn.setAttribute('aria-label', `Remove ${record.Title || ''} from My List`);
       removeBtn.innerHTML = '&times;';
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1578,7 +1578,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const meta = document.createElement('div');
       meta.className = 'poster-meta';
       const subParts = type === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
-      if (type === 'tvshow' && record.Season) subParts.push(`Musim ${record.Season}`);
+      if (type === 'tvshow' && record.Season) subParts.push(`Season ${record.Season}`);
       const sub = subParts.filter(Boolean).join(' · ');
       meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
 
