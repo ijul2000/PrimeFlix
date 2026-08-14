@@ -764,6 +764,30 @@ body.detail-page .hero-desc{
   overflow:hidden;
 }
 
+/* Watch page (tablet + mobile, up to 1024px): lebar kekal penuh, tapi
+   tinggi video dikecilkan (guna aspect-ratio 16:9) supaya tak tarik
+   sepenuh tinggi skrin. Page dibenarkan scroll supaya butiran & butang
+   di bawah video tetap boleh dicapai. */
+@media (max-width: 1024px){
+  body.watch-page{
+    height:auto;
+    min-height:100vh;
+    overflow-y:auto;
+  }
+  .watch-main{
+    overflow:visible;
+  }
+  .watch-player-outer{
+    flex:0 0 auto;
+  }
+  .watch-player-wrap{
+    flex:none;
+    aspect-ratio:16/9;
+    min-height:0;
+  }
+}
+
+
 /* =========================================================
    RESPONSIVE
    ========================================================= */
