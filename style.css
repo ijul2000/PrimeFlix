@@ -688,6 +688,41 @@ body.watch-page .site-header{
 .watch-actions{
   margin-top:14px;
 }
+.watch-player-outer{
+  position:relative;
+  flex:1 1 auto;
+  min-height:0;
+  display:flex;
+}
+.watch-nav-btn{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(10,10,10,0.55);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.watch-nav-btn:hover{
+  background:rgba(10,10,10,0.8);
+  border-color:var(--gold-deep);
+}
+.watch-nav-btn[hidden]{ display:none; }
+.watch-nav-prev{ left:16px; }
+.watch-nav-next{ right:16px; }
+@media (max-width:640px){
+  .watch-nav-btn{ width:36px; height:36px; }
+  .watch-nav-prev{ left:8px; }
+  .watch-nav-next{ right:8px; }
+}
 .watch-desc{
   color:var(--text-muted);
   font-size:14px;
