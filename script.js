@@ -236,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
      Musim & Episod.
      ========================================================= */
   (function initHero() {
+    const heroSection = document.getElementById('heroSection');
     const heroContent = document.getElementById('heroContent');
     const heroBackdropImg = document.getElementById('heroBackdropImg');
     const heroEyebrow = document.getElementById('heroEyebrow');
@@ -338,6 +339,54 @@ document.addEventListener('DOMContentLoaded', () => {
       if (list.length < 2) return;
       renderSlide((currentIndex + 1) % list.length);
     }
+
+    function prevSlide() {
+      const list = slidesByCategory[currentCategory];
+      if (list.length < 2) return;
+      renderSlide((currentIndex - 1 + list.length) % list.length);
+    }
+
+    // Slide (swipe) guna jari — untuk mobile & tablet. Sapu ke KIRI papar
+    // tajuk seterusnya, sapu ke KANAN papar tajuk sebelum. Guna touch
+    // events sahaja (skrin sentuh), jadi tak menjejaskan klik/mouse pada
+    // desktop.
+    (function initSwipe() {
+      if (!heroSection) return;
+      const SWIPE_THRESHOLD = 40; // piksel minimum untuk dikira sapuan
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+
+      heroSection.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length !== 1) return;
+        const list = slidesByCategory[currentCategory];
+        if (list.length < 2) return;
+        tracking = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+
+      heroSection.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const touch = e.changedTouches && e.changedTouches[0];
+        if (!touch) return;
+
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+
+        // Pastikan pergerakan lebih mendatar (kiri/kanan) berbanding
+        // menegak (elak konflik dengan scroll page menegak).
+        if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+        if (deltaX < 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+        resetTimer();
+      }, { passive: true });
+    })();
 
     function resetTimer() {
       clearInterval(rotateTimer);
