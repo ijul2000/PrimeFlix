@@ -8,14 +8,24 @@ const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpR
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  const MOBILE_SEARCH_BP = 860; // Breakpoint di mana search bar jadi ikon + panel (sama seperti hamburger)
+
   /* ---- Mobile nav toggle ---- */
   const hamburger = document.getElementById('hamburgerBtn');
   const mobileNav = document.getElementById('mobileNav');
+  const searchForm = document.getElementById('searchForm');
+
+  function closeMobileSearchPanel() {
+    if (window.innerWidth <= MOBILE_SEARCH_BP) {
+      searchForm.classList.remove('expanded');
+    }
+  }
 
   hamburger.addEventListener('click', () => {
     const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
     hamburger.setAttribute('aria-expanded', String(!isOpen));
     mobileNav.classList.toggle('open');
+    if (!isOpen) closeMobileSearchPanel(); // buka nav -> tutup panel carian jika terbuka
   });
 
   mobileNav.querySelectorAll('.nav-link').forEach(link => {
@@ -26,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ---- Search form — carian langsung (papar padanan semasa menaip) ---- */
-  const searchForm = document.getElementById('searchForm');
   const searchInput = document.getElementById('searchInput');
   const searchResults = document.getElementById('searchResults');
 
@@ -188,12 +197,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!searchForm.contains(e.target)) closeSearchResults();
   });
 
-  // On small screens, tap the icon to expand the search field first
+  // Pada skrin mobile & tablet (≤860px), tap ikon dulu untuk buka panel carian
+  // penuh lebar di bawah header (sama gaya seperti menu hamburger).
   const searchIconBtn = searchForm.querySelector('.search-icon-btn');
   searchIconBtn.addEventListener('click', (e) => {
-    if (window.innerWidth <= 480 && !searchForm.classList.contains('expanded')) {
+    if (window.innerWidth <= MOBILE_SEARCH_BP && !searchForm.classList.contains('expanded')) {
       e.preventDefault();
       searchForm.classList.add('expanded');
+      hamburger.setAttribute('aria-expanded', 'false');
+      mobileNav.classList.remove('open'); // tutup menu hamburger jika terbuka
       searchInput.focus();
     }
   });
@@ -201,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sedikit lengah supaya klik pada hasil carian sempat diproses dahulu
     // sebelum medan carian collapse (elak race condition pada mobile).
     setTimeout(() => {
-      if (window.innerWidth <= 480 && !searchInput.value) {
+      if (window.innerWidth <= MOBILE_SEARCH_BP && !searchInput.value) {
         searchForm.classList.remove('expanded');
       }
     }, 150);
