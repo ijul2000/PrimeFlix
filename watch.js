@@ -14,10 +14,92 @@ document.addEventListener('DOMContentLoaded', () => {
   const metaEl = document.getElementById('watchMeta');
   const descEl = document.getElementById('watchDesc');
   const backLink = document.getElementById('backLink');
+  const watchlistBtn = document.getElementById('watchWatchlistBtn');
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
   const type = params.get('type') || 'movie';
+
+  /* =========================================================
+     SENARAI SAYA (Watch List) — sama seperti movie.js/script.js,
+     disimpan dalam localStorage supaya dikongsi merentasi halaman.
+     ========================================================= */
+  const WATCHLIST_KEY = 'primeflix_watchlist_v1';
+
+  function readWatchlist() {
+    try {
+      const raw = localStorage.getItem(WATCHLIST_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return {
+        movie: Array.isArray(parsed && parsed.movie) ? parsed.movie : [],
+        tvshow: Array.isArray(parsed && parsed.tvshow) ? parsed.tvshow : []
+      };
+    } catch (err) {
+      return { movie: [], tvshow: [] };
+    }
+  }
+
+  function writeWatchlist(data) {
+    try {
+      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(data));
+    } catch (err) {
+      // localStorage tak tersedia / penuh — abaikan, tak kritikal.
+    }
+  }
+
+  function isInWatchlist(wlType, wlId) {
+    if (!wlId) return false;
+    const wl = readWatchlist();
+    return (wl[wlType] || []).some(r => String(r.ID) === String(wlId));
+  }
+
+  function addToWatchlist(wlType, record) {
+    if (!record || !record.ID) return;
+    const wl = readWatchlist();
+    if (!wl[wlType]) wl[wlType] = [];
+    if (wl[wlType].some(r => String(r.ID) === String(record.ID))) return;
+    wl[wlType].unshift({
+      ID: record.ID,
+      Title: record.Title || '',
+      Year: record.Year || '',
+      Genre: record.Genre || '',
+      Season: record.Season || '',
+      Poster: record.Poster || '',
+      Badge: record.Badge || ''
+    });
+    writeWatchlist(wl);
+  }
+
+  function removeFromWatchlist(wlType, wlId) {
+    const wl = readWatchlist();
+    wl[wlType] = (wl[wlType] || []).filter(r => String(r.ID) !== String(wlId));
+    writeWatchlist(wl);
+  }
+
+  function toggleWatchlist(wlType, record) {
+    if (!record || !record.ID) return;
+    if (isInWatchlist(wlType, record.ID)) {
+      removeFromWatchlist(wlType, record.ID);
+    } else {
+      addToWatchlist(wlType, record);
+    }
+  }
+
+  function syncWatchlistBtn(btn, wlType, wlId) {
+    if (!btn) return;
+    const saved = isInWatchlist(wlType, wlId);
+    btn.textContent = saved ? '✓ Dalam Senarai Saya' : '+ Senarai Saya';
+    btn.classList.toggle('in-watchlist', saved);
+  }
+
+  let currentDetailRecord = null;
+  if (watchlistBtn) {
+    watchlistBtn.addEventListener('click', () => {
+      if (!currentDetailRecord) return;
+      toggleWatchlist(type, currentDetailRecord);
+      syncWatchlistBtn(watchlistBtn, type, currentDetailRecord.ID);
+    });
+  }
 
   // Butang "Kembali" bawa balik ke halaman butiran movie/TV show yang sama.
   backLink.href = id
@@ -151,8 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderRecord(record) {
+    currentDetailRecord = record;
     renderInfo(record);
     renderPlayer(record);
+    syncWatchlistBtn(watchlistBtn, type, record.ID);
   }
 
   async function loadAndPlay() {
