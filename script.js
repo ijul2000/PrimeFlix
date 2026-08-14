@@ -25,17 +25,167 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ---- Search form ---- */
+  /* ---- Search form — carian langsung (papar padanan semasa menaip) ---- */
   const searchForm = document.getElementById('searchForm');
   const searchInput = document.getElementById('searchInput');
+  const searchResults = document.getElementById('searchResults');
+
+  const SEARCH_MAX_RESULTS = 8;
+  const SEARCH_DEBOUNCE_MS = 200;
+  let searchDebounceTimer = null;
+  let searchActiveIndex = -1;
+  let searchCurrentItems = [];
+
+  function closeSearchResults() {
+    if (!searchResults) return;
+    searchResults.hidden = true;
+    searchResults.innerHTML = '';
+    searchActiveIndex = -1;
+    searchCurrentItems = [];
+    searchInput.setAttribute('aria-expanded', 'false');
+  }
+
+  // TV Show: satu rekod = satu episod. Untuk hasil carian, satu tajuk +
+  // musim yang sama papar SATU sahaja (elak senarai carian penuh dengan
+  // episod yang sama tajuk berulang-ulang).
+  function dedupeTvForSearch(list) {
+    const seen = new Set();
+    const result = [];
+    (list || []).forEach(record => {
+      const key = `${(record.Title || '').trim().toLowerCase()}|||${record.Season || ''}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      result.push(record);
+    });
+    return result;
+  }
+
+  function goToSearchResult(item) {
+    if (!item || !item.record || !item.record.ID) return;
+    const typeParam = item.type === 'tvshow' ? '&type=tvshow' : '';
+    window.location.href = `movie.html?id=${encodeURIComponent(item.record.ID)}${typeParam}`;
+  }
+
+  function setActiveIndex(index) {
+    searchActiveIndex = index;
+    searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
+      el.classList.toggle('active', i === index);
+    });
+  }
+
+  function renderSearchResults(items, query) {
+    searchCurrentItems = items;
+    searchActiveIndex = -1;
+    searchResults.innerHTML = '';
+
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'search-result-empty';
+      empty.textContent = `Tiada padanan untuk "${query}".`;
+      searchResults.appendChild(empty);
+      searchResults.hidden = false;
+      searchInput.setAttribute('aria-expanded', 'true');
+      return;
+    }
+
+    items.forEach((item, i) => {
+      const record = item.record;
+      const row = document.createElement('div');
+      row.className = 'search-result-item';
+      row.setAttribute('role', 'option');
+      row.dataset.index = String(i);
+
+      const thumb = document.createElement('div');
+      thumb.className = 'search-result-thumb';
+      if (record.Poster) thumb.style.backgroundImage = `url("${record.Poster}")`;
+
+      const info = document.createElement('div');
+      info.className = 'search-result-info';
+      const titleEl = document.createElement('div');
+      titleEl.className = 'search-result-title';
+      titleEl.textContent = record.Title || '';
+      const subEl = document.createElement('div');
+      subEl.className = 'search-result-sub';
+      const subParts = item.type === 'tvshow'
+        ? [record.Year, record.Season ? `Musim ${record.Season}` : null, 'TV Show']
+        : [record.Year, record.Genre, 'Filem'];
+      subEl.textContent = subParts.filter(Boolean).join(' · ');
+      info.appendChild(titleEl);
+      info.appendChild(subEl);
+
+      row.appendChild(thumb);
+      row.appendChild(info);
+      row.addEventListener('click', () => goToSearchResult(item));
+      row.addEventListener('mouseenter', () => setActiveIndex(i));
+
+      searchResults.appendChild(row);
+    });
+
+    searchResults.hidden = false;
+    searchInput.setAttribute('aria-expanded', 'true');
+  }
+
+  async function runSearch(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      closeSearchResults();
+      return;
+    }
+
+    let data = readContentCache();
+    if (!data) {
+      try {
+        data = await fetchContentOnce();
+      } catch (err) {
+        closeSearchResults();
+        return;
+      }
+    }
+
+    // Kalau pengguna dah tukar teks carian semasa fetch berjalan,
+    // batalkan hasil ni (dah lapuk).
+    if (searchInput.value.trim().toLowerCase() !== q) return;
+
+    const movieMatches = (data.movie || [])
+      .filter(r => (r.Title || '').toLowerCase().includes(q))
+      .map(r => ({ type: 'movie', record: r }));
+
+    const tvMatches = dedupeTvForSearch((data.tvshow || []).filter(r => (r.Title || '').toLowerCase().includes(q)))
+      .map(r => ({ type: 'tvshow', record: r }));
+
+    const items = movieMatches.concat(tvMatches).slice(0, SEARCH_MAX_RESULTS);
+    renderSearchResults(items, query.trim());
+  }
 
   searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const query = searchInput.value.trim();
-    if (query) {
-      console.log('Mencari:', query);
-      // Placeholder: sambungkan ke logik carian sebenar di sini
+    const chosen = (searchActiveIndex >= 0 && searchCurrentItems[searchActiveIndex])
+      ? searchCurrentItems[searchActiveIndex]
+      : searchCurrentItems[0];
+    if (chosen) goToSearchResult(chosen);
+  });
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchDebounceTimer);
+    const query = searchInput.value;
+    searchDebounceTimer = setTimeout(() => runSearch(query), SEARCH_DEBOUNCE_MS);
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (searchResults.hidden) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (searchCurrentItems.length) setActiveIndex((searchActiveIndex + 1) % searchCurrentItems.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (searchCurrentItems.length) setActiveIndex((searchActiveIndex - 1 + searchCurrentItems.length) % searchCurrentItems.length);
+    } else if (e.key === 'Escape') {
+      closeSearchResults();
     }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!searchForm.contains(e.target)) closeSearchResults();
   });
 
   // On small screens, tap the icon to expand the search field first
@@ -48,9 +198,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   searchInput.addEventListener('blur', () => {
-    if (window.innerWidth <= 480 && !searchInput.value) {
-      searchForm.classList.remove('expanded');
-    }
+    // Sedikit lengah supaya klik pada hasil carian sempat diproses dahulu
+    // sebelum medan carian collapse (elak race condition pada mobile).
+    setTimeout(() => {
+      if (window.innerWidth <= 480 && !searchInput.value) {
+        searchForm.classList.remove('expanded');
+      }
+    }, 150);
   });
 
   /* ---- Nav active state (Movie / TV Show) — tukar kategori tanpa reload ---- */
@@ -347,36 +501,80 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Slide (swipe) guna jari — untuk mobile & tablet. Sapu ke KIRI papar
-    // tajuk seterusnya, sapu ke KANAN papar tajuk sebelum. Guna touch
-    // events sahaja (skrin sentuh), jadi tak menjejaskan klik/mouse pada
-    // desktop.
+    // tajuk seterusnya, sapu ke KANAN papar tajuk sebelum. Guna Pointer
+    // Events (disokong touch + pen pada semua pelayar mobile moden) dan
+    // setPointerCapture supaya sapuan tetap dikesan walaupun jari
+    // meninggalkan kawasan hero sebelum dilepaskan.
     (function initSwipe() {
       if (!heroSection) return;
-      const SWIPE_THRESHOLD = 40; // piksel minimum untuk dikira sapuan
+      const SWIPE_THRESHOLD = 30; // piksel minimum untuk dikira sapuan
       let startX = 0;
       let startY = 0;
-      let tracking = false;
+      let activePointerId = null;
 
-      heroSection.addEventListener('touchstart', (e) => {
-        if (!e.touches || e.touches.length !== 1) return;
+      function onPointerDown(e) {
+        if (e.pointerType === 'mouse') return; // elak konflik dengan klik/drag mouse
+        if (e.target.closest('button, a')) return; // elak konflik dengan butang/pautan (dots, Tonton Sekarang, dll)
         const list = slidesByCategory[currentCategory];
         if (list.length < 2) return;
-        tracking = true;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-      }, { passive: true });
+        activePointerId = e.pointerId;
+        startX = e.clientX;
+        startY = e.clientY;
+      }
 
-      heroSection.addEventListener('touchend', (e) => {
-        if (!tracking) return;
-        tracking = false;
-        const touch = e.changedTouches && e.changedTouches[0];
-        if (!touch) return;
+      function onPointerUp(e) {
+        if (activePointerId === null || e.pointerId !== activePointerId) return;
+        activePointerId = null;
 
-        const deltaX = touch.clientX - startX;
-        const deltaY = touch.clientY - startY;
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
 
         // Pastikan pergerakan lebih mendatar (kiri/kanan) berbanding
         // menegak (elak konflik dengan scroll page menegak).
+        if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+        if (deltaX < 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+        resetTimer();
+      }
+
+      function onPointerCancel(e) {
+        if (e.pointerId === activePointerId) activePointerId = null;
+      }
+
+      heroSection.addEventListener('pointerdown', onPointerDown);
+      heroSection.addEventListener('pointerup', onPointerUp);
+      heroSection.addEventListener('pointercancel', onPointerCancel);
+
+      // Fallback untuk pelayar/persekitaran yang tak sokong Pointer
+      // Events sepenuhnya bagi skrin sentuh (jarang berlaku, tapi
+      // pastikan sapuan tetap berfungsi).
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchTracking = false;
+
+      heroSection.addEventListener('touchstart', (e) => {
+        if (window.PointerEvent) return; // Pointer Events dah tangani
+        if (!e.touches || e.touches.length !== 1) return;
+        if (e.target.closest('button, a')) return;
+        const list = slidesByCategory[currentCategory];
+        if (list.length < 2) return;
+        touchTracking = true;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      heroSection.addEventListener('touchend', (e) => {
+        if (!touchTracking) return;
+        touchTracking = false;
+        const touch = e.changedTouches && e.changedTouches[0];
+        if (!touch) return;
+
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
         if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return;
 
         if (deltaX < 0) {
