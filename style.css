@@ -232,6 +232,7 @@ button.nav-link{
   display:flex;
   align-items:flex-end;
   overflow:hidden;
+  touch-action:pan-y;
 }
 .hero-fullpage{
   min-height:100vh;
