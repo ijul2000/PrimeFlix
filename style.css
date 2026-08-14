@@ -901,8 +901,31 @@ body.detail-page .hero-desc{
 }
 
 @media (max-width: 480px){
-  .search-form{ width:0; padding:0; border:none; overflow:hidden; }
-  .search-form.expanded{ width:170px; padding:0 10px; border:1px solid var(--line); }
+  .search-form{
+    width:38px;
+    padding:0;
+    border:none;
+    overflow:hidden;
+    flex:0 0 auto;
+  }
+  .search-form .search-icon-btn{ flex:0 0 auto; }
+  .search-form .search-input{
+    width:0;
+    padding:0;
+    opacity:0;
+    transition:width .2s ease, opacity .15s ease, padding .2s ease;
+  }
+  .search-form.expanded{
+    width:min(200px, calc(100vw - 140px));
+    padding:0 8px;
+    border:1px solid var(--line);
+    overflow:visible;
+  }
+  .search-form.expanded .search-input{
+    width:100%;
+    opacity:1;
+    padding:0 8px;
+  }
   .hero-desc{ font-size:14.5px; }
   .poster-card, .poster-art{ width:140px; }
   .poster-art{ height:200px; }
