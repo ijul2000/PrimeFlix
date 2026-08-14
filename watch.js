@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function syncWatchlistBtn(btn, wlType, wlId) {
     if (!btn) return;
     const saved = isInWatchlist(wlType, wlId);
-    btn.textContent = saved ? '✓ Dalam Senarai Saya' : '+ Senarai Saya';
+    btn.textContent = saved ? '✓ In My List' : '+ My List';
     btn.classList.toggle('in-watchlist', saved);
   }
 
@@ -114,14 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (!id) {
-    showState('Rekod tidak dijumpai. Tiada ID diberikan dalam pautan.');
-    titleEl.textContent = 'Rekod tidak dijumpai.';
+    showState('Record not found. No ID provided in the link.');
+    titleEl.textContent = 'Record not found.';
     return;
   }
 
   if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) {
-    showState('WEBAPP_URL belum ditetapkan dalam watch.js.');
-    titleEl.textContent = 'WEBAPP_URL belum ditetapkan.';
+    showState('WEBAPP_URL is not set in watch.js.');
+    titleEl.textContent = 'WEBAPP_URL is not set.';
     return;
   }
 
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!link) {
       const state = document.createElement('div');
       state.className = 'watch-player-state';
-      state.textContent = 'Tiada pautan tontonan untuk tajuk ini.';
+      state.textContent = 'No watch link available for this title.';
       playerWrap.appendChild(state);
       return;
     }
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playerWrap.innerHTML = '';
         const state = document.createElement('div');
         state.className = 'watch-player-state';
-        state.textContent = 'Gagal memainkan video ini.';
+        state.textContent = 'Failed to play this video.';
         playerWrap.appendChild(state);
       });
       playerWrap.appendChild(video);
@@ -226,12 +226,12 @@ document.addEventListener('DOMContentLoaded', () => {
     titleEl.textContent = record.Title || '';
     const metaParts = [record.Year, record.Genre];
     if (type === 'tvshow') {
-      if (record.Season) metaParts.push(`Musim ${record.Season}`);
-      if (record.Episode) metaParts.push(`Episod ${record.Episode}`);
+      if (record.Season) metaParts.push(`Season ${record.Season}`);
+      if (record.Episode) metaParts.push(`Episode ${record.Episode}`);
     }
     metaEl.textContent = metaParts.filter(Boolean).join(' · ');
     descEl.textContent = record.Description || '';
-    document.title = `${record.Title || 'Tonton'} — Prime Flix`;
+    document.title = `${record.Title || 'Watch'} — Prime Flix`;
   }
 
   // Panah "Episod Sebelum" / "Episod Seterusnya" — hanya untuk TV show.
@@ -302,13 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch(`${WEBAPP_URL}?action=list&type=${encodeURIComponent(type)}`);
       const json = await res.json();
       if (!json.ok || !Array.isArray(json.data)) {
-        throw new Error(json.error || 'Gagal memuatkan data.');
+        throw new Error(json.error || 'Failed to load data.');
       }
       const record = json.data.find(r => String(r.ID) === String(id));
       if (!record) {
         if (!shown) {
-          showState('Rekod tidak dijumpai.');
-          titleEl.textContent = 'Rekod tidak dijumpai.';
+          showState('Record not found.');
+          titleEl.textContent = 'Record not found.';
         }
         return;
       }
@@ -320,8 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       if (!shown) {
-        showState('Gagal memuatkan pemain. Sila cuba semula sebentar lagi.');
-        titleEl.textContent = 'Gagal memuatkan.';
+        showState('Failed to load player. Please try again shortly.');
+        titleEl.textContent = 'Failed to load.';
       }
     }
   }
