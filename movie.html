@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prime Flix — Butiran Filem</title>
+<title>Tonton — Prime Flix</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body class="detail-page">
+<body class="watch-page">
 
 <!-- HEADER (ringkas — logo & pautan kembali) -->
 <header class="site-header" id="siteHeader">
@@ -30,45 +30,29 @@
     </a>
 
     <div class="header-actions">
-      <a href="index.html" class="btn btn-secondary btn-sm">&larr; Kembali ke Laman</a>
+      <a href="#" class="btn btn-secondary btn-sm" id="backLink">&larr; Kembali</a>
     </div>
 
   </div>
 </header>
 
-<!-- BUTIRAN MOVIE — backdrop penuh halaman -->
-<section class="hero hero-fullpage" id="movieDetailHero">
-  <div class="hero-backdrop-img" id="detailBackdropImg"></div>
-  <div class="hero-backdrop"></div>
-  <div class="hero-content">
-    <h1 class="hero-title" id="detailTitle">Memuatkan...</h1>
-    <p class="hero-meta" id="detailMeta"></p>
-    <p class="hero-desc" id="detailDesc"></p>
-    <div class="hero-actions" id="movieActions">
-      <button class="btn btn-primary" id="watchNowBtn" type="button">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
-        Tonton Sekarang
-      </button>
-      <button class="btn btn-secondary" id="movieWatchlistBtn" type="button">+ Senarai Saya</button>
-    </div>
+<main class="watch-main">
 
-    <div class="hero-actions tv-select-actions is-hidden" id="tvActions" hidden>
-      <div class="season-badge" id="seasonBadge">
-        Musim <span id="seasonSelectLabel">—</span>
-      </div>
-      <div class="select-btn-wrap">
-        <button class="btn btn-primary select-btn" id="episodeSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
-          Episod <span id="episodeSelectLabel">—</span>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div class="select-dropdown" id="episodeDropdown" role="listbox" hidden></div>
-      </div>
-      <button class="btn btn-secondary" id="tvWatchlistBtn" type="button">+ Senarai Saya</button>
+  <div class="watch-player-wrap" id="playerWrap">
+    <div class="watch-player-state" id="playerState">Memuatkan pemain...</div>
+  </div>
+
+  <div class="watch-info">
+    <h1 class="watch-title" id="watchTitle">Memuatkan...</h1>
+    <p class="watch-meta" id="watchMeta"></p>
+    <p class="watch-desc" id="watchDesc"></p>
+    <div class="watch-actions">
+      <button class="btn btn-secondary" id="watchWatchlistBtn" type="button" hidden>+ Senarai Saya</button>
     </div>
   </div>
-</section>
 
-<script src="movie.js"></script>
+</main>
+
+<script src="watch.js"></script>
 </body>
 </html>
