@@ -14,16 +14,90 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const movieActions = document.getElementById('movieActions');
   const watchNowBtn = document.getElementById('watchNowBtn');
+  const movieWatchlistBtn = document.getElementById('movieWatchlistBtn');
 
   const tvActions = document.getElementById('tvActions');
   const seasonSelectLabel = document.getElementById('seasonSelectLabel');
   const episodeSelectBtn = document.getElementById('episodeSelectBtn');
   const episodeSelectLabel = document.getElementById('episodeSelectLabel');
   const episodeDropdown = document.getElementById('episodeDropdown');
+  const tvWatchlistBtn = document.getElementById('tvWatchlistBtn');
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
   const type = params.get('type') || 'movie';
+
+  /* =========================================================
+     SENARAI SAYA (Watch List) — sama seperti script.js, disimpan
+     dalam localStorage supaya dikongsi merentasi halaman.
+     ========================================================= */
+  const WATCHLIST_KEY = 'primeflix_watchlist_v1';
+
+  function readWatchlist() {
+    try {
+      const raw = localStorage.getItem(WATCHLIST_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return {
+        movie: Array.isArray(parsed && parsed.movie) ? parsed.movie : [],
+        tvshow: Array.isArray(parsed && parsed.tvshow) ? parsed.tvshow : []
+      };
+    } catch (err) {
+      return { movie: [], tvshow: [] };
+    }
+  }
+
+  function writeWatchlist(data) {
+    try {
+      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(data));
+    } catch (err) {
+      // localStorage tak tersedia / penuh — abaikan, tak kritikal.
+    }
+  }
+
+  function isInWatchlist(wlType, wlId) {
+    if (!wlId) return false;
+    const wl = readWatchlist();
+    return (wl[wlType] || []).some(r => String(r.ID) === String(wlId));
+  }
+
+  function addToWatchlist(wlType, record) {
+    if (!record || !record.ID) return;
+    const wl = readWatchlist();
+    if (!wl[wlType]) wl[wlType] = [];
+    if (wl[wlType].some(r => String(r.ID) === String(record.ID))) return;
+    wl[wlType].unshift({
+      ID: record.ID,
+      Title: record.Title || '',
+      Year: record.Year || '',
+      Genre: record.Genre || '',
+      Season: record.Season || '',
+      Poster: record.Poster || '',
+      Badge: record.Badge || ''
+    });
+    writeWatchlist(wl);
+  }
+
+  function removeFromWatchlist(wlType, wlId) {
+    const wl = readWatchlist();
+    wl[wlType] = (wl[wlType] || []).filter(r => String(r.ID) !== String(wlId));
+    writeWatchlist(wl);
+  }
+
+  function toggleWatchlist(wlType, record) {
+    if (!record || !record.ID) return;
+    if (isInWatchlist(wlType, record.ID)) {
+      removeFromWatchlist(wlType, record.ID);
+    } else {
+      addToWatchlist(wlType, record);
+    }
+  }
+
+  function syncWatchlistBtn(btn, wlType, wlId) {
+    if (!btn) return;
+    const saved = isInWatchlist(wlType, wlId);
+    btn.textContent = saved ? '✓ Dalam Senarai Saya' : '+ Senarai Saya';
+    btn.classList.toggle('in-watchlist', saved);
+  }
 
   // Butang "Tonton Sekarang" (movie sahaja) — bawa ke pemain (watch.html)
   // dengan id yang sama.
@@ -31,6 +105,23 @@ document.addEventListener('DOMContentLoaded', () => {
     watchNowBtn.addEventListener('click', () => {
       if (!id) return;
       window.location.href = `watch.html?id=${encodeURIComponent(id)}`;
+    });
+  }
+
+  // Butang "+ Senarai Saya" — movie & TV show diasingkan ikut `type`.
+  let currentDetailRecord = null;
+  if (movieWatchlistBtn) {
+    movieWatchlistBtn.addEventListener('click', () => {
+      if (!currentDetailRecord) return;
+      toggleWatchlist(type, currentDetailRecord);
+      syncWatchlistBtn(movieWatchlistBtn, type, currentDetailRecord.ID);
+    });
+  }
+  if (tvWatchlistBtn) {
+    tvWatchlistBtn.addEventListener('click', () => {
+      if (!currentDetailRecord) return;
+      toggleWatchlist(type, currentDetailRecord);
+      syncWatchlistBtn(tvWatchlistBtn, type, currentDetailRecord.ID);
     });
   }
 
@@ -218,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderDetail(record, fullList) {
+    currentDetailRecord = record;
     backdropImg.style.backgroundImage = record.Backdrop ? `url("${record.Backdrop}")` : 'none';
     titleEl.textContent = record.Title || '';
     // Maklumat musim/episod kini dipilih melalui butang Musim & Episod
@@ -229,6 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (type === 'tvshow') {
       initTvPicker(record, fullList);
+      syncWatchlistBtn(tvWatchlistBtn, type, record.ID);
+    } else {
+      syncWatchlistBtn(movieWatchlistBtn, type, record.ID);
     }
   }
 
