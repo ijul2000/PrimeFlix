@@ -251,7 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
       episodeSelectLabel.textContent = active ? (Number(active.Episode) || 0) : '—';
     }
 
-    renderEpisodeDropdown(Number(record.Episode) || 0);
+    // Default dropdown papar Episode 1 (episod pertama dalam musim ini),
+    // bukan episod rekod yang dipautkan dari kad poster trending —
+    // sebab dedupeByTitleSeason() dalam script.js boleh pilih mana-mana
+    // episod sebagai rekod "wakil" bagi musim tu.
+    const defaultEpisodeNum = episodes.length ? (Number(episodes[0].Episode) || 0) : (Number(record.Episode) || 0);
+    renderEpisodeDropdown(defaultEpisodeNum);
 
     episodeSelectBtn.onclick = (e) => {
       e.stopPropagation();
