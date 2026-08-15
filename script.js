@@ -248,14 +248,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Landing terus dengan #tvshows (cth. dari butang "Back to Site" pada
-  // page butiran TV show) — aktifkan navbar & seksyen TV Show serta-merta
-  // (tanpa skrol turun — page kekal papar dari atas seperti biasa). Guna
+  // Landing dari butang "Back to Site" pada page butiran TV show — aktifkan
+  // navbar & seksyen TV Show serta-merta. Guna flag sekali-guna dalam
+  // sessionStorage (bukan URL hash) supaya: (1) browser tak auto-scroll
+  // ke seksyen #tvshows, page kekal papar dari atas; (2) refresh
+  // lepas ni kembali ke default Movie (flag terus dipadam lepas dibaca,
+  // tak "tersangkut" TV Show macam URL hash yang berkekalan).
+  //
   // setTimeout supaya event "primeflix:categorychange" didispatch
   // SELEPAS initHero() (di bawah dalam fail ni) sempat register
   // listener-nya — kalau tak, Hero akan terlepas event ni dan terus
   // tersangkut papar Movie.
-  if (window.location.hash === '#tvshows') {
+  if (sessionStorage.getItem('primeflix_open_category') === 'tvshow') {
+    sessionStorage.removeItem('primeflix_open_category');
     setTimeout(() => {
       switchCategory('tvshow', 'tv show');
     }, 0);
