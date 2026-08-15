@@ -27,6 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const id = params.get('id');
   const type = params.get('type') || 'movie';
 
+  // Butang "Back to Site" — untuk TV show, bawa balik ke seksyen navbar
+  // "TV Show" di halaman utama (bukan seksyen Movie default).
+  const backToSiteLink = document.getElementById('backToSiteLink');
+  if (backToSiteLink) {
+    backToSiteLink.href = type === 'tvshow' ? 'index.html#tvshows' : 'index.html';
+  }
+
   /* =========================================================
      SENARAI SAYA (Watch List) — sama seperti script.js, disimpan
      dalam localStorage supaya dikongsi merentasi halaman.
