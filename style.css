@@ -519,7 +519,7 @@ button.nav-link{
   margin:0 auto;
   padding:8px 32px 64px;
 }
-.row-section{ margin-top:20px; }
+.row-section{ margin-top:44px; }
 .row-head{
   display:flex;
   align-items:baseline;
@@ -583,6 +583,9 @@ button.nav-link{
   display:flex;
   align-items:flex-end;
   transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
 }
 .poster-card:hover .poster-art{
   transform:translateY(-6px) scale(1.03);
