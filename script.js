@@ -220,6 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ---- Nav active state (Movie / TV Show) — tukar kategori tanpa reload ---- */
+  const ACTIVE_CATEGORY_KEY = 'primeflix_active_category';
+
   function switchCategory(category, label) {
     document.querySelectorAll('.nav-link').forEach(l => {
       l.classList.toggle('active', l.textContent.trim().toLowerCase() === label);
@@ -229,6 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const tvSection = document.getElementById('tvshows');
     if (movieSection) movieSection.hidden = category !== 'movie';
     if (tvSection) tvSection.hidden = category !== 'tvshow';
+
+    // Simpan kategori aktif — supaya bila page di-refresh, ia kekal pada
+    // tab yang sama (Movie kekal Movie, TV Show kekal TV Show), bukan
+    // sentiasa default balik ke Movie.
+    try { sessionStorage.setItem(ACTIVE_CATEGORY_KEY, category); } catch (err) { /* abaikan */ }
 
     document.dispatchEvent(new CustomEvent('primeflix:categorychange', { detail: { category } }));
   }
@@ -248,23 +255,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Landing dari butang "Back to Site" pada page butiran TV show — aktifkan
-  // navbar & seksyen TV Show serta-merta. Guna flag sekali-guna dalam
-  // sessionStorage (bukan URL hash) supaya: (1) browser tak auto-scroll
-  // ke seksyen #tvshows, page kekal papar dari atas; (2) refresh
-  // lepas ni kembali ke default Movie (flag terus dipadam lepas dibaca,
-  // tak "tersangkut" TV Show macam URL hash yang berkekalan).
+  // Bila page dimuatkan (termasuk refresh, atau landing dari butang
+  // "Back to Site" pada page butiran TV show — lihat movie.js), semak
+  // kategori yang disimpan dalam sessionStorage dan terus paparkan tab
+  // tu (bukan sentiasa default ke Movie). Tiada aksi diperlukan kalau
+  // tersimpan "movie" sebab Movie memang default sedia ada dalam HTML.
   //
   // setTimeout supaya event "primeflix:categorychange" didispatch
   // SELEPAS initHero() (di bawah dalam fail ni) sempat register
   // listener-nya — kalau tak, Hero akan terlepas event ni dan terus
   // tersangkut papar Movie.
-  if (sessionStorage.getItem('primeflix_open_category') === 'tvshow') {
-    sessionStorage.removeItem('primeflix_open_category');
-    setTimeout(() => {
-      switchCategory('tvshow', 'tv show');
-    }, 0);
-  }
+  (function restoreActiveCategory() {
+    let savedCategory = null;
+    try { savedCategory = sessionStorage.getItem(ACTIVE_CATEGORY_KEY); } catch (err) { /* abaikan */ }
+    if (savedCategory === 'tvshow') {
+      setTimeout(() => switchCategory('tvshow', 'tv show'), 0);
+    }
+  })();
 
   /* =========================================================
      DATA MOVIE & TV SHOW — dikongsi oleh Hero & kedua-dua grid
