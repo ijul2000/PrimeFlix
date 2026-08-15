@@ -250,14 +250,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Landing terus dengan #tvshows (cth. dari butang "Back to Site" pada
   // page butiran TV show) — aktifkan navbar & seksyen TV Show serta-merta,
-  // dan skrol ke seksyen tu (anchor jump asal tak jadi sebab seksyen ni
-  // "hidden" semasa load, sebelum JS ni patch hidden attribute-nya).
+  // dan skrol ke seksyen tu. Guna setTimeout supaya event
+  // "primeflix:categorychange" didispatch SELEPAS initHero() (di bawah
+  // dalam fail ni) sempat register listener-nya — kalau tak, Hero akan
+  // terlepas event ni dan terus tersangkut papar Movie.
   if (window.location.hash === '#tvshows') {
-    switchCategory('tvshow', 'tv show');
-    const tvSection = document.getElementById('tvshows');
-    if (tvSection) {
-      requestAnimationFrame(() => tvSection.scrollIntoView({ behavior: 'instant', block: 'start' }));
-    }
+    setTimeout(() => {
+      switchCategory('tvshow', 'tv show');
+      const tvSection = document.getElementById('tvshows');
+      if (tvSection) tvSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }, 0);
   }
 
   /* =========================================================
