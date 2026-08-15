@@ -220,6 +220,19 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ---- Nav active state (Movie / TV Show) — tukar kategori tanpa reload ---- */
+  function switchCategory(category, label) {
+    document.querySelectorAll('.nav-link').forEach(l => {
+      l.classList.toggle('active', l.textContent.trim().toLowerCase() === label);
+    });
+
+    const movieSection = document.getElementById('movies');
+    const tvSection = document.getElementById('tvshows');
+    if (movieSection) movieSection.hidden = category !== 'movie';
+    if (tvSection) tvSection.hidden = category !== 'tvshow';
+
+    document.dispatchEvent(new CustomEvent('primeflix:categorychange', { detail: { category } }));
+  }
+
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
       if (link.tagName === 'A') e.preventDefault();
@@ -231,18 +244,21 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (lower === 'movie') category = 'movie';
       if (!category) return; // cth. "Watch List" — tak tukar kategori/active state
 
-      document.querySelectorAll('.nav-link').forEach(l => {
-        l.classList.toggle('active', l.textContent.trim() === label);
-      });
-
-      const movieSection = document.getElementById('movies');
-      const tvSection = document.getElementById('tvshows');
-      if (movieSection) movieSection.hidden = category !== 'movie';
-      if (tvSection) tvSection.hidden = category !== 'tvshow';
-
-      document.dispatchEvent(new CustomEvent('primeflix:categorychange', { detail: { category } }));
+      switchCategory(category, lower);
     });
   });
+
+  // Landing terus dengan #tvshows (cth. dari butang "Back to Site" pada
+  // page butiran TV show) — aktifkan navbar & seksyen TV Show serta-merta,
+  // dan skrol ke seksyen tu (anchor jump asal tak jadi sebab seksyen ni
+  // "hidden" semasa load, sebelum JS ni patch hidden attribute-nya).
+  if (window.location.hash === '#tvshows') {
+    switchCategory('tvshow', 'tv show');
+    const tvSection = document.getElementById('tvshows');
+    if (tvSection) {
+      requestAnimationFrame(() => tvSection.scrollIntoView({ behavior: 'instant', block: 'start' }));
+    }
+  }
 
   /* =========================================================
      DATA MOVIE & TV SHOW — dikongsi oleh Hero & kedua-dua grid
