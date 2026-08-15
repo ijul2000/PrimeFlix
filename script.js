@@ -249,16 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Landing terus dengan #tvshows (cth. dari butang "Back to Site" pada
-  // page butiran TV show) — aktifkan navbar & seksyen TV Show serta-merta,
-  // dan skrol ke seksyen tu. Guna setTimeout supaya event
-  // "primeflix:categorychange" didispatch SELEPAS initHero() (di bawah
-  // dalam fail ni) sempat register listener-nya — kalau tak, Hero akan
-  // terlepas event ni dan terus tersangkut papar Movie.
+  // page butiran TV show) — aktifkan navbar & seksyen TV Show serta-merta
+  // (tanpa skrol turun — page kekal papar dari atas seperti biasa). Guna
+  // setTimeout supaya event "primeflix:categorychange" didispatch
+  // SELEPAS initHero() (di bawah dalam fail ni) sempat register
+  // listener-nya — kalau tak, Hero akan terlepas event ni dan terus
+  // tersangkut papar Movie.
   if (window.location.hash === '#tvshows') {
     setTimeout(() => {
       switchCategory('tvshow', 'tv show');
-      const tvSection = document.getElementById('tvshows');
-      if (tvSection) tvSection.scrollIntoView({ behavior: 'instant', block: 'start' });
     }, 0);
   }
 
