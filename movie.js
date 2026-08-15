@@ -27,16 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const id = params.get('id');
   const type = params.get('type') || 'movie';
 
-  // Butang "Back to Site" — untuk TV show, set flag sekali-guna supaya
-  // halaman utama (index.html) terus buka pada navbar/seksyen "TV Show"
-  // (bukan Movie default). Guna sessionStorage, bukan URL hash, supaya
-  // page tak auto-scroll turun dan flag tak "tersangkut" bila refresh.
+  // Butang "Back to Site" — simpan kategori (movie/tvshow) dalam
+  // sessionStorage dengan key yang sama seperti script.js, supaya
+  // index.html terus buka pada tab navbar yang sepadan.
   const backToSiteLink = document.getElementById('backToSiteLink');
   if (backToSiteLink) {
     backToSiteLink.addEventListener('click', () => {
-      if (type === 'tvshow') {
-        sessionStorage.setItem('primeflix_open_category', 'tvshow');
-      }
+      try {
+        sessionStorage.setItem('primeflix_active_category', type === 'tvshow' ? 'tvshow' : 'movie');
+      } catch (err) { /* abaikan */ }
     });
   }
 
