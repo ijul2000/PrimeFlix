@@ -430,8 +430,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (heroWatchNowBtn) {
       heroWatchNowBtn.addEventListener('click', () => {
         if (!currentRecord || !currentRecord.ID) return;
-        const typeParam = currentCategory === 'tvshow' ? '&type=tvshow' : '';
-        window.location.href = `watch.html?id=${encodeURIComponent(currentRecord.ID)}${typeParam}`;
+        if (currentCategory === 'tvshow') {
+          // TV Show: bawa ke page butiran (movie.html) bagi tajuk & musim
+          // yang sama — bukan terus ke player — supaya pengguna boleh
+          // pilih episod dahulu (sama seperti klik poster di grid).
+          window.location.href = `movie.html?id=${encodeURIComponent(currentRecord.ID)}&type=tvshow`;
+          return;
+        }
+        window.location.href = `watch.html?id=${encodeURIComponent(currentRecord.ID)}`;
       });
     }
 
