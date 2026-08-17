@@ -23,8 +23,21 @@ function readSession() {
   }
 }
 
+// Pulangkan true/false — BUKAN senyap seperti sebelum ini — supaya
+// pemanggil tahu dengan pasti sama ada sesi betul-betul tersimpan.
+// Pada sesetengah browser mobile (mod Private/Incognito, in-app
+// browser WhatsApp/Instagram/Facebook/TikTok, atau setting Safari
+// "Block All Cookies"), localStorage.setItem() boleh gagal atau
+// "berjaya" tetapi nilai tak kekal — jadi kita baca semula selepas
+// simpan untuk sahkan ia benar-benar tersimpan.
 function writeSession(user) {
-  try { localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user)); } catch (err) { /* abaikan */ }
+  try {
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
+    const check = localStorage.getItem(AUTH_SESSION_KEY);
+    return !!check && JSON.parse(check).ID === user.ID;
+  } catch (err) {
+    return false;
+  }
 }
 
 // Destinasi selepas log masuk/daftar berjaya. Kalau page ni dibuka
@@ -102,7 +115,20 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.disabled = true;
     try {
       const user = await apiAuth('login', data);
-      writeSession(user);
+      const saved = writeSession(user);
+      if (!saved) {
+        // Login BERJAYA di server, tapi browser/peranti ni menyekat
+        // localStorage (mod Private/Incognito, browser dalam-app
+        // WhatsApp/Instagram/Facebook/TikTok, atau setting Safari
+        // "Block All Cookies"). Kalau kita tetap redirect di sini,
+        // page seterusnya (requireAuth) akan gagal jumpa sesi dan
+        // hantar balik ke login — nampak macam "login pun tak jalan"
+        // walhal login sebenarnya berjaya. Jadi berhenti di sini
+        // dengan mesej yang jelas, bukan bounce senyap.
+        showFormError(gateLoginForm, 'Login berjaya, tetapi peranti/pelayar ini menyekat storan sesi (localStorage). Sila matikan mod Private/Incognito, benarkan cookies & storan laman web (buka Tetapan Safari/Chrome), atau buka pautan ini terus dalam Safari/Chrome — bukan dalam pelayar dalam-app (WhatsApp/Instagram/Facebook/TikTok).');
+        submitBtn.disabled = false;
+        return;
+      }
       window.location.href = getRedirectTarget();
     } catch (err) {
       showFormError(gateLoginForm, err.message || 'Login failed.');
@@ -131,7 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.disabled = true;
     try {
       const user = await apiAuth('register', data);
-      writeSession(user);
+      const saved = writeSession(user);
+      if (!saved) {
+        showFormError(gateRegisterForm, 'Pendaftaran berjaya, tetapi peranti/pelayar ini menyekat storan sesi (localStorage). Sila matikan mod Private/Incognito, benarkan cookies & storan laman web (buka Tetapan Safari/Chrome), atau buka pautan ini terus dalam Safari/Chrome — bukan dalam pelayar dalam-app (WhatsApp/Instagram/Facebook/TikTok).');
+        submitBtn.disabled = false;
+        return;
+      }
       window.location.href = getRedirectTarget();
     } catch (err) {
       showFormError(gateRegisterForm, err.message || 'Registration failed.');
