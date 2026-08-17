@@ -426,6 +426,205 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* =========================================================
+     AUTH — Login / Register / Session
+     Guna endpoint POST yang sama (Code.gs) dengan action
+     "register" / "login". Sesi pengguna yang berjaya log masuk
+     disimpan dalam localStorage (kekal walaupun tab ditutup)
+     supaya pengguna tak perlu log masuk semula setiap kali buka
+     semula laman. Kata laluan TIDAK PERNAH disimpan di sini —
+     hanya {ID, Username, Email, Role} yang backend pulangkan.
+     ========================================================= */
+  const AUTH_SESSION_KEY = 'primeflix_session_v1';
+  const toastEl = document.getElementById('toast');
+
+  function readSession() {
+    try {
+      const raw = localStorage.getItem(AUTH_SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      return null;
+    }
+  }
+  function writeSession(user) {
+    try { localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user)); } catch (err) { /* abaikan */ }
+  }
+  function clearSession() {
+    try { localStorage.removeItem(AUTH_SESSION_KEY); } catch (err) { /* abaikan */ }
+  }
+  function isAdminSession() {
+    const s = readSession();
+    return !!s && s.Role === 'admin';
+  }
+
+  function showToast(message, type) {
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.className = 'toast toast-' + (type || 'success');
+    toastEl.hidden = false;
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => { toastEl.hidden = true; }, 3200);
+  }
+
+  function webAppReady() {
+    return typeof WEBAPP_URL === 'string' && WEBAPP_URL.indexOf('GANTI_DENGAN') === -1;
+  }
+
+  async function apiAuth(action, data) {
+    const res = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, data })
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Request failed.');
+    return json.data; // { ID, Username, Email, Role }
+  }
+
+  (function initAuth() {
+    const authGate = document.getElementById('authGate');
+    const siteContent = document.getElementById('siteContent');
+    const gateTabs = document.getElementById('authGateTabs');
+    const gateLoginForm = document.getElementById('gateLoginForm');
+    const gateRegisterForm = document.getElementById('gateRegisterForm');
+    const authArea = document.getElementById('authArea');
+    const authAreaMobile = document.getElementById('authAreaMobile');
+
+    if (!authGate || !siteContent || !gateLoginForm || !gateRegisterForm) return;
+
+    function showFormError(form, message) {
+      const errEl = form.querySelector('[data-form-error]');
+      if (!errEl) return;
+      errEl.textContent = message || '';
+      errEl.hidden = !message;
+    }
+
+    // Tunjuk/sembunyi laman utama ikut status log masuk. Dipanggil
+    // sebaik sahaja page dimuatkan, dan lepas login/register/logout.
+    function applyAuthState() {
+      const session = readSession();
+      if (session) {
+        authGate.hidden = true;
+        siteContent.hidden = false;
+        document.body.style.overflow = '';
+      } else {
+        authGate.hidden = false;
+        siteContent.hidden = true;
+        document.body.style.overflow = 'hidden';
+      }
+      renderAuthArea();
+    }
+
+    function renderAuthArea() {
+      const session = readSession();
+      [authArea, authAreaMobile].forEach(area => {
+        if (!area) return;
+        const isMobile = area === authAreaMobile;
+        area.innerHTML = '';
+        if (!session) return; // header hanya kelihatan bila #siteContent didedahkan (i.e. dah log masuk)
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'auth-user-name';
+        nameEl.textContent = session.Username;
+        const roleTag = document.createElement('span');
+        roleTag.className = 'auth-role-tag';
+        roleTag.textContent = session.Role === 'admin' ? 'Admin' : 'User';
+        nameEl.appendChild(roleTag);
+
+        const logoutBtn = document.createElement('button');
+        logoutBtn.type = 'button';
+        logoutBtn.className = isMobile ? 'nav-link' : 'btn btn-secondary btn-sm';
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.addEventListener('click', () => {
+          clearSession();
+          gateLoginForm.reset();
+          gateRegisterForm.reset();
+          showFormError(gateLoginForm, '');
+          showFormError(gateRegisterForm, '');
+          applyAuthState();
+          showToast('You have been logged out.', 'success');
+          document.dispatchEvent(new CustomEvent('primeflix:authchange', { detail: { user: null } }));
+        });
+
+        area.appendChild(nameEl);
+        area.appendChild(logoutBtn);
+      });
+    }
+
+    // Tab "Login" / "Register" pada gate.
+    if (gateTabs) {
+      gateTabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-gate-tab]');
+        if (!btn) return;
+        const tab = btn.dataset.gateTab;
+        gateTabs.querySelectorAll('.auth-gate-tab').forEach(t => t.classList.toggle('active', t === btn));
+        gateLoginForm.hidden = tab !== 'login';
+        gateRegisterForm.hidden = tab !== 'register';
+        showFormError(gateLoginForm, '');
+        showFormError(gateRegisterForm, '');
+      });
+    }
+
+    gateLoginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showFormError(gateLoginForm, '');
+      if (!webAppReady()) { showFormError(gateLoginForm, 'WEBAPP_URL is not set in script.js.'); return; }
+
+      const submitBtn = gateLoginForm.querySelector('[data-submit-btn]');
+      const fd = new FormData(gateLoginForm);
+      const data = { Username: fd.get('Username'), Password: fd.get('Password') };
+
+      submitBtn.disabled = true;
+      try {
+        const user = await apiAuth('login', data);
+        writeSession(user);
+        gateLoginForm.reset();
+        applyAuthState();
+        showToast(`Welcome back, ${user.Username}!`, 'success');
+        document.dispatchEvent(new CustomEvent('primeflix:authchange', { detail: { user } }));
+      } catch (err) {
+        showFormError(gateLoginForm, err.message || 'Login failed.');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    gateRegisterForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showFormError(gateRegisterForm, '');
+      if (!webAppReady()) { showFormError(gateRegisterForm, 'WEBAPP_URL is not set in script.js.'); return; }
+
+      const submitBtn = gateRegisterForm.querySelector('[data-submit-btn]');
+      const fd = new FormData(gateRegisterForm);
+      const data = {
+        Username: fd.get('Username'),
+        Email: fd.get('Email'),
+        Password: fd.get('Password'),
+        ConfirmPassword: fd.get('ConfirmPassword')
+      };
+      if (data.Password !== data.ConfirmPassword) {
+        showFormError(gateRegisterForm, 'Password and Confirm Password do not match.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      try {
+        const user = await apiAuth('register', data);
+        writeSession(user);
+        gateRegisterForm.reset();
+        applyAuthState();
+        showToast(`Account created. Welcome, ${user.Username}!`, 'success');
+        document.dispatchEvent(new CustomEvent('primeflix:authchange', { detail: { user } }));
+      } catch (err) {
+        showFormError(gateRegisterForm, err.message || 'Registration failed.');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    applyAuthState();
+  })();
+
+  /* =========================================================
      HERO — papar 5 tajuk terbaharu; kandungan tukar ikut kategori
      (Movie / TV Show) yang aktif pada navbar. TV Show turut papar
      Musim & Episod.
@@ -888,7 +1087,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let adminLoaded = false;
 
     const apiStatus = document.getElementById('apiStatus');
-    const toastEl = document.getElementById('toast');
 
     const chooserOverlay = document.getElementById('chooserOverlay');
     const openAddChooserBtn = document.getElementById('openAddChooserBtn');
@@ -933,13 +1131,8 @@ document.addEventListener('DOMContentLoaded', () => {
       apiStatus.className = 'admin-status status-' + (type || 'info');
     }
 
-    function showToast(message, type) {
-      toastEl.textContent = message;
-      toastEl.className = 'toast toast-' + (type || 'success');
-      toastEl.hidden = false;
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => { toastEl.hidden = true; }, 3200);
-    }
+    // showToast() digunakan di sini datang dari blok AUTH di atas (skop
+    // sama — DOMContentLoaded) — tiada perlu takrif semula.
 
     /* ---------------------------------------------------------
        BUKA / TUTUP PANEL ADMIN
@@ -955,7 +1148,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fungsi "UI sahaja" — tukar paparan tanpa sentuh history.
     // Dipanggil terus oleh popstate (bila user dah tekan Back/Forward)
     // supaya kita tak push/pop history entry berganda.
+    // Flag: bila akses admin ditolak sebab belum log masuk, tandakan
+    // niat ni — kalau pengguna berjaya log masuk SEBAGAI ADMIN sejurus
+    // selepas tu (lihat listener "primeflix:authchange" di bawah), panel
+    // admin terus dibuka automatik tanpa perlu klik butang "Admin" kali kedua.
+    let pendingAdminOpen = false;
+
     function openAdminPanelUI() {
+      // Sentiasa sahkan sesi & peranan sebelum papar — ini juga tempat
+      // yang dipanggil oleh popstate (butang Back/Forward) dan bila
+      // page dimuatkan terus dengan hash #admin, jadi mesti disemak di
+      // sini juga (bukan hanya dalam openAdminPanel()).
+      if (!isAdminSession()) {
+        adminPanel.hidden = true;
+        document.body.style.overflow = '';
+        if (window.location.hash === ADMIN_HASH) {
+          history.replaceState({}, '', window.location.pathname + window.location.search);
+        }
+        return;
+      }
+
       adminPanel.hidden = false;
       document.body.style.overflow = 'hidden';
       if (!adminLoaded) {
@@ -975,12 +1187,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Dipanggil bila USER klik butang "Admin" — cipta history entry baharu.
+    // Akses admin panel memerlukan sesi log masuk dengan Role = "admin"
+    // (lihat blok AUTH di atas & Code.gs — Role ditukar manual dalam
+    // Google Sheet untuk jadikan seseorang admin). Butang "Admin" hanya
+    // boleh ditekan selepas log masuk (header cuma kelihatan lepas
+    // #siteContent didedahkan), jadi di sini kita hanya perlu semak
+    // peranan (Role), bukan status log masuk.
     function openAdminPanel() {
+      if (!isAdminSession()) {
+        pendingAdminOpen = true;
+        showToast('Your account does not have Admin access.', 'error');
+        return;
+      }
+      pendingAdminOpen = false;
       if (window.location.hash !== ADMIN_HASH) {
         history.pushState({ admin: true }, '', ADMIN_HASH);
       }
       openAdminPanelUI();
     }
+
+    // Kalau pengguna log masuk sebagai admin sejurus selepas cuba akses
+    // panel admin (lihat pendingAdminOpen di atas), terus bukakan panel.
+    document.addEventListener('primeflix:authchange', (e) => {
+      const user = e.detail && e.detail.user;
+      if (pendingAdminOpen && user && user.Role === 'admin') {
+        pendingAdminOpen = false;
+        openAdminPanel();
+      } else if (user === null) {
+        // Log keluar — kalau panel admin sedang terbuka, tutup terus.
+        if (!adminPanel.hidden) closeAdminPanelUI();
+      }
+    });
 
     // Dipanggil bila USER klik butang "Kembali ke Laman" — guna history.back()
     // supaya kelakuannya sama macam tekan butang Back browser.
