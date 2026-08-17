@@ -14,14 +14,41 @@ const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpR
 (function requireAuth() {
   try {
     const raw = localStorage.getItem('primeflix_session_v1');
-    if (!raw || !JSON.parse(raw)) {
-      const here = window.location.pathname + window.location.search;
-      window.location.replace('login.html?redirect=' + encodeURIComponent(here));
+    if (raw && JSON.parse(raw)) return; // sesi wujud — teruskan macam biasa
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('_ac') === '1') {
+      // Penanda "baru log masuk" hadir tapi sesi tetap tiada di sini —
+      // storan (localStorage) tak kekal merentasi navigasi pada
+      // pelayar/peranti ini (selalunya pelayar dalam-app WhatsApp/
+      // Instagram/Facebook/TikTok, atau mod Private/Incognito). Jangan
+      // redirect balik ke login.html (akan loop tanpa henti) — papar
+      // mesej jelas supaya pengguna faham punca sebenar.
+      showAuthStorageBlockedMessage();
+      return;
     }
+
+    const here = window.location.pathname + window.location.search;
+    window.location.replace('login.html?redirect=' + encodeURIComponent(here));
   } catch (err) {
     window.location.replace('login.html');
   }
 })();
+
+// Papar mesej penuh skrin (gantikan kandungan <body>) apabila sesi
+// hilang selepas log masuk berjaya — lihat nota di dalam requireAuth().
+function showAuthStorageBlockedMessage() {
+  document.body.innerHTML =
+    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0a0a0a;color:#fff;font-family:\'Work Sans\',sans-serif;text-align:center;">' +
+      '<div style="max-width:420px;">' +
+        '<h1 style="font-size:20px;margin:0 0 12px;">Storan sesi disekat</h1>' +
+        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Log masuk berjaya, tetapi pelayar/peranti ini menyekat storan sesi (localStorage) merentasi halaman.</p>' +
+        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Ini biasa berlaku pada pelayar dalam-app (WhatsApp, Instagram, Facebook, TikTok) atau mod Private/Incognito.</p>' +
+        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 18px;">Sila buka laman ini terus dalam Safari/Chrome (bukan dalam app tersebut), pastikan mod Private dimatikan, kemudian cuba log masuk semula.</p>' +
+        '<a href="login.html" style="display:inline-block;padding:10px 22px;background:#D9B25C;color:#0a0a0a;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">Kembali ke Log Masuk</a>' +
+      '</div>' +
+    '</div>';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 
