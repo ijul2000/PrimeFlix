@@ -200,6 +200,19 @@ button.nav-link{
    AUTH GATE — full-page login/register layout used by the
    standalone login.html page.
    ========================================================= */
+.in-app-browser-warning{
+  position:sticky;
+  top:0;
+  z-index:200;
+  background:#3a2a10;
+  border-bottom:1px solid rgba(217,178,92,0.4);
+  color:#f3d27a;
+  font-size:12.5px;
+  line-height:1.5;
+  text-align:center;
+  padding:10px 16px;
+}
+.in-app-browser-warning[hidden]{ display:none; }
 .auth-gate{
   min-height:100vh;
   display:flex;
