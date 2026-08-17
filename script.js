@@ -1,1817 +1,1671 @@
-// =========================================================
-// PRIME FLIX — interactions
-// =========================================================
+/* =========================================================
+   PRIME FLIX — Design tokens
+   ========================================================= */
+:root{
+  --bg:            #0a0a0a;
+  --bg-raised:     #141414;
+  --bg-card:       #1c1c1c;
+  --line:          #2a2a28;
+  --gold:          #d9b25c;
+  --gold-soft:     #f3d27a;
+  --gold-deep:     #b9862f;
+  --text:          #f2f0ea;
+  --text-muted:    #a3a19a;
+  --text-dim:      #706e68;
 
-// Tampal URL Web App Google Apps Script anda di bawah
-// (lihat arahan pasang di bahagian atas Code.gs).
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
+  --font-display: "Anton", "Arial Narrow", sans-serif;
+  --font-body:    "Work Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
-// Kawalan akses: laman utama kini memerlukan log masuk pada page
-// BERASINGAN (login.html), bukan overlay dalam page ini. Kalau tiada
-// sesi tersimpan dalam localStorage (disimpan oleh login.js), hantar
-// pengguna ke login.html dahulu — bawa URL semasa sebagai ?redirect=
-// supaya selepas berjaya log masuk, pengguna dibawa balik ke sini.
-(function requireAuth() {
-  try {
-    const raw = localStorage.getItem('primeflix_session_v1');
-    if (raw && JSON.parse(raw)) return; // sesi wujud — teruskan macam biasa
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('_ac') === '1') {
-      // Penanda "baru log masuk" hadir tapi sesi tetap tiada di sini —
-      // storan (localStorage) tak kekal merentasi navigasi pada
-      // pelayar/peranti ini (selalunya pelayar dalam-app WhatsApp/
-      // Instagram/Facebook/TikTok, atau mod Private/Incognito). Jangan
-      // redirect balik ke login.html (akan loop tanpa henti) — papar
-      // mesej jelas supaya pengguna faham punca sebenar.
-      showAuthStorageBlockedMessage();
-      return;
-    }
-
-    const here = window.location.pathname + window.location.search;
-    window.location.replace('login.html?redirect=' + encodeURIComponent(here));
-  } catch (err) {
-    window.location.replace('login.html');
-  }
-})();
-
-// Papar mesej penuh skrin (gantikan kandungan <body>) apabila sesi
-// hilang selepas log masuk berjaya — lihat nota di dalam requireAuth().
-function showAuthStorageBlockedMessage() {
-  document.body.innerHTML =
-    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0a0a0a;color:#fff;font-family:\'Work Sans\',sans-serif;text-align:center;">' +
-      '<div style="max-width:420px;">' +
-        '<h1 style="font-size:20px;margin:0 0 12px;">Storan sesi disekat</h1>' +
-        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Log masuk berjaya, tetapi pelayar/peranti ini menyekat storan sesi (localStorage) merentasi halaman.</p>' +
-        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Ini biasa berlaku pada pelayar dalam-app (WhatsApp, Instagram, Facebook, TikTok) atau mod Private/Incognito.</p>' +
-        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 18px;">Sila buka laman ini terus dalam Safari/Chrome (bukan dalam app tersebut), pastikan mod Private dimatikan, kemudian cuba log masuk semula.</p>' +
-        '<a href="login.html" style="display:inline-block;padding:10px 22px;background:#D9B25C;color:#0a0a0a;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">Kembali ke Log Masuk</a>' +
-      '</div>' +
-    '</div>';
+  --header-h: 72px;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+*{ box-sizing:border-box; margin:0; padding:0; }
 
-  const MOBILE_SEARCH_BP = 860; // Breakpoint di mana search bar jadi ikon + panel (sama seperti hamburger)
+html{ scroll-behavior:smooth; }
 
-  /* ---- Mobile nav toggle ---- */
-  const hamburger = document.getElementById('hamburgerBtn');
-  const mobileNav = document.getElementById('mobileNav');
-  const searchForm = document.getElementById('searchForm');
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
 
-  function closeMobileSearchPanel() {
-    if (window.innerWidth <= MOBILE_SEARCH_BP) {
-      searchForm.classList.remove('expanded');
-    }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; }
+
+/* Sembunyikan scrollbar menegak pada halaman utama sahaja (bukan
+   movie.html) — tatal (scroll) masih berfungsi seperti biasa, cuma
+   bar/track scrollbar tak dipaparkan secara visual. */
+body:not(.detail-page){
+  scrollbar-width:none;      /* Firefox */
+  -ms-overflow-style:none;   /* Edge/IE lama */
+}
+body:not(.detail-page)::-webkit-scrollbar{
+  display:none;              /* Chrome, Safari, Edge (Chromium) */
+}
+
+::selection{ background:var(--gold-deep); color:#0a0a0a; }
+
+/* Focus visibility */
+a:focus-visible, button:focus-visible, input:focus-visible{
+  outline:2px solid var(--gold);
+  outline-offset:3px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+.site-header{
+  position:sticky;
+  top:0;
+  z-index:100;
+  height:var(--header-h);
+  display:flex;
+  align-items:center;
+  background:linear-gradient(180deg, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.85) 100%);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+
+.header-inner{
+  width:100%;
+  max-width:1400px;
+  margin:0 auto;
+  padding:0 32px;
+  display:flex;
+  align-items:center;
+  gap:40px;
+}
+
+/* Logo */
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+.logo-mark{ display:block; }
+.logo-word{
+  font-family:var(--font-display);
+  font-size:20px;
+  letter-spacing:1.5px;
+  color:var(--text);
+  line-height:1;
+  padding-top:2px;
+}
+.logo-word-accent{
+  background:linear-gradient(135deg, var(--gold-soft), var(--gold-deep));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+/* Nav */
+.main-nav{
+  display:flex;
+  align-items:center;
+  gap:28px;
+}
+.nav-link{
+  font-size:15px;
+  font-weight:600;
+  color:var(--text-muted);
+  padding:8px 2px;
+  position:relative;
+  transition:color .2s ease;
+}
+button.nav-link{
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-family:inherit;
+}
+.nav-link::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-2px;
+  height:2px;
+  background:var(--gold);
+  transform:scaleX(0);
+  transform-origin:left;
+  transition:transform .25s ease;
+}
+.nav-link:hover{ color:var(--text); }
+.nav-link.active{ color:var(--text); }
+.nav-link.active::after{ transform:scaleX(1); }
+
+/* Header actions (search on the right) */
+.header-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+/* Auth area (Login button / logged-in user + Logout) */
+.auth-area{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.auth-user-name{
+  font-size:13px;
+  font-weight:600;
+  color:var(--text-muted);
+  white-space:nowrap;
+}
+.auth-user-name .auth-role-tag{
+  margin-left:6px;
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--gold);
+  border:1px solid rgba(217,178,92,0.4);
+  border-radius:4px;
+  padding:2px 6px;
+}
+.auth-area-mobile{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 2px 0;
+  border-top:1px solid var(--line);
+  margin-top:6px;
+}
+.auth-switch{
+  margin-top:4px;
+  font-size:12.5px;
+  color:var(--text-dim);
+  text-align:center;
+}
+.auth-switch-link{
+  background:none;
+  border:none;
+  padding:0;
+  font:inherit;
+  font-weight:700;
+  color:var(--gold-soft);
+  cursor:pointer;
+  text-decoration:underline;
+}
+
+/* =========================================================
+   AUTH GATE — full-page login/register layout used by the
+   standalone login.html page.
+   ========================================================= */
+.in-app-browser-warning{
+  position:sticky;
+  top:0;
+  z-index:200;
+  background:#3a2a10;
+  border-bottom:1px solid rgba(217,178,92,0.4);
+  color:#f3d27a;
+  font-size:12.5px;
+  line-height:1.5;
+  text-align:center;
+  padding:10px 16px;
+}
+.in-app-browser-warning[hidden]{ display:none; }
+.auth-gate{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 20px;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(217,178,92,0.12), transparent 60%),
+    var(--bg);
+}
+.auth-gate-inner{
+  width:100%;
+  max-width:400px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+}
+.auth-gate-logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+.auth-gate-logo .logo-word{
+  font-family:'Anton', sans-serif;
+  font-size:22px;
+  letter-spacing:.02em;
+  color:var(--text);
+}
+.auth-gate-tagline{
+  font-size:14px;
+  color:var(--text-muted);
+  margin-bottom:28px;
+}
+.auth-gate-card{
+  width:100%;
+  background:var(--bg-raised);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:22px;
+}
+.auth-gate-tabs{
+  display:flex;
+  gap:6px;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:4px;
+  margin-bottom:20px;
+}
+.auth-gate-tab{
+  flex:1;
+  background:none;
+  border:none;
+  border-radius:7px;
+  padding:9px 0;
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--text-muted);
+  cursor:pointer;
+  transition:background .2s ease, color .2s ease;
+}
+.auth-gate-tab.active{
+  background:var(--gold);
+  color:#0a0a0a;
+}
+.auth-gate-form{ text-align:left; }
+.auth-gate-form[hidden]{ display:none; }
+.auth-gate-submit{ width:100%; margin-top:4px; justify-content:center; }
+
+.search-form{
+  position:relative;
+  display:flex;
+  align-items:center;
+  background:var(--bg-raised);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:0 10px;
+  height:38px;
+  transition:border-color .2s ease, width .2s ease;
+  width:230px;
+}
+.search-form:focus-within{
+  border-color:var(--gold-deep);
+}
+.search-icon-btn{
+  background:none;
+  border:none;
+  color:var(--text-dim);
+  display:flex;
+  align-items:center;
+  padding:4px;
+  touch-action:manipulation;
+}
+.search-form:focus-within .search-icon-btn{ color:var(--gold); }
+.search-input{
+  background:none;
+  border:none;
+  color:var(--text);
+  font-size:14px;
+  padding:0 8px;
+  width:100%;
+  outline:none;
+  touch-action:manipulation;
+}
+.search-input::placeholder{ color:var(--text-dim); }
+
+.search-results{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  right:0;
+  min-width:320px;
+  max-height:420px;
+  overflow-y:auto;
+  background:var(--bg-raised);
+  border:1px solid var(--line);
+  border-radius:10px;
+  box-shadow:0 16px 40px rgba(0,0,0,0.45);
+  padding:6px;
+  z-index:120;
+}
+.search-results[hidden]{ display:none; }
+.search-result-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:8px;
+  border-radius:8px;
+  cursor:pointer;
+  color:var(--text);
+}
+.search-result-item:hover,
+.search-result-item.active{
+  background:rgba(243,210,122,0.08);
+}
+.search-result-thumb{
+  flex:0 0 auto;
+  width:42px;
+  height:58px;
+  border-radius:5px;
+  background:linear-gradient(160deg, #1c1a15 0%, #141414 55%, #0a0a0a 100%);
+  background-size:cover;
+  background-position:center;
+}
+.search-result-info{
+  min-width:0;
+  flex:1 1 auto;
+}
+.search-result-title{
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--text);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.search-result-sub{
+  font-size:12px;
+  color:var(--text-dim);
+  margin-top:2px;
+}
+.search-result-empty{
+  padding:16px 10px;
+  text-align:center;
+  color:var(--text-dim);
+  font-size:13px;
+}
+@media (max-width:480px){
+  .search-results{ min-width:0; }
+}
+
+.hamburger{
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+  width:34px;
+  height:34px;
+  background:none;
+  border:none;
+}
+.hamburger span{
+  display:block;
+  height:2px;
+  background:var(--text);
+  border-radius:2px;
+  transition:transform .25s ease, opacity .25s ease;
+}
+.hamburger[aria-expanded="true"] span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+.hamburger[aria-expanded="true"] span:nth-child(2){ opacity:0; }
+.hamburger[aria-expanded="true"] span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+.mobile-nav{
+  display:none;
+  flex-direction:column;
+  position:absolute;
+  top:100%;
+  left:0;
+  right:0;
+  background:var(--bg-raised);
+  border-bottom:1px solid var(--line);
+  padding:8px 24px 16px;
+  max-height:calc(100vh - var(--header-h));
+  overflow-y:auto;
+}
+.mobile-nav .nav-link{
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
+  text-align:left;
+  width:100%;
+}
+.mobile-nav.open{ display:flex; }
+
+/* =========================================================
+   HERO
+   ========================================================= */
+.hero{
+  position:relative;
+  min-height:78vh;
+  display:flex;
+  align-items:flex-end;
+  overflow:hidden;
+  touch-action:pan-y;
+}
+.hero-fullpage{
+  min-height:100vh;
+}
+.hero-backdrop-img{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-color:#141414;
+  transition:background-image 0.5s ease;
+}
+.hero-backdrop{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(ellipse 90% 60% at 75% 20%, rgba(185,134,47,0.22), transparent 60%),
+    linear-gradient(0deg, var(--bg) 5%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.75) 100%),
+    linear-gradient(120deg, rgba(28,26,21,0.55) 0%, rgba(20,20,20,0.55) 45%, rgba(10,10,10,0.75) 100%);
+}
+.hero-backdrop::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 90px);
+}
+.hero-content{
+  position:relative;
+  z-index:2;
+  max-width:640px;
+  padding:0 32px 72px;
+  margin:0 auto;
+  width:100%;
+  max-width:1400px;
+  opacity:1;
+  transition:opacity 0.35s ease;
+}
+/* Sembunyikan kandungan hero (termasuk teks contoh/statik dalam HTML)
+   selagi movie sebenar dari Google Sheet belum siap dimuatkan, supaya
+   pengguna tak nampak movie yang salah berkelip sebentar semasa
+   refresh / kembali ke laman utama. */
+.hero-content.is-loading{
+  opacity:0;
+  pointer-events:none;
+}
+.hero-eyebrow{
+  color:var(--gold);
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:2.5px;
+  text-transform:uppercase;
+  margin-bottom:14px;
+}
+.hero-title{
+  font-family:var(--font-display);
+  font-size:clamp(36px, 6vw, 68px);
+  line-height:0.98;
+  letter-spacing:0.5px;
+  margin-bottom:20px;
+  max-width:620px;
+}
+.hero-desc{
+  color:var(--text-muted);
+  font-size:16px;
+  line-height:1.6;
+  max-width:480px;
+  margin-bottom:28px;
+}
+.hero-actions{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+}
+/* PENTING: kaedah paling kukuh untuk sembunyi #movieActions / #tvActions
+   — guna class .is-hidden dengan !important supaya TIDAK akan ditindih
+   oleh mana-mana peraturan display lain dalam stylesheet ini. */
+.hero-actions.is-hidden,
+.hero-actions[hidden]{
+  display:none !important;
+}
+
+/* TV Show — kotak statik papar Musim (tiada dropdown, sebab satu
+   poster = satu musim sahaja). Episod kekal sebagai dropdown. */
+.season-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:13px 24px;
+  border-radius:6px;
+  font-size:14px;
+  font-weight:700;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.06);
+  color:var(--text);
+}
+
+/* TV Show — butang pilih Episod (dropdown) */
+.select-btn-wrap{
+  position:relative;
+}
+.select-btn{
+  gap:8px;
+}
+.select-btn svg:last-child{
+  transition:transform .2s ease;
+}
+.select-btn[aria-expanded="true"] svg:last-child{
+  transform:rotate(180deg);
+}
+.select-dropdown{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  z-index:20;
+  min-width:150px;
+  max-height:260px;
+  overflow-y:auto;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:6px;
+  box-shadow:0 16px 36px rgba(0,0,0,0.55);
+}
+.select-dropdown[hidden]{ display:none; }
+.select-option{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:none;
+  border:none;
+  color:var(--text);
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:600;
+  padding:9px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease;
+}
+.select-option:hover{
+  background:rgba(217,178,92,0.12);
+  color:var(--gold-soft);
+}
+.select-option.active{
+  color:var(--gold-soft);
+  background:rgba(217,178,92,0.08);
+}
+
+.hero-meta{
+  color:var(--gold);
+  font-weight:600;
+  font-size:14px;
+  letter-spacing:0.3px;
+  margin-top:-8px;
+  margin-bottom:16px;
+}
+.hero-dots{
+  display:flex;
+  gap:8px;
+  margin-top:26px;
+}
+.hero-dots:empty{
+  margin-top:0;
+}
+.hero-dot{
+  width:22px;
+  height:4px;
+  border-radius:3px;
+  border:none;
+  padding:0;
+  background:rgba(255,255,255,0.25);
+  cursor:pointer;
+  transition:background 0.25s ease, width 0.25s ease;
+}
+.hero-dot:hover{
+  background:rgba(255,255,255,0.45);
+}
+.hero-dot.active{
+  background:var(--gold);
+  width:34px;
+}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:13px 24px;
+  border-radius:6px;
+  font-size:14px;
+  font-weight:700;
+  border:1px solid transparent;
+  transition:transform .15s ease, background .2s ease, border-color .2s ease;
+}
+.btn:hover{ transform:translateY(-1px); }
+.btn-primary{
+  background:linear-gradient(135deg, var(--gold-soft), var(--gold-deep));
+  color:#0a0a0a;
+}
+.btn-secondary{
+  background:rgba(255,255,255,0.06);
+  border-color:var(--line);
+  color:var(--text);
+}
+.btn-secondary:hover{ border-color:var(--gold-deep); }
+.btn-secondary.in-watchlist{
+  border-color:var(--gold-deep);
+  color:var(--gold-soft);
+}
+
+/* =========================================================
+   CONTENT ROWS
+   ========================================================= */
+.content{
+  max-width:1400px;
+  margin:0 auto;
+  padding:8px 32px 64px;
+}
+.row-section{ margin-top:44px; }
+.row-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+.row-head h2{
+  font-family:var(--font-display);
+  font-size:22px;
+  letter-spacing:0.5px;
+  font-weight:400;
+}
+.row-see-all{
+  font-size:13px;
+  font-weight:600;
+  color:var(--text-dim);
+  transition:color .2s ease;
+}
+.row-see-all:hover{ color:var(--gold); }
+
+.card-row{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  padding-bottom:14px;
+  scroll-snap-type:x proximity;
+}
+.card-row::-webkit-scrollbar{ height:6px; }
+.card-row::-webkit-scrollbar-track{ background:transparent; }
+.card-row::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+/* Grid 7 lajur x 5 baris — tiada scroll ke tepi, movie terbaharu
+   dipaparkan dahulu dan yang lain teranjak ke kanan / turun baris. */
+.poster-grid{
+  display:grid;
+  grid-template-columns:repeat(7, minmax(0, 1fr));
+  gap:14px;
+}
+.poster-grid .poster-card,
+.poster-grid .poster-art{
+  width:100%;
+}
+.poster-grid .poster-art{
+  height:auto;
+  aspect-ratio:2 / 3;
+}
+
+.poster-card{
+  flex:0 0 auto;
+  width:190px;
+  scroll-snap-align:start;
+  cursor:pointer;
+}
+.poster-art{
+  position:relative;
+  width:190px;
+  height:270px;
+  border-radius:8px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  display:flex;
+  align-items:flex-end;
+  transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+.poster-card:hover .poster-art{
+  transform:translateY(-6px) scale(1.03);
+  border-color:var(--gold-deep);
+  box-shadow:0 16px 32px rgba(0,0,0,0.5);
+}
+.poster-badge{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:rgba(10,10,10,0.6);
+  color:var(--gold-soft);
+  font-size:11px;
+  font-weight:700;
+  padding:3px 8px;
+  border-radius:4px;
+  letter-spacing:0.5px;
+}
+.poster-play{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  background:rgba(10,10,10,0.35);
+  transition:opacity .2s ease;
+}
+.poster-card:hover .poster-play{ opacity:1; }
+.poster-play svg{ filter:drop-shadow(0 4px 10px rgba(0,0,0,0.6)); }
+.poster-meta{
+  padding:10px 2px 0;
+}
+.poster-title{
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--text);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.poster-sub{
+  font-size:12px;
+  color:var(--text-dim);
+  margin-top:2px;
+}
+
+/* ---- Skeleton loading (poster belum sampai lagi) ---- */
+@keyframes primeflixShimmer{
+  0%{ background-position:200% 0; }
+  100%{ background-position:-200% 0; }
+}
+.skeleton-shimmer{
+  background:linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 75%);
+  background-size:200% 100%;
+  animation:primeflixShimmer 1.4s ease-in-out infinite;
+}
+.poster-card.skeleton{ pointer-events:none; cursor:default; }
+.poster-card.skeleton .poster-art{ border-color:var(--line); }
+.poster-card.skeleton .poster-title,
+.poster-card.skeleton .poster-sub{
+  height:11px;
+  border-radius:4px;
+  color:transparent;
+}
+.poster-card.skeleton .poster-title{ width:85%; margin-bottom:6px; }
+.poster-card.skeleton .poster-sub{ width:50%; height:10px; }
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+.site-footer{
+  border-top:1px solid var(--line);
+  padding:36px 0 48px;
+}
+.footer-inner{
+  max-width:1400px;
+  margin:0 auto;
+  padding:0 32px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.footer-logo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:var(--font-display);
+  font-size:15px;
+  letter-spacing:1px;
+}
+.footer-note{
+  color:var(--text-dim);
+  font-size:12.5px;
+  margin-left:auto;
+}
+
+/* =========================================================
+   WATCH PAGE (watch.html) — pemain video/iframe, fit dalam 1 page
+   ========================================================= */
+body.watch-page{
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+body.watch-page .site-header{
+  flex:0 0 auto;
+}
+.watch-main{
+  flex:1 1 auto;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  max-width:1400px;
+  width:100%;
+  margin:0 auto;
+  padding:20px 32px 24px;
+  overflow:hidden;
+}
+.watch-player-wrap{
+  position:relative;
+  width:100%;
+  flex:1 1 auto;
+  min-height:0;
+  background:#000;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid var(--line);
+}
+.watch-player-wrap video,
+.watch-player-wrap iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:none;
+  display:block;
+}
+.watch-player-state{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:14px;
+  text-align:center;
+  padding:24px;
+  color:var(--text-muted);
+  font-size:14px;
+}
+.watch-player-state.is-hidden{ display:none; }
+.watch-info{
+  flex:0 0 auto;
+  margin-top:18px;
+}
+.watch-title{
+  font-family:var(--font-display);
+  font-size:clamp(20px, 2.6vw, 30px);
+  letter-spacing:0.5px;
+  margin-bottom:8px;
+}
+.watch-meta{
+  color:var(--gold);
+  font-weight:600;
+  font-size:14px;
+  margin-bottom:8px;
+}
+.watch-actions{
+  margin-top:14px;
+}
+.watch-player-outer{
+  position:relative;
+  flex:1 1 auto;
+  min-height:0;
+  display:flex;
+}
+.watch-nav-btn{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(10,10,10,0.55);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.watch-nav-btn:hover{
+  background:rgba(10,10,10,0.8);
+  border-color:var(--gold-deep);
+}
+.watch-nav-btn[hidden]{ display:none; }
+.watch-nav-prev{ left:16px; }
+.watch-nav-next{ right:16px; }
+@media (max-width:640px){
+  .watch-nav-btn{ width:36px; height:36px; }
+  .watch-nav-prev{ left:8px; }
+  .watch-nav-next{ right:8px; }
+}
+.watch-desc{
+  color:var(--text-muted);
+  font-size:14px;
+  line-height:1.5;
+  max-width:760px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+/* =========================================================
+   MOVIE DETAIL PAGE (movie.html) — fix dalam 1 page, tiada scroll
+   ========================================================= */
+body.detail-page{
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+body.detail-page .site-header{
+  position:relative;
+  flex:0 0 auto;
+}
+body.detail-page .hero-fullpage{
+  flex:1 1 auto;
+  min-height:0;
+  /* Letak maklumat (tajuk, meta, deskripsi, butang) di ATAS SEBELAH
+     KIRI kawasan backdrop, bukan di bawah seperti asal. */
+  align-items:flex-start;
+}
+body.detail-page .hero-content{
+  padding:56px 32px 0;
+}
+body.detail-page .hero-desc{
+  display:-webkit-box;
+  -webkit-line-clamp:6;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+/* Watch page (tablet + mobile, up to 1024px): lebar kekal penuh, tapi
+   tinggi video dikecilkan (guna aspect-ratio 16:9) supaya tak tarik
+   sepenuh tinggi skrin. Page dibenarkan scroll supaya butiran & butang
+   di bawah video tetap boleh dicapai. */
+@media (max-width: 1024px){
+  body.watch-page{
+    height:auto;
+    min-height:100vh;
+    overflow-y:auto;
   }
-
-  hamburger.addEventListener('click', () => {
-    const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
-    hamburger.setAttribute('aria-expanded', String(!isOpen));
-    mobileNav.classList.toggle('open');
-    if (!isOpen) closeMobileSearchPanel(); // buka nav -> tutup panel carian jika terbuka
-  });
-
-  mobileNav.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      hamburger.setAttribute('aria-expanded', 'false');
-      mobileNav.classList.remove('open');
-    });
-  });
-
-  /* ---- Search form — carian langsung (papar padanan semasa menaip) ---- */
-  const searchInput = document.getElementById('searchInput');
-  const searchResults = document.getElementById('searchResults');
-
-  const SEARCH_MAX_RESULTS = 8;
-  const SEARCH_DEBOUNCE_MS = 200;
-  let searchDebounceTimer = null;
-  let searchActiveIndex = -1;
-  let searchCurrentItems = [];
-
-  function closeSearchResults() {
-    if (!searchResults) return;
-    searchResults.hidden = true;
-    searchResults.innerHTML = '';
-    searchActiveIndex = -1;
-    searchCurrentItems = [];
-    searchInput.setAttribute('aria-expanded', 'false');
+  .watch-main{
+    overflow:visible;
   }
-
-  // TV Show: satu rekod = satu episod. Untuk hasil carian, satu tajuk +
-  // musim yang sama papar SATU sahaja (elak senarai carian penuh dengan
-  // episod yang sama tajuk berulang-ulang).
-  function dedupeTvForSearch(list) {
-    const seen = new Set();
-    const result = [];
-    (list || []).forEach(record => {
-      const key = `${(record.Title || '').trim().toLowerCase()}|||${record.Season || ''}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      result.push(record);
-    });
-    return result;
+  .watch-player-outer{
+    flex:0 0 auto;
   }
-
-  function goToSearchResult(item) {
-    if (!item || !item.record || !item.record.ID) return;
-    const typeParam = item.type === 'tvshow' ? '&type=tvshow' : '';
-    window.location.href = `movie.html?id=${encodeURIComponent(item.record.ID)}${typeParam}`;
+  .watch-player-wrap{
+    flex:none;
+    aspect-ratio:16/9;
+    min-height:0;
   }
+}
 
-  function setActiveIndex(index) {
-    searchActiveIndex = index;
-    searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
-      el.classList.toggle('active', i === index);
-    });
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 860px){
+  .header-inner{ gap:16px; padding:0 18px; }
+  .main-nav{ display:none; }
+  /* Username + Logout dipindah masuk dalam menu hamburger (drawer
+     mobile-nav) sahaja pada mobile & tablet — versi desktop
+     (#authArea) disembunyikan supaya header tak sesak.
+     NOTA: guna selector ID (#authArea), BUKAN .auth-area — sebab
+     #authAreaMobile (versi dalam drawer) turut ada class "auth-area"
+     (class="auth-area auth-area-mobile"), jadi kalau guna selector
+     class ia akan sembunyikan KEDUA-DUA versi sekali. */
+  #authArea{ display:none; }
+  .search-form{
+    width:38px;
+    padding:0;
+    border:none;
+    overflow:hidden;
+    flex:0 0 auto;
   }
-
-  function renderSearchResults(items, query) {
-    searchCurrentItems = items;
-    searchActiveIndex = -1;
-    searchResults.innerHTML = '';
-
-    if (!items.length) {
-      const empty = document.createElement('div');
-      empty.className = 'search-result-empty';
-      empty.textContent = `No matches for "${query}".`;
-      searchResults.appendChild(empty);
-      searchResults.hidden = false;
-      searchInput.setAttribute('aria-expanded', 'true');
-      return;
-    }
-
-    items.forEach((item, i) => {
-      const record = item.record;
-      const row = document.createElement('div');
-      row.className = 'search-result-item';
-      row.setAttribute('role', 'option');
-      row.dataset.index = String(i);
-
-      const thumb = document.createElement('div');
-      thumb.className = 'search-result-thumb';
-      if (record.Poster) thumb.style.backgroundImage = `url("${record.Poster}")`;
-
-      const info = document.createElement('div');
-      info.className = 'search-result-info';
-      const titleEl = document.createElement('div');
-      titleEl.className = 'search-result-title';
-      titleEl.textContent = record.Title || '';
-      const subEl = document.createElement('div');
-      subEl.className = 'search-result-sub';
-      const subParts = item.type === 'tvshow'
-        ? [record.Year, record.Season ? `Season ${record.Season}` : null, 'TV Show']
-        : [record.Year, record.Genre, 'Movie'];
-      subEl.textContent = subParts.filter(Boolean).join(' · ');
-      info.appendChild(titleEl);
-      info.appendChild(subEl);
-
-      row.appendChild(thumb);
-      row.appendChild(info);
-      row.addEventListener('click', () => goToSearchResult(item));
-      row.addEventListener('mouseenter', () => setActiveIndex(i));
-
-      searchResults.appendChild(row);
-    });
-
-    searchResults.hidden = false;
-    searchInput.setAttribute('aria-expanded', 'true');
+  .search-form .search-icon-btn{ flex:0 0 auto; touch-action:manipulation; }
+  .search-form .search-input{
+    width:0;
+    padding:0;
+    opacity:0;
+    touch-action:manipulation;
   }
-
-  async function runSearch(query) {
-    const q = query.trim().toLowerCase();
-    if (!q) {
-      closeSearchResults();
-      return;
-    }
-
-    let data = readContentCache();
-    if (!data) {
-      try {
-        data = await fetchContentOnce();
-      } catch (err) {
-        closeSearchResults();
-        return;
-      }
-    }
-
-    // Kalau pengguna dah tukar teks carian semasa fetch berjalan,
-    // batalkan hasil ni (dah lapuk).
-    if (searchInput.value.trim().toLowerCase() !== q) return;
-
-    const movieMatches = (data.movie || [])
-      .filter(r => (r.Title || '').toLowerCase().includes(q))
-      .map(r => ({ type: 'movie', record: r }));
-
-    const tvMatches = dedupeTvForSearch((data.tvshow || []).filter(r => (r.Title || '').toLowerCase().includes(q)))
-      .map(r => ({ type: 'tvshow', record: r }));
-
-    const items = movieMatches.concat(tvMatches).slice(0, SEARCH_MAX_RESULTS);
-    renderSearchResults(items, query.trim());
+  .search-form.expanded{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    width:auto;
+    height:auto;
+    padding:14px 18px;
+    border:none;
+    border-bottom:1px solid var(--line);
+    border-radius:0;
+    background:var(--bg-raised);
+    overflow:visible;
+    z-index:130;
   }
-
-  searchForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const chosen = (searchActiveIndex >= 0 && searchCurrentItems[searchActiveIndex])
-      ? searchCurrentItems[searchActiveIndex]
-      : searchCurrentItems[0];
-    if (chosen) goToSearchResult(chosen);
-  });
-
-  searchInput.addEventListener('input', () => {
-    clearTimeout(searchDebounceTimer);
-    const query = searchInput.value;
-    searchDebounceTimer = setTimeout(() => runSearch(query), SEARCH_DEBOUNCE_MS);
-  });
-
-  searchInput.addEventListener('keydown', (e) => {
-    if (searchResults.hidden) return;
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (searchCurrentItems.length) setActiveIndex((searchActiveIndex + 1) % searchCurrentItems.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (searchCurrentItems.length) setActiveIndex((searchActiveIndex - 1 + searchCurrentItems.length) % searchCurrentItems.length);
-    } else if (e.key === 'Escape') {
-      closeSearchResults();
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!searchForm.contains(e.target)) closeSearchResults();
-  });
-
-  // Pada skrin mobile & tablet (≤860px), tap ikon dulu untuk buka panel carian
-  // penuh lebar di bawah header (sama gaya seperti menu hamburger).
-  const searchIconBtn = searchForm.querySelector('.search-icon-btn');
-  searchIconBtn.addEventListener('click', (e) => {
-    if (window.innerWidth <= MOBILE_SEARCH_BP && !searchForm.classList.contains('expanded')) {
-      e.preventDefault();
-      searchForm.classList.add('expanded');
-      hamburger.setAttribute('aria-expanded', 'false');
-      mobileNav.classList.remove('open'); // tutup menu hamburger jika terbuka
-      searchInput.focus();
-    }
-  });
-  searchInput.addEventListener('blur', () => {
-    // Sedikit lengah supaya klik pada hasil carian sempat diproses dahulu
-    // sebelum medan carian collapse (elak race condition pada mobile).
-    setTimeout(() => {
-      if (window.innerWidth <= MOBILE_SEARCH_BP && !searchInput.value) {
-        searchForm.classList.remove('expanded');
-      }
-    }, 150);
-  });
-
-  /* ---- Nav active state (Movie / TV Show) — tukar kategori tanpa reload ---- */
-  const ACTIVE_CATEGORY_KEY = 'primeflix_active_category';
-
-  function switchCategory(category, label) {
-    document.querySelectorAll('.nav-link').forEach(l => {
-      l.classList.toggle('active', l.textContent.trim().toLowerCase() === label);
-    });
-
-    const movieSection = document.getElementById('movies');
-    const tvSection = document.getElementById('tvshows');
-    if (movieSection) movieSection.hidden = category !== 'movie';
-    if (tvSection) tvSection.hidden = category !== 'tvshow';
-
-    // Simpan kategori aktif — supaya bila page di-refresh, ia kekal pada
-    // tab yang sama (Movie kekal Movie, TV Show kekal TV Show), bukan
-    // sentiasa default balik ke Movie.
-    try { sessionStorage.setItem(ACTIVE_CATEGORY_KEY, category); } catch (err) { /* abaikan */ }
-
-    document.dispatchEvent(new CustomEvent('primeflix:categorychange', { detail: { category } }));
+  .search-form.expanded .search-icon-btn{
+    flex:0 0 auto;
+    color:var(--text-dim);
   }
-
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      if (link.tagName === 'A') e.preventDefault();
-      const label = link.textContent.trim();
-
-      const lower = label.toLowerCase();
-      let category = null;
-      if (lower === 'tv show') category = 'tvshow';
-      else if (lower === 'movie') category = 'movie';
-      if (!category) return; // cth. "Watch List" — tak tukar kategori/active state
-
-      switchCategory(category, lower);
-    });
-  });
-
-  // Bila page dimuatkan (termasuk refresh, atau landing dari butang
-  // "Back to Site" pada page butiran TV show — lihat movie.js), semak
-  // kategori yang disimpan dalam sessionStorage dan terus paparkan tab
-  // tu (bukan sentiasa default ke Movie). Tiada aksi diperlukan kalau
-  // tersimpan "movie" sebab Movie memang default sedia ada dalam HTML.
-  //
-  // setTimeout supaya event "primeflix:categorychange" didispatch
-  // SELEPAS initHero() (di bawah dalam fail ni) sempat register
-  // listener-nya — kalau tak, Hero akan terlepas event ni dan terus
-  // tersangkut papar Movie.
-  (function restoreActiveCategory() {
-    let savedCategory = null;
-    try { savedCategory = sessionStorage.getItem(ACTIVE_CATEGORY_KEY); } catch (err) { /* abaikan */ }
-    if (savedCategory === 'tvshow') {
-      setTimeout(() => switchCategory('tvshow', 'tv show'), 0);
-    }
-  })();
-
-  /* =========================================================
-     DATA MOVIE & TV SHOW — dikongsi oleh Hero & kedua-dua grid
-     Trending. Satu fetch sahaja ke Apps Script (action=list tanpa
-     "type" memulangkan movie + tvshow serentak), dengan cache
-     sessionStorage supaya paparan seterusnya dalam sesi yang sama
-     terus laju tanpa tunggu rangkaian.
-     ========================================================= */
-  const CONTENT_CACHE_KEY = 'primeflix_content_cache_v1';
-  let contentFetchPromise = null;
-
-  function sortNewestFirst(arr) {
-    return (arr || []).slice().sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
+  .search-form.expanded .search-input{
+    width:100%;
+    opacity:1;
+    padding:0 8px;
+    font-size:16px;
+    height:42px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:8px;
   }
-
-  function readContentCache() {
-    try {
-      const raw = sessionStorage.getItem(CONTENT_CACHE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') return null;
-      const movie = Array.isArray(parsed.movie) ? parsed.movie : [];
-      const tvshow = Array.isArray(parsed.tvshow) ? parsed.tvshow : [];
-      if (!movie.length && !tvshow.length) return null;
-      return { movie: movie, tvshow: tvshow };
-    } catch (err) {
-      return null;
-    }
+  .search-form.expanded .search-results{
+    left:18px;
+    right:18px;
+    top:calc(100% + 4px);
   }
+  .hamburger{ display:flex; }
+  .hero{ min-height:64vh; }
+  .hero-content{ padding:0 18px 48px; }
+  .content{ padding:0 18px 48px; }
+  .watch-main{ padding:14px 18px 18px; }
+  .watch-desc{ -webkit-line-clamp:1; }
+  .poster-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); }
+}
 
-  function writeContentCache(data) {
-    try {
-      sessionStorage.setItem(CONTENT_CACHE_KEY, JSON.stringify(data));
-    } catch (err) {
-      // sessionStorage tak tersedia / penuh — abaikan, tak kritikal.
-    }
+/* Movie/TV Show detail page (tablet + mobile, up to 1024px so it also
+   covers tablets in landscape): maklumat diletakkan di TENGAH (bukan
+   kad terapung) — tiada latar belakang/border, hanya tulisan & butang
+   kelihatan terus atas backdrop. */
+@media (max-width: 1024px){
+  body.detail-page .hero-fullpage{
+    align-items:center;
   }
-
-  function fetchContentOnce() {
-    if (!contentFetchPromise) {
-      contentFetchPromise = fetch(`${WEBAPP_URL}?action=list`)
-        .then(res => res.json())
-        .then(json => {
-          if (!json.ok || !json.data) {
-            throw new Error(json.error || 'Failed to load data.');
-          }
-          const result = {
-            movie: sortNewestFirst(json.data.movie),
-            tvshow: sortNewestFirst(json.data.tvshow)
-          };
-          writeContentCache(result);
-          return result;
-        })
-        .catch(err => {
-          contentFetchPromise = null; // bagi peluang cuba semula pada panggilan seterusnya
-          throw err;
-        });
-    }
-    return contentFetchPromise;
+  body.detail-page .hero-content{
+    width:100%;
+    margin:0 auto;
+    max-width:560px;
+    text-align:center;
+    background:none;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    border-radius:0;
+    padding:0 18px;
   }
-
-  // Senarai fungsi refresh Hero & setiap grid Trending — didaftar oleh
-  // masing-masing di bawah, dan dipanggil semula selepas Admin berjaya
-  // tambah/kemaskini/padam tajuk, supaya Hero & Trending terus papar
-  // data terkini tanpa perlu reload halaman.
-  const homeRefreshCallbacks = [];
-
-  function refreshHomeContent() {
-    contentFetchPromise = null; // paksa fetch baharu (bukan guna hasil lama yang tersimpan)
-    homeRefreshCallbacks.forEach(fn => fn());
+  body.detail-page .hero-title,
+  body.detail-page .hero-desc{
+    margin-left:auto;
+    margin-right:auto;
   }
-
-  /* =========================================================
-     SENARAI SAYA (Watch List) — disimpan dalam localStorage
-     (kekal walaupun tab ditutup), diasingkan ikut kategori
-     'movie' & 'tvshow'. Digunakan oleh butang "+ Senarai Saya"
-     pada Hero & page butiran (movie.js), dan dipaparkan melalui
-     modal "Watch List" pada navbar.
-     ========================================================= */
-  const WATCHLIST_KEY = 'primeflix_watchlist_v1';
-  const watchlistRefreshCallbacks = [];
-
-  function readWatchlist() {
-    try {
-      const raw = localStorage.getItem(WATCHLIST_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-      return {
-        movie: Array.isArray(parsed && parsed.movie) ? parsed.movie : [],
-        tvshow: Array.isArray(parsed && parsed.tvshow) ? parsed.tvshow : []
-      };
-    } catch (err) {
-      return { movie: [], tvshow: [] };
-    }
+  body.detail-page .hero-actions{
+    justify-content:center;
   }
-
-  function writeWatchlist(data) {
-    try {
-      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(data));
-    } catch (err) {
-      // localStorage tak tersedia / penuh — abaikan, tak kritikal.
-    }
-    watchlistRefreshCallbacks.forEach(fn => fn());
-  }
-
-  function isInWatchlist(type, id) {
-    if (!id) return false;
-    const wl = readWatchlist();
-    return (wl[type] || []).some(r => String(r.ID) === String(id));
-  }
-
-  // Simpan hanya medan yang perlu untuk papar kad poster + navigasi.
-  function addToWatchlist(type, record) {
-    if (!record || !record.ID) return;
-    const wl = readWatchlist();
-    if (!wl[type]) wl[type] = [];
-    if (wl[type].some(r => String(r.ID) === String(record.ID))) return;
-    wl[type].unshift({
-      ID: record.ID,
-      Title: record.Title || '',
-      Year: record.Year || '',
-      Genre: record.Genre || '',
-      Season: record.Season || '',
-      Poster: record.Poster || '',
-      Badge: record.Badge || ''
-    });
-    writeWatchlist(wl);
-  }
-
-  function removeFromWatchlist(type, id) {
-    const wl = readWatchlist();
-    wl[type] = (wl[type] || []).filter(r => String(r.ID) !== String(id));
-    writeWatchlist(wl);
-  }
-
-  // Toggle & pulangkan status BAHARU (true = baru ditambah, false = baru dibuang).
-  function toggleWatchlist(type, record) {
-    if (!record || !record.ID) return false;
-    if (isInWatchlist(type, record.ID)) {
-      removeFromWatchlist(type, record.ID);
-      return false;
-    }
-    addToWatchlist(type, record);
-    return true;
-  }
-
-  // Kemaskan rupa mana-mana butang "+ Senarai Saya" ikut status semasa.
-  function syncWatchlistBtn(btn, type, id) {
-    if (!btn) return;
-    const saved = isInWatchlist(type, id);
-    btn.textContent = saved ? '✓ In My List' : '+ My List';
-    btn.classList.toggle('in-watchlist', saved);
-  }
-
-  /* =========================================================
-     AUTH — Session
-     Log masuk & daftar kini berada pada page BERASINGAN
-     (login.html & login.js) — lihat requireAuth() di bahagian
-     atas fail ini. Di sini kita hanya perlu baca sesi yang
-     disimpan dalam localStorage (oleh login.js) untuk memaparkan
-     nama pengguna pada header dan mengendalikan Logout.
-     ========================================================= */
-  const AUTH_SESSION_KEY = 'primeflix_session_v1';
-  const toastEl = document.getElementById('toast');
-
-  function readSession() {
-    try {
-      const raw = localStorage.getItem(AUTH_SESSION_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch (err) {
-      return null;
-    }
-  }
-  function writeSession(user) {
-    try { localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user)); } catch (err) { /* abaikan */ }
-  }
-  function clearSession() {
-    try { localStorage.removeItem(AUTH_SESSION_KEY); } catch (err) { /* abaikan */ }
-  }
-  function isAdminSession() {
-    const s = readSession();
-    return !!s && s.Role === 'admin';
-  }
-
-  function showToast(message, type) {
-    if (!toastEl) return;
-    toastEl.textContent = message;
-    toastEl.className = 'toast toast-' + (type || 'success');
-    toastEl.hidden = false;
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => { toastEl.hidden = true; }, 3200);
-  }
-
-  (function initAuthArea() {
-    const authArea = document.getElementById('authArea');
-    const authAreaMobile = document.getElementById('authAreaMobile');
-    const openAdminBtn = document.getElementById('openAdminBtn');
-
-    // Papar nama pengguna & butang Logout pada header (desktop & mobile).
-    // Sebab requireAuth() dah pastikan sesi wujud sebelum page ini
-    // sempat dipaparkan, `session` di sini sepatutnya sentiasa ada.
-    // Butang "Admin" pada header dibuang TERUS daripada DOM (bukan
-    // sekadar hidden) untuk sesi yang bukan Role = "admin" — jadi
-    // pengguna biasa (Role = "user") tak nampak langsung butang ini,
-    // walaupun cuba buka Elemen/Inspect pada browser.
-    function renderAuthArea() {
-      const session = readSession();
-
-      if (openAdminBtn && !(session && session.Role === 'admin')) {
-        openAdminBtn.remove();
-      }
-
-      [authArea, authAreaMobile].forEach(area => {
-        if (!area) return;
-        const isMobile = area === authAreaMobile;
-        area.innerHTML = '';
-        if (!session) return;
-
-        const nameEl = document.createElement('span');
-        nameEl.className = 'auth-user-name';
-        nameEl.textContent = session.Username;
-        const roleTag = document.createElement('span');
-        roleTag.className = 'auth-role-tag';
-        roleTag.textContent = session.Role === 'admin' ? 'Admin' : 'User';
-        nameEl.appendChild(roleTag);
-
-        const logoutBtn = document.createElement('button');
-        logoutBtn.type = 'button';
-        logoutBtn.className = isMobile ? 'nav-link' : 'btn btn-secondary btn-sm';
-        logoutBtn.textContent = 'Logout';
-        logoutBtn.addEventListener('click', () => {
-          clearSession();
-          document.dispatchEvent(new CustomEvent('primeflix:authchange', { detail: { user: null } }));
-          window.location.href = 'login.html';
-        });
-
-        area.appendChild(nameEl);
-        area.appendChild(logoutBtn);
-      });
-    }
-
-    renderAuthArea();
-  })();
-
-  /* =========================================================
-     HERO — papar 5 tajuk terbaharu; kandungan tukar ikut kategori
-     (Movie / TV Show) yang aktif pada navbar. TV Show turut papar
-     Musim & Episod.
-     ========================================================= */
-  (function initHero() {
-    const heroSection = document.getElementById('heroSection');
-    const heroContent = document.getElementById('heroContent');
-    const heroBackdropImg = document.getElementById('heroBackdropImg');
-    const heroEyebrow = document.getElementById('heroEyebrow');
-    const heroTitle = document.getElementById('heroTitle');
-    const heroMeta = document.getElementById('heroMeta');
-    const heroDesc = document.getElementById('heroDesc');
-    const heroDots = document.getElementById('heroDots');
-    const heroWatchNowBtn = document.getElementById('heroWatchNowBtn');
-    const heroWatchlistBtn = document.getElementById('heroWatchlistBtn');
-
-    if (!heroBackdropImg) return;
-    if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) {
-      // WEBAPP_URL belum ditetapkan — papar sahaja kandungan statik sedia ada.
-      if (heroContent) heroContent.classList.remove('is-loading');
-      return;
-    }
-
-    const ROTATE_MS = 7000;
-    let slidesByCategory = { movie: [], tvshow: [] };
-    let currentCategory = 'movie';
-    let currentIndex = 0;
-    let rotateTimer = null;
-    let currentRecord = null;
-
-    if (heroWatchNowBtn) {
-      heroWatchNowBtn.addEventListener('click', () => {
-        if (!currentRecord || !currentRecord.ID) return;
-        if (currentCategory === 'tvshow') {
-          // TV Show: bawa ke page butiran (movie.html) bagi tajuk & musim
-          // yang sama — bukan terus ke player — supaya pengguna boleh
-          // pilih episod dahulu (sama seperti klik poster di grid).
-          window.location.href = `movie.html?id=${encodeURIComponent(currentRecord.ID)}&type=tvshow`;
-          return;
-        }
-        window.location.href = `watch.html?id=${encodeURIComponent(currentRecord.ID)}`;
-      });
-    }
-
-    if (heroWatchlistBtn) {
-      heroWatchlistBtn.addEventListener('click', () => {
-        if (!currentRecord || !currentRecord.ID) return;
-        toggleWatchlist(currentCategory, currentRecord);
-        syncWatchlistBtn(heroWatchlistBtn, currentCategory, currentRecord.ID);
-      });
-      watchlistRefreshCallbacks.push(() => {
-        if (currentRecord) syncWatchlistBtn(heroWatchlistBtn, currentCategory, currentRecord.ID);
-      });
-    }
-
-    function revealHero() {
-      if (heroContent) heroContent.classList.remove('is-loading');
-    }
-
-    // Baris meta hero: "Tahun · Genre" untuk movie.
-    // TV Show tiada Genre — papar "Tahun · Musim X · Episod Y" sahaja.
-    function formatMeta(record) {
-      if (currentCategory === 'tvshow') {
-        const parts = [record.Year].filter(Boolean);
-        if (record.Season) parts.push(`Season ${record.Season}`);
-        if (record.Episode) parts.push(`Episode ${record.Episode}`);
-        return parts.join(' · ');
-      }
-      return [record.Year, record.Genre].filter(Boolean).join(' · ');
-    }
-
-    function renderSlide(index) {
-      const list = slidesByCategory[currentCategory];
-      const record = list[index];
-      if (!record) return;
-      currentIndex = index;
-      currentRecord = record;
-
-      heroBackdropImg.style.backgroundImage = record.Backdrop ? `url("${record.Backdrop}")` : 'none';
-      heroTitle.textContent = record.Title || '';
-      heroMeta.textContent = formatMeta(record);
-      heroDesc.textContent = record.Description || '';
-      syncWatchlistBtn(heroWatchlistBtn, currentCategory, record.ID);
-
-      if (heroDots) {
-        heroDots.querySelectorAll('.hero-dot').forEach((dot, i) => {
-          dot.classList.toggle('active', i === index);
-        });
-      }
-    }
-
-    function buildDots() {
-      if (!heroDots) return;
-      heroDots.innerHTML = '';
-      const list = slidesByCategory[currentCategory];
-      if (list.length < 2) return;
-      list.forEach((_, i) => {
-        const dot = document.createElement('button');
-        dot.type = 'button';
-        dot.className = 'hero-dot';
-        dot.setAttribute('aria-label', `Show title ${i + 1}`);
-        dot.addEventListener('click', () => {
-          renderSlide(i);
-          resetTimer();
-        });
-        heroDots.appendChild(dot);
-      });
-    }
-
-    function nextSlide() {
-      const list = slidesByCategory[currentCategory];
-      if (list.length < 2) return;
-      renderSlide((currentIndex + 1) % list.length);
-    }
-
-    function prevSlide() {
-      const list = slidesByCategory[currentCategory];
-      if (list.length < 2) return;
-      renderSlide((currentIndex - 1 + list.length) % list.length);
-    }
-
-    // Slide (swipe) guna jari — untuk mobile & tablet. Sapu ke KIRI papar
-    // tajuk seterusnya, sapu ke KANAN papar tajuk sebelum. Guna Pointer
-    // Events (disokong touch + pen pada semua pelayar mobile moden) dan
-    // setPointerCapture supaya sapuan tetap dikesan walaupun jari
-    // meninggalkan kawasan hero sebelum dilepaskan.
-    (function initSwipe() {
-      if (!heroSection) return;
-      const SWIPE_THRESHOLD = 30; // piksel minimum untuk dikira sapuan
-      let startX = 0;
-      let startY = 0;
-      let activePointerId = null;
-
-      function onPointerDown(e) {
-        if (e.pointerType === 'mouse') return; // elak konflik dengan klik/drag mouse
-        if (e.target.closest('button, a')) return; // elak konflik dengan butang/pautan (dots, Tonton Sekarang, dll)
-        const list = slidesByCategory[currentCategory];
-        if (list.length < 2) return;
-        activePointerId = e.pointerId;
-        startX = e.clientX;
-        startY = e.clientY;
-      }
-
-      function onPointerUp(e) {
-        if (activePointerId === null || e.pointerId !== activePointerId) return;
-        activePointerId = null;
-
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-
-        // Pastikan pergerakan lebih mendatar (kiri/kanan) berbanding
-        // menegak (elak konflik dengan scroll page menegak).
-        if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return;
-
-        if (deltaX < 0) {
-          nextSlide();
-        } else {
-          prevSlide();
-        }
-        resetTimer();
-      }
-
-      function onPointerCancel(e) {
-        if (e.pointerId === activePointerId) activePointerId = null;
-      }
-
-      heroSection.addEventListener('pointerdown', onPointerDown);
-      heroSection.addEventListener('pointerup', onPointerUp);
-      heroSection.addEventListener('pointercancel', onPointerCancel);
-
-      // Fallback untuk pelayar/persekitaran yang tak sokong Pointer
-      // Events sepenuhnya bagi skrin sentuh (jarang berlaku, tapi
-      // pastikan sapuan tetap berfungsi).
-      let touchStartX = 0;
-      let touchStartY = 0;
-      let touchTracking = false;
-
-      heroSection.addEventListener('touchstart', (e) => {
-        if (window.PointerEvent) return; // Pointer Events dah tangani
-        if (!e.touches || e.touches.length !== 1) return;
-        if (e.target.closest('button, a')) return;
-        const list = slidesByCategory[currentCategory];
-        if (list.length < 2) return;
-        touchTracking = true;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      }, { passive: true });
-
-      heroSection.addEventListener('touchend', (e) => {
-        if (!touchTracking) return;
-        touchTracking = false;
-        const touch = e.changedTouches && e.changedTouches[0];
-        if (!touch) return;
-
-        const deltaX = touch.clientX - touchStartX;
-        const deltaY = touch.clientY - touchStartY;
-        if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return;
-
-        if (deltaX < 0) {
-          nextSlide();
-        } else {
-          prevSlide();
-        }
-        resetTimer();
-      }, { passive: true });
-    })();
-
-    function resetTimer() {
-      clearInterval(rotateTimer);
-      const list = slidesByCategory[currentCategory];
-      if (list.length > 1) {
-        rotateTimer = setInterval(nextSlide, ROTATE_MS);
-      }
-    }
-
-    // Papar kategori tertentu. Jika data kategori tu belum sampai lagi,
-    // sembunyikan hero buat sementara (elak papar kandungan kategori
-    // lain yang tak sepadan dengan tab aktif) — ia akan reveal semula
-    // sebaik sahaja data sampai.
-    function showCategory(category) {
-      if (category !== 'movie' && category !== 'tvshow') return;
-      currentCategory = category;
-      currentIndex = 0;
-      const list = slidesByCategory[category];
-      if (!list.length) {
-        if (heroContent) heroContent.classList.add('is-loading');
-        return;
-      }
-      buildDots();
-      renderSlide(0);
-      resetTimer();
-      revealHero();
-    }
-
-    document.addEventListener('primeflix:categorychange', (e) => {
-      if (e.detail && e.detail.category) showCategory(e.detail.category);
-    });
-
-    // TV Show: satu rekod = satu episod. Untuk Hero, kalau tajuk & musim
-    // sama tapi ada beberapa episod (cth. Episod 1 & Episod 2), papar
-    // SATU slaid sahaja bagi tajuk+musim tu — guna episod yang PALING
-    // BAHARU dimuat naik (senarai sudah disusun terbaharu dahulu ikut
-    // CreatedAt, jadi ambil kemunculan PERTAMA bagi setiap tajuk+musim).
-    function dedupeTvByTitleSeason(list) {
-      const seen = new Set();
-      const result = [];
-      (list || []).forEach(record => {
-        const key = `${(record.Title || '').trim().toLowerCase()}|||${record.Season || ''}`;
-        if (seen.has(key)) return;
-        seen.add(key);
-        result.push(record);
-      });
-      return result;
-    }
-
-    async function loadHero() {
-      let revealed = false;
-
-      // 1) Cache dahulu (kalau ada) — terus papar, tiada kelipan/lambat.
-      const cached = readContentCache();
-      if (cached) {
-        slidesByCategory.movie = cached.movie.slice(0, 5);
-        slidesByCategory.tvshow = dedupeTvByTitleSeason(cached.tvshow).slice(0, 5);
-        if (slidesByCategory[currentCategory].length) {
-          showCategory(currentCategory);
-          revealed = true;
-        }
-      }
-
-      // 2) Fetch terkini di latar belakang (dikongsi dengan kedua-dua
-      //    grid Trending — satu request sahaja).
-      try {
-        const data = await fetchContentOnce();
-        slidesByCategory.movie = data.movie.slice(0, 5);
-        slidesByCategory.tvshow = dedupeTvByTitleSeason(data.tvshow).slice(0, 5);
-        if (slidesByCategory[currentCategory].length) {
-          showCategory(currentCategory);
-        } else if (!revealed) {
-          revealHero(); // tiada cache & tiada data -> fallback kandungan statik
-        }
-      } catch (err) {
-        // Jika gagal muatkan (cth. WEBAPP_URL belum konfigurasi betul / rangkaian gagal),
-        // kekalkan kandungan hero statik sedia ada tanpa ranap laman.
-        if (!revealed) revealHero();
-      }
-    }
-
-    homeRefreshCallbacks.push(loadHero);
-    loadHero();
-  })();
-
-  /* =========================================================
-     FILEM TRENDING & TV SHOW TRENDING — grid 7x5 (35 poster),
-     tajuk terbaharu dahulu. Tiada scroll ke tepi; tajuk baharu
-     diletak di kedudukan pertama dan yang lain teranjak (grid
-     auto-wrap ke baris seterusnya).
-     ========================================================= */
-  function initTrendingSection(gridId, category) {
-    const grid = document.getElementById(gridId);
-    if (!grid) return;
-    if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) return;
-
-    const COLS = 7;
-    const ROWS = 5;
-    const MAX_ITEMS = COLS * ROWS;
-
-    // TV Show: satu rekod disimpan bagi SETIAP episod. Untuk paparan
-    // grid, kumpulkan ikut Tajuk + Musim supaya hanya SATU poster
-    // dipaparkan bagi setiap musim (guna poster episod pertama yang
-    // dijumpai dalam kumpulan itu) — episod baharu dengan tajuk & musim
-    // yang sama tidak akan cipta kad poster berasingan.
-    function dedupeByTitleSeason(list) {
-      if (category !== 'tvshow') return list;
-      const seen = new Set();
-      const result = [];
-      (list || []).forEach(record => {
-        const key = `${(record.Title || '').trim().toLowerCase()}|||${record.Season || ''}`;
-        if (seen.has(key)) return;
-        seen.add(key);
-        result.push(record);
-      });
-      return result;
-    }
-
-    function buildSkeletonCard() {
-      const card = document.createElement('div');
-      card.className = 'poster-card skeleton';
-
-      const art = document.createElement('div');
-      art.className = 'poster-art skeleton-shimmer';
-
-      const meta = document.createElement('div');
-      meta.className = 'poster-meta';
-      meta.innerHTML = '<div class="poster-title skeleton-shimmer"></div><div class="poster-sub skeleton-shimmer"></div>';
-
-      card.appendChild(art);
-      card.appendChild(meta);
-      return card;
-    }
-
-    // Papar skeleton serta-merta (tanpa tunggu rangkaian) supaya grid
-    // tak nampak kosong/lambat semasa data tengah dimuatkan.
-    function renderSkeletonGrid() {
-      grid.innerHTML = '';
-      for (let i = 0; i < MAX_ITEMS; i++) {
-        grid.appendChild(buildSkeletonCard());
-      }
-    }
-
-    function buildPosterCard(record) {
-      const card = document.createElement('div');
-      card.className = 'poster-card';
-      card.tabIndex = 0;
-      card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', `View details for ${record.Title || (category === 'tvshow' ? 'TV show' : 'movie')}`);
-
-      function goToDetail() {
-        if (!record.ID) return;
-        const typeParam = category === 'tvshow' ? '&type=tvshow' : '';
-        window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}${typeParam}`;
-      }
-      card.addEventListener('click', goToDetail);
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          goToDetail();
-        }
-      });
-
-      const art = document.createElement('div');
-      art.className = 'poster-art';
-      if (record.Poster) {
-        art.style.backgroundImage = `url("${record.Poster}")`;
-        art.style.backgroundSize = 'cover';
-        art.style.backgroundPosition = 'center';
-      } else {
-        art.style.background = 'linear-gradient(160deg, #1c1a15 0%, #141414 55%, #0a0a0a 100%)';
-      }
-
-      const badgeEl = document.createElement('span');
-      badgeEl.className = 'poster-badge';
-      badgeEl.textContent = record.Badge || 'HD';
-
-      const play = document.createElement('div');
-      play.className = 'poster-play';
-      play.innerHTML = `<svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-          <circle cx="22" cy="22" r="21" stroke="#F3D27A" stroke-width="1.5" opacity="0.7"/>
-          <path d="M18 14v16l13-8-13-8Z" fill="#F3D27A"/>
-        </svg>`;
-
-      art.appendChild(badgeEl);
-      art.appendChild(play);
-
-      const meta = document.createElement('div');
-      meta.className = 'poster-meta';
-      // TV Show tiada Genre — papar Tahun · Musim sahaja (tiada
-      // maklumat episod pada poster, sebab satu poster mewakili
-      // keseluruhan musim, bukan episod tertentu).
-      const subParts = category === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
-      if (category === 'tvshow' && record.Season) {
-        subParts.push(`Season ${record.Season}`);
-      }
-      const sub = subParts.filter(Boolean).join(' · ');
-      meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
-
-      card.appendChild(art);
-      card.appendChild(meta);
-      return card;
-    }
-
-    async function loadTrending() {
-      // 1) Jika ada cache, papar poster BETUL serta-merta — tiada
-      //    "lambat" nampak, tiada grid kosong.
-      const cached = readContentCache();
-      const cachedList = cached ? cached[category] : null;
-      if (cachedList && cachedList.length) {
-        grid.innerHTML = '';
-        dedupeByTitleSeason(cachedList).slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
-      } else {
-        // Tiada cache lagi (lawatan pertama) -> papar skeleton dahulu
-        // supaya ada maklum balas visual serta-merta semasa data dimuat.
-        renderSkeletonGrid();
-      }
-
-      // 2) Fetch data terkini di latar belakang (dikongsi dengan Hero
-      //    dan grid satu lagi — satu request sahaja) dan kemas kini
-      //    grid bila siap.
-      try {
-        const data = await fetchContentOnce();
-        const list = dedupeByTitleSeason(data[category] || []).slice(0, MAX_ITEMS);
-        grid.innerHTML = '';
-        list.forEach(record => grid.appendChild(buildPosterCard(record)));
-      } catch (err) {
-        // Jika gagal muatkan dan tiada cache, biarkan grid kosong tanpa ranap laman.
-        if (!(cachedList && cachedList.length)) grid.innerHTML = '';
-      }
-    }
-
-    homeRefreshCallbacks.push(loadTrending);
-    loadTrending();
-  }
-
-  initTrendingSection('trendingGrid', 'movie');
-  initTrendingSection('tvTrendingGrid', 'tvshow');
-
-
-  /* =========================================================
-     ADMIN PANEL
-     ========================================================= */
-
-  const adminPanel = document.getElementById('adminPanel');
-  const openAdminBtn = document.getElementById('openAdminBtn');
-  const closeAdminBtn = document.getElementById('closeAdminBtn');
-
-  if (adminPanel && openAdminBtn) {
-
-    let library = { movie: [], tvshow: [] };
-    let currentFilter = 'all';
-    let currentSearch = '';
-    let adminLoaded = false;
-
-    const apiStatus = document.getElementById('apiStatus');
-
-    const chooserOverlay = document.getElementById('chooserOverlay');
-    const openAddChooserBtn = document.getElementById('openAddChooserBtn');
-    const chooseMovieBtn = document.getElementById('chooseMovieBtn');
-    const chooseTvBtn = document.getElementById('chooseTvBtn');
-
-    const movieModalOverlay = document.getElementById('movieModalOverlay');
-    const movieForm = document.getElementById('movieForm');
-    const movieModalTitle = document.getElementById('movieModalTitle');
-
-    const tvModalOverlay = document.getElementById('tvModalOverlay');
-    const tvForm = document.getElementById('tvForm');
-    const tvModalTitle = document.getElementById('tvModalTitle');
-
-    const deleteModalOverlay = document.getElementById('deleteModalOverlay');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-
-    const checkLinksBtn = document.getElementById('checkLinksBtn');
-    const brokenLinksModalOverlay = document.getElementById('brokenLinksModalOverlay');
-    const brokenLinksLoading = document.getElementById('brokenLinksLoading');
-    const brokenLinksEmpty = document.getElementById('brokenLinksEmpty');
-    const brokenLinksList = document.getElementById('brokenLinksList');
-    const recheckLinksBtn = document.getElementById('recheckLinksBtn');
-
-    const libraryGrid = document.getElementById('libraryGrid');
-    const libraryLoading = document.getElementById('libraryLoading');
-    const libraryEmpty = document.getElementById('libraryEmpty');
-    const filterTabs = document.getElementById('filterTabs');
-    const searchForm = document.getElementById('adminSearchForm');
-    const searchInput = document.getElementById('adminSearchInput');
-
-    let pendingDelete = null; // { type, id }
-    const ADMIN_HASH = '#admin';
-
-    function webAppConfigured() {
-      return typeof WEBAPP_URL === 'string' && WEBAPP_URL.indexOf('GANTI_DENGAN') === -1;
-    }
-
-    function showStatus(message, type) {
-      apiStatus.textContent = message;
-      apiStatus.hidden = false;
-      apiStatus.className = 'admin-status status-' + (type || 'info');
-    }
-
-    // showToast() digunakan di sini datang dari blok AUTH di atas (skop
-    // sama — DOMContentLoaded) — tiada perlu takrif semula.
-
-    /* ---------------------------------------------------------
-       BUKA / TUTUP PANEL ADMIN
-       - Guna hash URL "#admin" sebagai penanda status, disokong
-         oleh history.pushState/popstate. Sebab URL itu sendiri
-         yang kekal selepas refresh (bukan localStorage), panel
-         admin automatik terbuka semula bila page di-refresh.
-       - Tekan butang "Kembali ke Laman" ATAU butang Back browser
-         kedua-duanya akan keluar dari panel admin ke laman utama,
-         sebab kedua-duanya melalui mekanisme history yang sama.
-    --------------------------------------------------------- */
-
-    // Fungsi "UI sahaja" — tukar paparan tanpa sentuh history.
-    // Dipanggil terus oleh popstate (bila user dah tekan Back/Forward)
-    // supaya kita tak push/pop history entry berganda.
-    // Flag: bila akses admin ditolak sebab belum log masuk, tandakan
-    // niat ni — kalau pengguna berjaya log masuk SEBAGAI ADMIN sejurus
-    // selepas tu (lihat listener "primeflix:authchange" di bawah), panel
-    // admin terus dibuka automatik tanpa perlu klik butang "Admin" kali kedua.
-    let pendingAdminOpen = false;
-
-    function openAdminPanelUI() {
-      // Sentiasa sahkan sesi & peranan sebelum papar — ini juga tempat
-      // yang dipanggil oleh popstate (butang Back/Forward) dan bila
-      // page dimuatkan terus dengan hash #admin, jadi mesti disemak di
-      // sini juga (bukan hanya dalam openAdminPanel()).
-      if (!isAdminSession()) {
-        adminPanel.hidden = true;
-        document.body.style.overflow = '';
-        if (window.location.hash === ADMIN_HASH) {
-          history.replaceState({}, '', window.location.pathname + window.location.search);
-        }
-        return;
-      }
-
-      adminPanel.hidden = false;
-      document.body.style.overflow = 'hidden';
-      if (!adminLoaded) {
-        adminLoaded = true;
-        if (!webAppConfigured()) {
-          showStatus(
-            'WEBAPP_URL is not set in script.js. Paste your Google Apps Script Web App URL at the top of this file to activate the admin panel.',
-            'error'
-          );
-        }
-        loadLibrary();
-      }
-    }
-    function closeAdminPanelUI() {
-      adminPanel.hidden = true;
-      document.body.style.overflow = '';
-    }
-
-    // Dipanggil bila USER klik butang "Admin" — cipta history entry baharu.
-    // Akses admin panel memerlukan sesi log masuk dengan Role = "admin"
-    // (lihat blok AUTH di atas & Code.gs — Role ditukar manual dalam
-    // Google Sheet untuk jadikan seseorang admin). Page ni sendiri sudah
-    // memerlukan log masuk (lihat requireAuth() di atas fail ini), jadi
-    // di sini kita hanya perlu semak peranan (Role), bukan status log masuk.
-    function openAdminPanel() {
-      if (!isAdminSession()) {
-        pendingAdminOpen = true;
-        showToast('Your account does not have Admin access.', 'error');
-        return;
-      }
-      pendingAdminOpen = false;
-      if (window.location.hash !== ADMIN_HASH) {
-        history.pushState({ admin: true }, '', ADMIN_HASH);
-      }
-      openAdminPanelUI();
-    }
-
-    // Kalau pengguna log masuk sebagai admin sejurus selepas cuba akses
-    // panel admin (lihat pendingAdminOpen di atas), terus bukakan panel.
-    document.addEventListener('primeflix:authchange', (e) => {
-      const user = e.detail && e.detail.user;
-      if (pendingAdminOpen && user && user.Role === 'admin') {
-        pendingAdminOpen = false;
-        openAdminPanel();
-      } else if (user === null) {
-        // Log keluar — kalau panel admin sedang terbuka, tutup terus.
-        if (!adminPanel.hidden) closeAdminPanelUI();
-      }
-    });
-
-    // Dipanggil bila USER klik butang "Kembali ke Laman" — guna history.back()
-    // supaya kelakuannya sama macam tekan butang Back browser.
-    function closeAdminPanel() {
-      if (window.location.hash === ADMIN_HASH) {
-        history.back();
-      } else {
-        closeAdminPanelUI();
-      }
-    }
-
-    openAdminBtn.addEventListener('click', openAdminPanel);
-    closeAdminBtn.addEventListener('click', closeAdminPanel);
-
-    // Butang Back / Forward browser (atau history.back() di atas) akan
-    // memicu event ini — sinkronkan paparan panel admin dengan hash semasa.
-    window.addEventListener('popstate', function () {
-      if (window.location.hash === ADMIN_HASH) {
-        openAdminPanelUI();
-      } else {
-        closeAdminPanelUI();
-      }
-    });
-
-    // Jika page dibuka/refresh dengan hash #admin dalam URL, terus
-    // paparkan panel admin (tanpa push history entry baharu).
-    if (window.location.hash === ADMIN_HASH) {
-      openAdminPanelUI();
-    }
-
-    /* ---- API helpers ---- */
-    async function apiList() {
-      const res = await fetch(`${WEBAPP_URL}?action=list`);
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error || 'Failed to load the list.');
-      return json.data; // { movie: [...], tvshow: [...] }
-    }
-
-    // Dihantar sebagai text/plain supaya Apps Script Web App tidak
-    // menyekat permintaan dengan CORS preflight (OPTIONS).
-    async function apiMutate(action, type, data) {
-      const res = await fetch(WEBAPP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, type, data })
-      });
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error || 'Request failed.');
-      return json.data;
-    }
-
-    async function apiCheckLinks() {
-      const res = await fetch(`${WEBAPP_URL}?action=checkLinks`);
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error || 'Failed to check links.');
-      return json.data; // array of { type, id, title, field, url, status, ok }
-    }
-
-    /* ---- Modal helpers ---- */
-    function openModal(overlay) {
-      document.querySelectorAll('.modal-overlay').forEach(o => { o.hidden = true; });
-      overlay.hidden = false;
-    }
-    function closeAllModals() {
-      document.querySelectorAll('.modal-overlay').forEach(o => { o.hidden = true; });
-      pendingDelete = null;
-    }
-
-    document.querySelectorAll('[data-close-modal]').forEach(btn => {
-      btn.addEventListener('click', closeAllModals);
-    });
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeAllModals();
-      });
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeAllModals();
-      }
-    });
-
-    openAddChooserBtn.addEventListener('click', () => openModal(chooserOverlay));
-
-    chooseMovieBtn.addEventListener('click', () => {
-      resetForm(movieForm, 'movieGenre');
-      movieModalTitle.textContent = 'Add Movie';
-      movieForm.querySelector('[data-submit-btn]').textContent = 'Save Movie';
-      openModal(movieModalOverlay);
-    });
-
-    chooseTvBtn.addEventListener('click', () => {
-      resetForm(tvForm, 'tvGenre');
-      tvModalTitle.textContent = 'Add TV Show';
-      tvForm.querySelector('[data-submit-btn]').textContent = 'Save TV Show';
-      openModal(tvModalOverlay);
-    });
-
-    /* ---- Tag input (genre — boleh banyak) ---- */
-    const tagState = {};
-
-    function initTagInput(key) {
-      const wrap = document.querySelector(`[data-tag-input="${key}"]`);
-      const list = wrap.querySelector('[data-tag-list]');
-      const input = wrap.querySelector('.tag-input-field');
-      tagState[key] = [];
-
-      function render() {
-        list.innerHTML = '';
-        tagState[key].forEach((tag, i) => {
-          const chip = document.createElement('span');
-          chip.className = 'tag-chip';
-          chip.innerHTML = `<span></span><button type="button" aria-label="Remove ${tag}">&times;</button>`;
-          chip.querySelector('span').textContent = tag;
-          chip.querySelector('button').addEventListener('click', () => {
-            tagState[key].splice(i, 1);
-            render();
-          });
-          list.appendChild(chip);
-        });
-      }
-
-      function addTag(raw) {
-        const value = raw.trim().replace(/,+$/, '');
-        if (!value) return;
-        if (tagState[key].some(t => t.toLowerCase() === value.toLowerCase())) return;
-        tagState[key].push(value);
-        render();
-      }
-
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ',') {
-          e.preventDefault();
-          addTag(input.value);
-          input.value = '';
-        } else if (e.key === 'Backspace' && !input.value && tagState[key].length) {
-          tagState[key].pop();
-          render();
-        }
-      });
-      input.addEventListener('blur', () => {
-        if (input.value.trim()) {
-          addTag(input.value);
-          input.value = '';
-        }
-      });
-
-      wrap.addEventListener('click', () => input.focus());
-
-      return {
-        set(genresArray) { tagState[key] = genresArray.slice(); render(); },
-        get() { return tagState[key]; },
-        clear() { tagState[key] = []; render(); }
-      };
-    }
-
-    const movieGenreTags = initTagInput('movieGenre');
-    const tvGenreTags = initTagInput('tvGenre');
-
-    /* ---- Image preview ---- */
-    function wirePreview(form) {
-      const posterInput = form.querySelector('[name="Poster"]');
-      const backdropInput = form.querySelector('[name="Backdrop"]');
-      const posterPreview = form.querySelector('[data-preview-poster]');
-      const backdropPreview = form.querySelector('[data-preview-backdrop]');
-
-      function update(input, previewEl) {
-        const url = input.value.trim();
-        previewEl.style.backgroundImage = url ? `url("${url}")` : '';
-      }
-      posterInput.addEventListener('input', () => update(posterInput, posterPreview));
-      backdropInput.addEventListener('input', () => update(backdropInput, backdropPreview));
-    }
-    wirePreview(movieForm);
-    wirePreview(tvForm);
-
-    /* ---- Form reset / fill ---- */
-    function resetForm(form, tagKey) {
-      form.reset();
-      form.querySelector('[name="ID"]').value = '';
-      form.querySelectorAll('[data-preview] > div').forEach(el => { el.style.backgroundImage = ''; });
-      hideFormError(form);
-      if (tagKey === 'movieGenre') movieGenreTags.clear();
-      if (tagKey === 'tvGenre') tvGenreTags.clear();
-    }
-
-    function fillForm(form, record, tagKey) {
-      form.querySelector('[name="ID"]').value = record.ID || '';
-      ['Title', 'Year', 'Description', 'Backdrop', 'Poster', 'Link', 'Badge', 'Season', 'Episode'].forEach(field => {
-        const el = form.querySelector(`[name="${field}"]`);
-        if (el && record[field] !== undefined) el.value = record[field];
-      });
-      const genres = String(record.Genre || '').split(',').map(g => g.trim()).filter(Boolean);
-      if (tagKey === 'movieGenre') movieGenreTags.set(genres);
-      if (tagKey === 'tvGenre') tvGenreTags.set(genres);
-
-      form.querySelectorAll('[data-preview] > div').forEach(el => { el.style.backgroundImage = ''; });
-      const posterPreview = form.querySelector('[data-preview-poster]');
-      const backdropPreview = form.querySelector('[data-preview-backdrop]');
-      if (record.Poster) posterPreview.style.backgroundImage = `url("${record.Poster}")`;
-      if (record.Backdrop) backdropPreview.style.backgroundImage = `url("${record.Backdrop}")`;
-      hideFormError(form);
-    }
-
-    function showFormError(form, message) {
-      const el = form.querySelector('[data-form-error]');
-      el.textContent = message;
-      el.hidden = false;
-    }
-    function hideFormError(form) {
-      const el = form.querySelector('[data-form-error]');
-      el.hidden = true;
-      el.textContent = '';
-    }
-
-    /* ---- Form submit (add / edit) ---- */
-    function formToData(form, genreTags) {
-      const fd = new FormData(form);
-      const data = {};
-      fd.forEach((value, key) => { data[key] = value; });
-      data.Genre = genreTags.get().join(', ');
-      if (!data.ID) delete data.ID;
-      return data;
-    }
-
-    async function handleSubmit(e, form, type, genreTags) {
-      e.preventDefault();
-      hideFormError(form);
-
-      if (!webAppConfigured()) {
-        showFormError(form, 'WEBAPP_URL is not set in script.js.');
-        return;
-      }
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-      if (genreTags.get().length === 0) {
-        showFormError(form, 'Please enter at least one genre.');
-        return;
-      }
-
-      const data = formToData(form, genreTags);
-      const isEdit = !!data.ID;
-      const submitBtn = form.querySelector('[data-submit-btn]');
-      const originalLabel = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Saving...';
-
-      try {
-        await apiMutate(isEdit ? 'edit' : 'add', type, data);
-        showToast(isEdit ? 'Update saved successfully.' : 'New title added successfully.', 'success');
-        closeAllModals();
-        loadLibrary();
-        refreshHomeContent();
-      } catch (err) {
-        showFormError(form, err.message || 'Sesuatu tidak kena. Cuba lagi.');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalLabel;
-      }
-    }
-
-    movieForm.addEventListener('submit', (e) => handleSubmit(e, movieForm, 'movie', movieGenreTags));
-    tvForm.addEventListener('submit', (e) => handleSubmit(e, tvForm, 'tvshow', tvGenreTags));
-
-    /* ---- Library: load / render / filter / search ---- */
-    async function loadLibrary() {
-      if (!webAppConfigured()) {
-        libraryLoading.hidden = true;
-        libraryEmpty.hidden = false;
-        libraryEmpty.textContent = 'Connect WEBAPP_URL to display the list.';
-        return;
-      }
-      libraryLoading.hidden = false;
-      libraryEmpty.hidden = true;
-      libraryGrid.innerHTML = '';
-      try {
-        library = await apiList();
-        renderLibrary();
-      } catch (err) {
-        libraryLoading.hidden = true;
-        showStatus('Failed to load list: ' + err.message, 'error');
-      }
-    }
-
-    function combinedRecords() {
-      const movies = (library.movie || []).map(r => Object.assign({ _type: 'movie' }, r));
-      const shows = (library.tvshow || []).map(r => Object.assign({ _type: 'tvshow' }, r));
-      return movies.concat(shows);
-    }
-
-    function renderLibrary() {
-      libraryLoading.hidden = true;
-      let records = combinedRecords();
-
-      if (currentFilter !== 'all') {
-        records = records.filter(r => r._type === currentFilter);
-      }
-      if (currentSearch.trim()) {
-        const q = currentSearch.trim().toLowerCase();
-        records = records.filter(r => String(r.Title || '').toLowerCase().includes(q));
-      }
-
-      records.sort((a, b) => String(a.Title || '').localeCompare(String(b.Title || '')));
-
-      libraryGrid.innerHTML = '';
-      if (records.length === 0) {
-        libraryEmpty.hidden = false;
-        libraryEmpty.textContent = 'No titles found.';
-        return;
-      }
-      libraryEmpty.hidden = true;
-
-      records.forEach(record => libraryGrid.appendChild(buildLibraryCard(record)));
-    }
-
-    function buildLibraryCard(record) {
-      const card = document.createElement('div');
-      card.className = 'admin-card';
-
-      const art = document.createElement('div');
-      art.className = 'admin-card-art';
-      if (record.Poster) art.style.backgroundImage = `url("${record.Poster}")`;
-
-      const typeTag = document.createElement('span');
-      typeTag.className = 'admin-card-type';
-      typeTag.textContent = record._type === 'movie' ? 'MOVIE' : 'TV SHOW';
-      art.appendChild(typeTag);
-
-      const body = document.createElement('div');
-      body.className = 'admin-card-body';
-
-      const title = document.createElement('div');
-      title.className = 'admin-card-title';
-      title.textContent = record.Title || '(No title)';
-
-      const meta = document.createElement('div');
-      meta.className = 'admin-card-meta';
-      meta.textContent = record._type === 'movie'
-        ? [record.Year, record.Badge].filter(Boolean).join(' · ')
-        : [record.Year, record.Season ? `Season ${record.Season}` : '', record.Episode ? `Ep ${record.Episode}` : ''].filter(Boolean).join(' · ');
-
-      const genres = document.createElement('div');
-      genres.className = 'admin-card-genres';
-      genres.textContent = record.Genre || '';
-
-      const actions = document.createElement('div');
-      actions.className = 'admin-card-actions';
-
-      const editBtn = document.createElement('button');
-      editBtn.type = 'button';
-      editBtn.className = 'btn-edit';
-      editBtn.textContent = 'Edit';
-      editBtn.addEventListener('click', () => openEdit(record));
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.type = 'button';
-      deleteBtn.className = 'btn-delete';
-      deleteBtn.textContent = 'Delete';
-      deleteBtn.addEventListener('click', () => openDeleteConfirm(record));
-
-      actions.appendChild(editBtn);
-      actions.appendChild(deleteBtn);
-
-      body.appendChild(title);
-      body.appendChild(meta);
-      body.appendChild(genres);
-      body.appendChild(actions);
-
-      card.appendChild(art);
-      card.appendChild(body);
-      return card;
-    }
-
-    function openEdit(record) {
-      if (record._type === 'movie') {
-        fillForm(movieForm, record, 'movieGenre');
-        movieModalTitle.textContent = 'Edit Movie';
-        movieForm.querySelector('[data-submit-btn]').textContent = 'Update Movie';
-        openModal(movieModalOverlay);
-      } else {
-        fillForm(tvForm, record, 'tvGenre');
-        tvModalTitle.textContent = 'Edit TV Show';
-        tvForm.querySelector('[data-submit-btn]').textContent = 'Update TV Show';
-        openModal(tvModalOverlay);
-      }
-    }
-
-    function openDeleteConfirm(record) {
-      pendingDelete = { type: record._type, id: record.ID };
-      openModal(deleteModalOverlay);
-    }
-
-    confirmDeleteBtn.addEventListener('click', async () => {
-      if (!pendingDelete) return;
-      confirmDeleteBtn.disabled = true;
-      confirmDeleteBtn.textContent = 'Deleting...';
-      try {
-        await apiMutate('delete', pendingDelete.type, { ID: pendingDelete.id });
-        showToast('Record deleted successfully.', 'success');
-        closeAllModals();
-        loadLibrary();
-        refreshHomeContent();
-      } catch (err) {
-        showToast(err.message || 'Failed to delete record.', 'error');
-      } finally {
-        confirmDeleteBtn.disabled = false;
-        confirmDeleteBtn.textContent = 'Delete';
-      }
-    });
-
-    /* ---- Semak Pautan Rosak (Backdrop / Poster / Link) ---- */
-    const FIELD_LABELS = {
-      Backdrop: 'Backdrop Image',
-      Poster: 'Poster Image',
-      Link: 'Watch Link'
-    };
-
-    function findRecordById(type, id) {
-      const rows = (type === 'movie' ? library.movie : library.tvshow) || [];
-      return rows.find(r => String(r.ID) === String(id));
-    }
-
-    function buildBrokenLinkItem(entry) {
-      const item = document.createElement('div');
-      item.className = 'broken-link-item';
-
-      const info = document.createElement('div');
-      info.className = 'broken-link-info';
-
-      const titleRow = document.createElement('div');
-      titleRow.className = 'broken-link-title';
-
-      const titleText = document.createElement('span');
-      titleText.textContent = entry.title || '(No title)';
-
-      const typeTag = document.createElement('span');
-      typeTag.className = 'broken-link-type';
-      typeTag.textContent = entry.type === 'movie' ? 'MOVIE' : 'TV SHOW';
-
-      const fieldTag = document.createElement('span');
-      fieldTag.className = 'broken-link-field';
-      fieldTag.textContent = FIELD_LABELS[entry.field] || entry.field;
-
-      titleRow.appendChild(titleText);
-      titleRow.appendChild(typeTag);
-      titleRow.appendChild(fieldTag);
-
-      const urlRow = document.createElement('div');
-      urlRow.className = 'broken-link-url';
-      urlRow.textContent = entry.url;
-
-      const statusRow = document.createElement('div');
-      statusRow.className = 'broken-link-status';
-      statusRow.textContent = entry.status && entry.status > 0
-        ? `HTTP Status: ${entry.status}`
-        : 'Connection failed / invalid link';
-
-      info.appendChild(titleRow);
-      info.appendChild(urlRow);
-      info.appendChild(statusRow);
-
-      const editBtn = document.createElement('button');
-      editBtn.type = 'button';
-      editBtn.className = 'broken-link-edit';
-      editBtn.textContent = 'Fix';
-      editBtn.addEventListener('click', () => {
-        const record = findRecordById(entry.type, entry.id);
-        if (record) {
-          openEdit(Object.assign({ _type: entry.type }, record));
-        } else {
-          showToast('Record not found in the current list.', 'error');
-        }
-      });
-
-      item.appendChild(info);
-      item.appendChild(editBtn);
-      return item;
-    }
-
-    async function runCheckLinks() {
-      brokenLinksList.innerHTML = '';
-      brokenLinksEmpty.hidden = true;
-      brokenLinksEmpty.textContent = 'All links are working fine.';
-      brokenLinksLoading.hidden = false;
-      recheckLinksBtn.disabled = true;
-
-      try {
-        const results = await apiCheckLinks();
-        brokenLinksLoading.hidden = true;
-
-        if (!results || results.length === 0) {
-          brokenLinksEmpty.hidden = false;
-          return;
-        }
-        results.forEach(entry => brokenLinksList.appendChild(buildBrokenLinkItem(entry)));
-      } catch (err) {
-        brokenLinksLoading.hidden = true;
-        brokenLinksEmpty.hidden = false;
-        brokenLinksEmpty.textContent = err.message || 'Failed to check links.';
-      } finally {
-        recheckLinksBtn.disabled = false;
-      }
-    }
-
-    checkLinksBtn.addEventListener('click', () => {
-      if (!webAppConfigured()) {
-        showToast('WEBAPP_URL is not set in script.js.', 'error');
-        return;
-      }
-      openModal(brokenLinksModalOverlay);
-      runCheckLinks();
-    });
-    recheckLinksBtn.addEventListener('click', runCheckLinks);
-
-    /* ---- Filter tabs + search ---- */
-    filterTabs.addEventListener('click', (e) => {
-      const btn = e.target.closest('.filter-tab');
-      if (!btn) return;
-      filterTabs.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
-      renderLibrary();
-    });
-
-    searchForm.addEventListener('submit', (e) => e.preventDefault());
-    searchInput.addEventListener('input', () => {
-      currentSearch = searchInput.value;
-      renderLibrary();
-    });
-  }
-
-  /* =========================================================
-     WATCH LIST MODAL — dipapar bila butang "Watch List" pada
-     navbar (desktop & mobile) ditekan. Tab Movie / TV Show
-     diasingkan; setiap kad boleh dibuang terus dari modal.
-     ========================================================= */
-  (function initWatchlistModal() {
-    const overlay = document.getElementById('watchlistModalOverlay');
-    const closeBtn = document.getElementById('watchlistCloseBtn');
-    const tabsWrap = document.getElementById('watchlistTabs');
-    const grid = document.getElementById('watchlistGrid');
-    const emptyEl = document.getElementById('watchlistEmpty');
-    const openBtn = document.getElementById('watchListBtn');
-    const openBtnMobile = document.getElementById('watchListBtnMobile');
-
-    if (!overlay || !grid) return;
-
-    let currentTab = 'movie';
-
-    function closeModal() {
-      overlay.hidden = true;
-    }
-    function openModalUI() {
-      overlay.hidden = false;
-      renderGrid();
-    }
-
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeModal();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !overlay.hidden) closeModal();
-    });
-
-    if (openBtn) openBtn.addEventListener('click', openModalUI);
-    if (openBtnMobile) openBtnMobile.addEventListener('click', openModalUI);
-
-    if (tabsWrap) {
-      tabsWrap.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-wl-tab]');
-        if (!btn) return;
-        tabsWrap.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentTab = btn.dataset.wlTab;
-        renderGrid();
-      });
-    }
-
-    function buildCard(record, type) {
-      const card = document.createElement('div');
-      card.className = 'poster-card watchlist-card';
-      card.tabIndex = 0;
-      card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', `View details for ${record.Title || ''}`);
-
-      function goToDetail() {
-        if (!record.ID) return;
-        const typeParam = type === 'tvshow' ? '&type=tvshow' : '';
-        window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}${typeParam}`;
-      }
-      card.addEventListener('click', goToDetail);
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          goToDetail();
-        }
-      });
-
-      const art = document.createElement('div');
-      art.className = 'poster-art';
-      if (record.Poster) {
-        art.style.backgroundImage = `url("${record.Poster}")`;
-        art.style.backgroundSize = 'cover';
-        art.style.backgroundPosition = 'center';
-      } else {
-        art.style.background = 'linear-gradient(160deg, #1c1a15 0%, #141414 55%, #0a0a0a 100%)';
-      }
-
-      const badgeEl = document.createElement('span');
-      badgeEl.className = 'poster-badge';
-      badgeEl.textContent = record.Badge || 'HD';
-
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'watchlist-remove-btn';
-      removeBtn.setAttribute('aria-label', `Remove ${record.Title || ''} from My List`);
-      removeBtn.innerHTML = '&times;';
-      removeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        removeFromWatchlist(type, record.ID);
-        renderGrid();
-      });
-
-      art.appendChild(badgeEl);
-      art.appendChild(removeBtn);
-
-      const meta = document.createElement('div');
-      meta.className = 'poster-meta';
-      const subParts = type === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
-      if (type === 'tvshow' && record.Season) subParts.push(`Season ${record.Season}`);
-      const sub = subParts.filter(Boolean).join(' · ');
-      meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
-
-      card.appendChild(art);
-      card.appendChild(meta);
-      return card;
-    }
-
-    function renderGrid() {
-      const wl = readWatchlist();
-      const list = wl[currentTab] || [];
-      grid.innerHTML = '';
-      if (!list.length) {
-        emptyEl.hidden = false;
-        grid.hidden = true;
-        return;
-      }
-      emptyEl.hidden = true;
-      grid.hidden = false;
-      list.forEach(record => grid.appendChild(buildCard(record, currentTab)));
-    }
-
-    // Bila watchlist berubah dari tempat lain (cth. butang pada Hero /
-    // page butiran), kemaskan grid ini juga jika modal sedang terbuka.
-    watchlistRefreshCallbacks.push(() => {
-      if (!overlay.hidden) renderGrid();
-    });
-  })();
-
-});
+}
+
+@media (max-width: 480px){
+  .hero-desc{ font-size:14.5px; }
+  .poster-card, .poster-art{ width:140px; }
+  .poster-art{ height:200px; }
+  .poster-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .poster-grid .poster-card,
+  .poster-grid .poster-art{ width:100%; height:auto; }
+  body.detail-page .hero-content{ max-width:100%; }
+}
+/* =========================================================
+   ADMIN PANEL (overlay on top of the main site)
+   ========================================================= */
+.admin-open-btn{ white-space:nowrap; }
+
+.admin-panel{
+  position:fixed;
+  inset:0;
+  z-index:150;
+  background:var(--bg);
+  overflow-y:auto;
+}
+.admin-panel[hidden]{ display:none; }
+
+.admin-header .header-inner{ gap:18px; }
+.admin-tag{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--gold);
+  background:rgba(217,178,92,0.12);
+  border:1px solid rgba(217,178,92,0.35);
+  padding:5px 10px;
+  border-radius:5px;
+}
+.btn-sm{ padding:9px 16px; font-size:13px; }
+
+/* Intro */
+.admin-main{
+  max-width:1200px;
+  margin:0 auto;
+  padding:40px 32px 80px;
+}
+.admin-intro{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  flex-wrap:wrap;
+  border-bottom:1px solid var(--line);
+  padding-bottom:28px;
+}
+.admin-eyebrow{
+  color:var(--gold);
+  font-weight:700;
+  font-size:12px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.admin-intro h1{
+  font-family:var(--font-display);
+  font-size:clamp(26px, 3.4vw, 38px);
+  font-weight:400;
+  letter-spacing:0.3px;
+  margin-bottom:8px;
+}
+.admin-sub{ color:var(--text-muted); font-size:14.5px; }
+
+.admin-status{
+  margin-top:18px;
+  padding:12px 16px;
+  border-radius:8px;
+  font-size:13.5px;
+  font-weight:600;
+}
+.admin-status.status-error{
+  background:rgba(214,88,74,0.12);
+  border:1px solid rgba(214,88,74,0.4);
+  color:#e88276;
+}
+.admin-status.status-info{
+  background:rgba(217,178,92,0.1);
+  border:1px solid rgba(217,178,92,0.35);
+  color:var(--gold-soft);
+}
+
+/* Library */
+.admin-library{ margin-top:36px; }
+.admin-library-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.admin-library-head h2{
+  font-family:var(--font-display);
+  font-size:20px;
+  font-weight:400;
+  letter-spacing:0.4px;
+}
+.admin-search-form{ width:260px; }
+
+.admin-filter-tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:20px;
+}
+.filter-tab{
+  background:var(--bg-raised);
+  border:1px solid var(--line);
+  color:var(--text-muted);
+  font-size:13px;
+  font-weight:600;
+  padding:8px 16px;
+  border-radius:20px;
+  transition:border-color .2s ease, color .2s ease, background .2s ease;
+}
+.filter-tab:hover{ color:var(--text); }
+.filter-tab.active{
+  background:linear-gradient(135deg, var(--gold-soft), var(--gold-deep));
+  border-color:transparent;
+  color:#0a0a0a;
+}
+
+.admin-table-wrap{ position:relative; min-height:120px; }
+.admin-loading, .admin-empty{
+  color:var(--text-dim);
+  font-size:14px;
+  padding:32px 4px;
+  text-align:center;
+  border:1px dashed var(--line);
+  border-radius:10px;
+}
+
+.admin-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:16px;
+}
+
+.admin-card{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  transition:border-color .2s ease, transform .2s ease;
+}
+.admin-card:hover{ border-color:var(--gold-deep); transform:translateY(-2px); }
+
+.admin-card-art{
+  position:relative;
+  width:100%;
+  aspect-ratio:2/3;
+  background-size:cover;
+  background-position:center;
+  background-color:var(--bg-raised);
+}
+.admin-card-type{
+  position:absolute;
+  top:8px;
+  left:8px;
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:0.4px;
+  padding:3px 8px;
+  border-radius:4px;
+  background:rgba(10,10,10,0.7);
+  color:var(--gold-soft);
+}
+.admin-card-body{
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  flex:1;
+}
+.admin-card-title{
+  font-size:13.5px;
+  font-weight:600;
+  line-height:1.3;
+}
+.admin-card-meta{
+  font-size:12px;
+  color:var(--text-dim);
+}
+.admin-card-genres{
+  font-size:11.5px;
+  color:var(--text-muted);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.admin-card-actions{
+  margin-top:auto;
+  display:flex;
+  gap:8px;
+  padding-top:10px;
+}
+.admin-card-actions button{
+  flex:1;
+  font-size:12px;
+  font-weight:700;
+  padding:8px 0;
+  border-radius:6px;
+  border:1px solid var(--line);
+  background:var(--bg-raised);
+  color:var(--text-muted);
+  transition:border-color .2s ease, color .2s ease;
+}
+.admin-card-actions button:hover{ color:var(--text); border-color:var(--gold-deep); }
+.admin-card-actions .btn-edit:hover{ color:var(--gold-soft); }
+.admin-card-actions .btn-delete:hover{ color:#e88276; border-color:#a4443a; }
+
+/* Modal */
+/* Watch List modal — grid poster lebih kecil sesuai lebar modal,
+   dengan butang buang (×) pada setiap kad. */
+.watchlist-grid{
+  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+}
+.poster-card.watchlist-card{
+  position:relative;
+}
+.watchlist-remove-btn{
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:2;
+  width:26px;
+  height:26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.25);
+  background:rgba(10,10,10,0.65);
+  color:var(--text);
+  font-size:15px;
+  line-height:1;
+  transition:background .2s ease, border-color .2s ease, color .2s ease;
+}
+.watchlist-remove-btn:hover{
+  background:rgba(214,88,74,0.85);
+  border-color:transparent;
+  color:#fff;
+}
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  z-index:200;
+  background:rgba(6,6,6,0.72);
+  backdrop-filter:blur(4px);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:5vh 16px;
+  overflow-y:auto;
+}
+.modal-overlay[hidden]{ display:none; }
+
+.modal{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  width:100%;
+  max-width:620px;
+  padding:24px 28px 28px;
+  box-shadow:0 30px 60px rgba(0,0,0,0.5);
+  animation:modalIn .18s ease;
+}
+.modal-sm{ max-width:440px; }
+
+@keyframes modalIn{
+  from{ opacity:0; transform:translateY(8px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+.modal-head h3{
+  font-family:var(--font-display);
+  font-weight:400;
+  font-size:20px;
+  letter-spacing:0.3px;
+}
+.modal-close{
+  background:none;
+  border:none;
+  color:var(--text-dim);
+  font-size:24px;
+  line-height:1;
+  padding:4px 6px;
+  transition:color .2s ease;
+}
+.modal-close:hover{ color:var(--text); }
+
+/* Type chooser */
+.chooser-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.chooser-card{
+  background:var(--bg-raised);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:22px 14px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  transition:border-color .2s ease, transform .2s ease;
+}
+.chooser-card:hover{ border-color:var(--gold-deep); transform:translateY(-2px); }
+.chooser-icon{ font-size:30px; }
+.chooser-label{ font-weight:700; font-size:15px; }
+.chooser-desc{ font-size:12px; color:var(--text-dim); text-align:center; }
+
+/* Form */
+.admin-form{ display:flex; flex-direction:column; gap:16px; }
+.form-row{ display:flex; gap:14px; }
+.form-row-split > *{ flex:1; }
+.form-field{ display:flex; flex-direction:column; gap:6px; }
+.form-field-narrow{ flex:0 0 120px; }
+.form-field span{ font-size:12.5px; font-weight:600; color:var(--text-muted); }
+.form-field em{ color:var(--gold); font-style:normal; }
+.form-field small{ font-size:11px; color:var(--text-dim); }
+
+.form-field input,
+.form-field textarea,
+.form-field select{
+  background:var(--bg-raised);
+  border:1px solid var(--line);
+  border-radius:7px;
+  color:var(--text);
+  font-family:inherit;
+  font-size:13.5px;
+  padding:10px 12px;
+  outline:none;
+  transition:border-color .2s ease;
+  width:100%;
+}
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus{ border-color:var(--gold-deep); }
+.form-field textarea{ resize:vertical; min-height:80px; }
+.form-field select{ appearance:auto; }
+
+/* Tag input (genre) */
+.tag-input{
+  background:var(--bg-raised);
+  border:1px solid var(--line);
+  border-radius:7px;
+  padding:8px 10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+}
+.tag-input:focus-within{ border-color:var(--gold-deep); }
+.tag-list{ display:flex; flex-wrap:wrap; gap:6px; }
+.tag-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(217,178,92,0.14);
+  border:1px solid rgba(217,178,92,0.35);
+  color:var(--gold-soft);
+  font-size:12px;
+  font-weight:600;
+  padding:4px 6px 4px 10px;
+  border-radius:20px;
+}
+.tag-chip button{
+  background:none;
+  border:none;
+  color:var(--gold-soft);
+  font-size:14px;
+  line-height:1;
+  padding:2px;
+  opacity:0.75;
+}
+.tag-chip button:hover{ opacity:1; }
+.tag-input-field{
+  background:none;
+  border:none;
+  color:var(--text);
+  font-size:13.5px;
+  padding:4px 2px;
+  flex:1;
+  min-width:140px;
+  outline:none;
+}
+.tag-input-field::placeholder{ color:var(--text-dim); }
+
+/* Preview swatches */
+.form-preview{ display:flex; gap:12px; }
+.form-preview-poster,
+.form-preview-backdrop{
+  flex:1;
+  height:80px;
+  border-radius:7px;
+  border:1px dashed var(--line);
+  background-size:cover;
+  background-position:center;
+  background-color:var(--bg-raised);
+  font-size:11px;
+  color:var(--text-dim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.form-preview-poster::before{ content:"Poster preview"; }
+.form-preview-backdrop::before{ content:"Backdrop preview"; }
+.form-preview-poster[style*="background-image"]::before,
+.form-preview-backdrop[style*="background-image"]::before{ content:""; }
+
+.form-error{
+  background:rgba(214,88,74,0.12);
+  border:1px solid rgba(214,88,74,0.4);
+  color:#e88276;
+  font-size:13px;
+  padding:10px 12px;
+  border-radius:7px;
+}
+
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:4px;
+}
+.btn-danger{
+  background:rgba(214,88,74,0.15);
+  border:1px solid rgba(214,88,74,0.4);
+  color:#e88276;
+}
+.btn-danger:hover{ background:rgba(214,88,74,0.25); }
+.btn[disabled]{ opacity:0.6; pointer-events:none; }
+
+.delete-confirm-text{
+  color:var(--text-muted);
+  font-size:13.5px;
+  line-height:1.6;
+  margin-bottom:6px;
+}
+
+/* Toast */
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:28px;
+  transform:translateX(-50%) translateY(0);
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  color:var(--text);
+  font-size:13.5px;
+  font-weight:600;
+  padding:12px 20px;
+  border-radius:8px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.5);
+  z-index:300;
+}
+.toast.toast-success{ border-color:rgba(217,178,92,0.5); color:var(--gold-soft); }
+.toast.toast-error{ border-color:rgba(214,88,74,0.5); color:#e88276; }
+.toast[hidden]{ display:none; }
+
+/* Responsive */
+@media (max-width:640px){
+  .admin-main{ padding:28px 18px 60px; }
+  .form-row{ flex-direction:column; }
+  .form-field-narrow{ flex:1; }
+  .admin-search-form{ width:100%; }
+  .admin-library-head{ flex-direction:column; align-items:flex-start; }
+  .chooser-options{ grid-template-columns:1fr; }
+}
+
+/* Admin intro action group */
+.admin-intro-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* Broken links modal */
+.modal-lg{ max-width:760px; }
+.broken-links-note{
+  color:var(--text-dim);
+  font-size:13px;
+  margin-bottom:16px;
+}
+.broken-links-body{ min-height:80px; margin-bottom:6px; }
+.broken-links-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-height:52vh;
+  overflow-y:auto;
+  padding-right:4px;
+}
+.broken-link-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:var(--bg-raised);
+  border:1px solid rgba(214,88,74,0.35);
+  border-radius:8px;
+  padding:12px 14px;
+}
+.broken-link-info{ flex:1; min-width:0; }
+.broken-link-title{
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.broken-link-field{
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:0.3px;
+  text-transform:uppercase;
+  color:#e88276;
+  background:rgba(214,88,74,0.14);
+  border:1px solid rgba(214,88,74,0.35);
+  padding:2px 7px;
+  border-radius:4px;
+}
+.broken-link-type{
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:0.3px;
+  color:var(--text-dim);
+}
+.broken-link-url{
+  font-size:12px;
+  color:var(--text-dim);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  margin-top:3px;
+}
+.broken-link-status{
+  font-size:11.5px;
+  font-weight:700;
+  color:#e88276;
+  white-space:nowrap;
+}
+.broken-link-edit{
+  flex-shrink:0;
+  font-size:12px;
+  font-weight:700;
+  padding:8px 14px;
+  border-radius:6px;
+  border:1px solid var(--line);
+  background:var(--bg-card);
+  color:var(--text-muted);
+  transition:border-color .2s ease, color .2s ease;
+}
+.broken-link-edit:hover{ color:var(--gold-soft); border-color:var(--gold-deep); }
