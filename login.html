@@ -23,6 +23,15 @@
      (atau ke ?redirect=... jika page ni dibuka melalui requireAuth()
      pada movie.html / watch.html / index.html).
      ========================================================= -->
+<!-- Amaran pelayar dalam-app — dipaparkan oleh login.js SEBELUM
+     pengguna cuba log masuk, kalau URA agent kelihatan seperti
+     WhatsApp/Instagram/Facebook/TikTok in-app browser. Pelayar ni
+     selalunya menyekat localStorage & cookie, jadi log masuk boleh
+     "berjaya" di server tapi sesi tak kekal. Amaran awal lebih baik
+     daripada bagi orang cuba log masuk dahulu baru gagal. -->
+<div class="in-app-browser-warning" id="inAppBrowserWarning" hidden>
+  <span>Anda sedang guna pelayar dalam-app, yang selalunya menyekat sesi log masuk. Untuk elak masalah, sila buka pautan ini terus dalam Safari/Chrome.</span>
+</div>
 <div class="auth-gate" id="authGate">
   <div class="auth-gate-inner">
     <a href="index.html" class="logo auth-gate-logo" aria-label="Prime Flix - Home">
@@ -38,6 +47,7 @@
       </svg>
       <span class="logo-word">PRIME<span class="logo-word-accent">FLIX</span></span>
     </a>
+
     <p class="auth-gate-tagline">Log in or create an account to start watching.</p>
 
     <div class="auth-gate-card">
