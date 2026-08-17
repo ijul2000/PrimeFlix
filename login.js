@@ -51,6 +51,24 @@ function getRedirectTarget() {
   return redirect ? redirect : 'index.html';
 }
 
+// Tampal penanda "_ac=1" (auth-check) pada URL destinasi selepas login
+// berjaya. Ini membolehkan requireAuth() pada index.html/movie.html/
+// watch.html bezakan dua situasi bila sesi tak dijumpai di sana:
+//   1) Pengguna memang belum log masuk -> redirect terus ke login.html
+//      (macam biasa).
+//   2) Pengguna BARU SAHAJA log masuk di sini (writeSession() dah
+//      sahkan localStorage tertulis betul PADA HALAMAN LOGIN INI),
+//      tapi sesi hilang lepas navigasi ke halaman lain — biasanya
+//      sebab pelayar dalam-app (WhatsApp/Instagram/Facebook/TikTok)
+//      atau mod Private tak kekalkan localStorage merentasi navigasi.
+//      Dalam kes ni, redirect balik ke login.html akan berulang tanpa
+//      henti ("asyik kembali ke page login") — jadi requireAuth() pada
+//      halaman destinasi akan berhenti loop dan papar mesej jelas
+//      apabila nampak penanda ini.
+function withAuthCheckFlag(url) {
+  return url + (url.indexOf('?') === -1 ? '?' : '&') + '_ac=1';
+}
+
 // Kalau sesi dah wujud (pengguna dah log masuk), tak perlu papar
 // borang log masuk lagi — terus hantar ke destinasi.
 (function redirectIfAlreadyLoggedIn() {
@@ -129,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = false;
         return;
       }
-      window.location.href = getRedirectTarget();
+      window.location.href = withAuthCheckFlag(getRedirectTarget());
     } catch (err) {
       showFormError(gateLoginForm, err.message || 'Login failed.');
       submitBtn.disabled = false;
@@ -163,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = false;
         return;
       }
-      window.location.href = getRedirectTarget();
+      window.location.href = withAuthCheckFlag(getRedirectTarget());
     } catch (err) {
       showFormError(gateRegisterForm, err.message || 'Registration failed.');
       submitBtn.disabled = false;
