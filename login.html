@@ -59,6 +59,7 @@
         <div class="form-error" data-form-error hidden></div>
 
         <button type="submit" class="btn btn-primary auth-gate-submit" data-submit-btn>Login</button>
+        <button type="button" class="auth-gate-forgot-link" id="forgotPasswordLink">Forgot password?</button>
       </form>
 
       <form id="gateRegisterForm" class="admin-form auth-gate-form" novalidate hidden>
@@ -82,6 +83,23 @@
         <div class="form-error" data-form-error hidden></div>
 
         <button type="submit" class="btn btn-primary auth-gate-submit" data-submit-btn>Register</button>
+      </form>
+
+      <!-- FORGOT PASSWORD — dipapar bila "Forgot password?" ditekan pada
+           borang Login. Emel akan hantar password pengguna (teks biasa)
+           ke alamat emel yang didaftarkan, jika alamat itu wujud. -->
+      <form id="gateForgotForm" class="admin-form auth-gate-form" novalidate hidden>
+        <label class="form-field">
+          <span>Registered Email <em>*</em></span>
+          <input type="email" name="Email" required placeholder="you@example.com" autocomplete="email">
+        </label>
+        <small>We'll email your password to this address if it's registered.</small>
+
+        <div class="form-error" data-form-error hidden></div>
+        <div class="form-success" data-form-success hidden></div>
+
+        <button type="submit" class="btn btn-primary auth-gate-submit" data-submit-btn>Send Password</button>
+        <button type="button" class="auth-gate-back-link" id="backToLoginLink">&larr; Back to Login</button>
       </form>
     </div>
   </div>
