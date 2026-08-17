@@ -6,6 +6,23 @@
 // (lihat arahan pasang di bahagian atas Code.gs).
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
 
+// Kawalan akses: laman utama kini memerlukan log masuk pada page
+// BERASINGAN (login.html), bukan overlay dalam page ini. Kalau tiada
+// sesi tersimpan dalam localStorage (disimpan oleh login.js), hantar
+// pengguna ke login.html dahulu — bawa URL semasa sebagai ?redirect=
+// supaya selepas berjaya log masuk, pengguna dibawa balik ke sini.
+(function requireAuth() {
+  try {
+    const raw = localStorage.getItem('primeflix_session_v1');
+    if (!raw || !JSON.parse(raw)) {
+      const here = window.location.pathname + window.location.search;
+      window.location.replace('login.html?redirect=' + encodeURIComponent(here));
+    }
+  } catch (err) {
+    window.location.replace('login.html');
+  }
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
 
   const MOBILE_SEARCH_BP = 860; // Breakpoint di mana search bar jadi ikon + panel (sama seperti hamburger)
@@ -426,13 +443,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* =========================================================
-     AUTH — Login / Register / Session
-     Guna endpoint POST yang sama (Code.gs) dengan action
-     "register" / "login". Sesi pengguna yang berjaya log masuk
-     disimpan dalam localStorage (kekal walaupun tab ditutup)
-     supaya pengguna tak perlu log masuk semula setiap kali buka
-     semula laman. Kata laluan TIDAK PERNAH disimpan di sini —
-     hanya {ID, Username, Email, Role} yang backend pulangkan.
+     AUTH — Session
+     Log masuk & daftar kini berada pada page BERASINGAN
+     (login.html & login.js) — lihat requireAuth() di bahagian
+     atas fail ini. Di sini kita hanya perlu baca sesi yang
+     disimpan dalam localStorage (oleh login.js) untuk memaparkan
+     nama pengguna pada header dan mengendalikan Logout.
      ========================================================= */
   const AUTH_SESSION_KEY = 'primeflix_session_v1';
   const toastEl = document.getElementById('toast');
@@ -465,62 +481,20 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast._t = setTimeout(() => { toastEl.hidden = true; }, 3200);
   }
 
-  function webAppReady() {
-    return typeof WEBAPP_URL === 'string' && WEBAPP_URL.indexOf('GANTI_DENGAN') === -1;
-  }
-
-  async function apiAuth(action, data) {
-    const res = await fetch(WEBAPP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action, data })
-    });
-    const json = await res.json();
-    if (!json.ok) throw new Error(json.error || 'Request failed.');
-    return json.data; // { ID, Username, Email, Role }
-  }
-
-  (function initAuth() {
-    const authGate = document.getElementById('authGate');
-    const siteContent = document.getElementById('siteContent');
-    const gateTabs = document.getElementById('authGateTabs');
-    const gateLoginForm = document.getElementById('gateLoginForm');
-    const gateRegisterForm = document.getElementById('gateRegisterForm');
+  (function initAuthArea() {
     const authArea = document.getElementById('authArea');
     const authAreaMobile = document.getElementById('authAreaMobile');
 
-    if (!authGate || !siteContent || !gateLoginForm || !gateRegisterForm) return;
-
-    function showFormError(form, message) {
-      const errEl = form.querySelector('[data-form-error]');
-      if (!errEl) return;
-      errEl.textContent = message || '';
-      errEl.hidden = !message;
-    }
-
-    // Tunjuk/sembunyi laman utama ikut status log masuk. Dipanggil
-    // sebaik sahaja page dimuatkan, dan lepas login/register/logout.
-    function applyAuthState() {
-      const session = readSession();
-      if (session) {
-        authGate.hidden = true;
-        siteContent.hidden = false;
-        document.body.style.overflow = '';
-      } else {
-        authGate.hidden = false;
-        siteContent.hidden = true;
-        document.body.style.overflow = 'hidden';
-      }
-      renderAuthArea();
-    }
-
+    // Papar nama pengguna & butang Logout pada header (desktop & mobile).
+    // Sebab requireAuth() dah pastikan sesi wujud sebelum page ini
+    // sempat dipaparkan, `session` di sini sepatutnya sentiasa ada.
     function renderAuthArea() {
       const session = readSession();
       [authArea, authAreaMobile].forEach(area => {
         if (!area) return;
         const isMobile = area === authAreaMobile;
         area.innerHTML = '';
-        if (!session) return; // header hanya kelihatan bila #siteContent didedahkan (i.e. dah log masuk)
+        if (!session) return;
 
         const nameEl = document.createElement('span');
         nameEl.className = 'auth-user-name';
@@ -536,13 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.textContent = 'Logout';
         logoutBtn.addEventListener('click', () => {
           clearSession();
-          gateLoginForm.reset();
-          gateRegisterForm.reset();
-          showFormError(gateLoginForm, '');
-          showFormError(gateRegisterForm, '');
-          applyAuthState();
-          showToast('You have been logged out.', 'success');
           document.dispatchEvent(new CustomEvent('primeflix:authchange', { detail: { user: null } }));
+          window.location.href = 'login.html';
         });
 
         area.appendChild(nameEl);
@@ -550,78 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Tab "Login" / "Register" pada gate.
-    if (gateTabs) {
-      gateTabs.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-gate-tab]');
-        if (!btn) return;
-        const tab = btn.dataset.gateTab;
-        gateTabs.querySelectorAll('.auth-gate-tab').forEach(t => t.classList.toggle('active', t === btn));
-        gateLoginForm.hidden = tab !== 'login';
-        gateRegisterForm.hidden = tab !== 'register';
-        showFormError(gateLoginForm, '');
-        showFormError(gateRegisterForm, '');
-      });
-    }
-
-    gateLoginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      showFormError(gateLoginForm, '');
-      if (!webAppReady()) { showFormError(gateLoginForm, 'WEBAPP_URL is not set in script.js.'); return; }
-
-      const submitBtn = gateLoginForm.querySelector('[data-submit-btn]');
-      const fd = new FormData(gateLoginForm);
-      const data = { Username: fd.get('Username'), Password: fd.get('Password') };
-
-      submitBtn.disabled = true;
-      try {
-        const user = await apiAuth('login', data);
-        writeSession(user);
-        gateLoginForm.reset();
-        applyAuthState();
-        showToast(`Welcome back, ${user.Username}!`, 'success');
-        document.dispatchEvent(new CustomEvent('primeflix:authchange', { detail: { user } }));
-      } catch (err) {
-        showFormError(gateLoginForm, err.message || 'Login failed.');
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-
-    gateRegisterForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      showFormError(gateRegisterForm, '');
-      if (!webAppReady()) { showFormError(gateRegisterForm, 'WEBAPP_URL is not set in script.js.'); return; }
-
-      const submitBtn = gateRegisterForm.querySelector('[data-submit-btn]');
-      const fd = new FormData(gateRegisterForm);
-      const data = {
-        Username: fd.get('Username'),
-        Email: fd.get('Email'),
-        Password: fd.get('Password'),
-        ConfirmPassword: fd.get('ConfirmPassword')
-      };
-      if (data.Password !== data.ConfirmPassword) {
-        showFormError(gateRegisterForm, 'Password and Confirm Password do not match.');
-        return;
-      }
-
-      submitBtn.disabled = true;
-      try {
-        const user = await apiAuth('register', data);
-        writeSession(user);
-        gateRegisterForm.reset();
-        applyAuthState();
-        showToast(`Account created. Welcome, ${user.Username}!`, 'success');
-        document.dispatchEvent(new CustomEvent('primeflix:authchange', { detail: { user } }));
-      } catch (err) {
-        showFormError(gateRegisterForm, err.message || 'Registration failed.');
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-
-    applyAuthState();
+    renderAuthArea();
   })();
 
   /* =========================================================
@@ -1189,10 +1087,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dipanggil bila USER klik butang "Admin" — cipta history entry baharu.
     // Akses admin panel memerlukan sesi log masuk dengan Role = "admin"
     // (lihat blok AUTH di atas & Code.gs — Role ditukar manual dalam
-    // Google Sheet untuk jadikan seseorang admin). Butang "Admin" hanya
-    // boleh ditekan selepas log masuk (header cuma kelihatan lepas
-    // #siteContent didedahkan), jadi di sini kita hanya perlu semak
-    // peranan (Role), bukan status log masuk.
+    // Google Sheet untuk jadikan seseorang admin). Page ni sendiri sudah
+    // memerlukan log masuk (lihat requireAuth() di atas fail ini), jadi
+    // di sini kita hanya perlu semak peranan (Role), bukan status log masuk.
     function openAdminPanel() {
       if (!isAdminSession()) {
         pendingAdminOpen = true;
