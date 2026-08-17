@@ -6,17 +6,19 @@
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
 
 // Kawalan akses: page ni juga memerlukan log masuk (sesi yang sama
-// disimpan oleh index.html dalam localStorage). Kalau seseorang buka
-// page ni terus tanpa log masuk (cth. terus taip URL), hantar balik ke
-// halaman utama supaya papar skrin Login/Register dahulu.
+// disimpan oleh login.js dalam localStorage). Kalau seseorang buka
+// page ni terus tanpa log masuk (cth. terus taip URL), hantar ke
+// login.html dahulu — bawa URL semasa sebagai ?redirect= supaya
+// selepas berjaya log masuk, pengguna dibawa balik terus ke sini.
 (function requireAuth() {
   try {
     const raw = localStorage.getItem('primeflix_session_v1');
     if (!raw || !JSON.parse(raw)) {
-      window.location.replace('index.html');
+      const here = window.location.pathname + window.location.search;
+      window.location.replace('login.html?redirect=' + encodeURIComponent(here));
     }
   } catch (err) {
-    window.location.replace('index.html');
+    window.location.replace('login.html');
   }
 })();
 
