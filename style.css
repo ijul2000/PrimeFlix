@@ -992,8 +992,12 @@ body.detail-page .hero-desc{
   .main-nav{ display:none; }
   /* Username + Logout dipindah masuk dalam menu hamburger (drawer
      mobile-nav) sahaja pada mobile & tablet — versi desktop
-     (#authArea) disembunyikan supaya header tak sesak. */
-  .auth-area{ display:none; }
+     (#authArea) disembunyikan supaya header tak sesak.
+     NOTA: guna selector ID (#authArea), BUKAN .auth-area — sebab
+     #authAreaMobile (versi dalam drawer) turut ada class "auth-area"
+     (class="auth-area auth-area-mobile"), jadi kalau guna selector
+     class ia akan sembunyikan KEDUA-DUA versi sekali. */
+  #authArea{ display:none; }
   .search-form{
     width:38px;
     padding:0;
