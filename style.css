@@ -270,6 +270,42 @@ button.nav-link{
 .auth-gate-form{ text-align:left; }
 .auth-gate-form[hidden]{ display:none; }
 .auth-gate-submit{ width:100%; margin-top:4px; justify-content:center; }
+.auth-gate-forgot-link{
+  display:block;
+  width:100%;
+  background:none;
+  border:none;
+  margin-top:12px;
+  padding:0;
+  font-size:13px;
+  color:var(--text-muted);
+  text-decoration:underline;
+  cursor:pointer;
+  text-align:center;
+}
+.auth-gate-forgot-link:hover{ color:var(--text); }
+.auth-gate-back-link{
+  display:block;
+  width:100%;
+  background:none;
+  border:none;
+  margin-top:12px;
+  padding:0;
+  font-size:13px;
+  color:var(--text-muted);
+  text-decoration:underline;
+  cursor:pointer;
+  text-align:center;
+}
+.auth-gate-back-link:hover{ color:var(--text); }
+.form-success{
+  background:rgba(90,168,120,0.12);
+  border:1px solid rgba(90,168,120,0.4);
+  color:#7fcf9f;
+  font-size:13px;
+  padding:10px 12px;
+  border-radius:7px;
+}
 
 .search-form{
   position:relative;
