@@ -16,80 +16,6 @@
 </head>
 <body>
 
-<!-- =========================================================
-     AUTH GATE — page pertama yang dipaparkan. Laman utama
-     (header, hero, kandungan, footer) hanya didedahkan selepas
-     berjaya log masuk (lihat #siteContent & script.js).
-     ========================================================= -->
-<div class="auth-gate" id="authGate">
-  <div class="auth-gate-inner">
-    <div class="logo auth-gate-logo" aria-label="Prime Flix">
-      <svg class="logo-mark" width="40" height="40" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M17 0C7.6 0 0 7.6 0 17s7.6 17 17 17 17-7.6 17-17S26.4 0 17 0Z" fill="url(#pfGradGate)"/>
-        <path d="M13 9.5 25 17l-12 7.5V9.5Z" fill="#0A0A0A"/>
-        <defs>
-          <linearGradient id="pfGradGate" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#F3D27A"/>
-            <stop offset="1" stop-color="#B9862F"/>
-          </linearGradient>
-        </defs>
-      </svg>
-      <span class="logo-word">PRIME<span class="logo-word-accent">FLIX</span></span>
-    </div>
-    <p class="auth-gate-tagline">Log in or create an account to start watching.</p>
-
-    <div class="auth-gate-card">
-      <div class="auth-gate-tabs" id="authGateTabs">
-        <button type="button" class="auth-gate-tab active" data-gate-tab="login">Login</button>
-        <button type="button" class="auth-gate-tab" data-gate-tab="register">Register</button>
-      </div>
-
-      <form id="gateLoginForm" class="admin-form auth-gate-form" novalidate>
-        <label class="form-field">
-          <span>Username or Email <em>*</em></span>
-          <input type="text" name="Username" required placeholder="Your username or email" autocomplete="username">
-        </label>
-        <label class="form-field">
-          <span>Password <em>*</em></span>
-          <input type="password" name="Password" required placeholder="Your password" autocomplete="current-password">
-        </label>
-
-        <div class="form-error" data-form-error hidden></div>
-
-        <button type="submit" class="btn btn-primary auth-gate-submit" data-submit-btn>Login</button>
-      </form>
-
-      <form id="gateRegisterForm" class="admin-form auth-gate-form" novalidate hidden>
-        <label class="form-field">
-          <span>Username <em>*</em></span>
-          <input type="text" name="Username" required placeholder="Choose a username" autocomplete="username" minlength="3">
-        </label>
-        <label class="form-field">
-          <span>Email <em>*</em></span>
-          <input type="email" name="Email" required placeholder="you@example.com" autocomplete="email">
-        </label>
-        <label class="form-field">
-          <span>Password <em>*</em></span>
-          <input type="password" name="Password" required placeholder="At least 6 characters" autocomplete="new-password" minlength="6">
-        </label>
-        <label class="form-field">
-          <span>Confirm Password <em>*</em></span>
-          <input type="password" name="ConfirmPassword" required placeholder="Re-enter your password" autocomplete="new-password" minlength="6">
-        </label>
-
-        <div class="form-error" data-form-error hidden></div>
-
-        <button type="submit" class="btn btn-primary auth-gate-submit" data-submit-btn>Register</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- =========================================================
-     SITE CONTENT — disembunyikan sehingga pengguna log masuk.
-     ========================================================= -->
-<div id="siteContent" hidden>
-
 <!-- HEADER -->
 <header class="site-header" id="siteHeader">
   <div class="header-inner">
@@ -513,8 +439,6 @@
 
 
 </div>
-
-</div><!-- /#siteContent -->
 
 <div class="toast" id="toast" hidden></div>
 
