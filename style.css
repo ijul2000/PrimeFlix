@@ -197,8 +197,8 @@ button.nav-link{
 }
 
 /* =========================================================
-   AUTH GATE — full-page login/register wall shown before any
-   site content is revealed (see #siteContent in index.html).
+   AUTH GATE — full-page login/register layout used by the
+   standalone login.html page.
    ========================================================= */
 .auth-gate{
   min-height:100vh;
