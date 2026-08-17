@@ -5,6 +5,21 @@
 // Guna URL Web App yang sama seperti script.js
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
 
+// Kawalan akses: page ni juga memerlukan log masuk (sesi yang sama
+// disimpan oleh index.html dalam localStorage). Kalau seseorang buka
+// page ni terus tanpa log masuk (cth. terus taip URL), hantar balik ke
+// halaman utama supaya papar skrin Login/Register dahulu.
+(function requireAuth() {
+  try {
+    const raw = localStorage.getItem('primeflix_session_v1');
+    if (!raw || !JSON.parse(raw)) {
+      window.location.replace('index.html');
+    }
+  } catch (err) {
+    window.location.replace('index.html');
+  }
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
 
   const backdropImg = document.getElementById('detailBackdropImg');
