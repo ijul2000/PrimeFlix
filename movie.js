@@ -5,33 +5,71 @@
 // Guna URL Web App yang sama seperti script.js
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
 
-// Kawalan akses: page ni juga memerlukan log masuk (sesi yang sama
-// disimpan oleh login.js dalam localStorage). Kalau seseorang buka
-// page ni terus tanpa log masuk (cth. terus taip URL), hantar ke
-// login.html dahulu — bawa URL semasa sebagai ?redirect= supaya
-// selepas berjaya log masuk, pengguna dibawa balik terus ke sini.
-(function requireAuth() {
+// =========================================================
+// SESI — storan berlapis (localStorage + cookie fallback)
+// Sesetengah pelayar (mod Private/Incognito, pelayar dalam-app
+// WhatsApp/Instagram/Facebook/TikTok) menyekat localStorage. Cookie
+// biasa (document.cookie) kadangkala masih dibenarkan walaupun
+// localStorage disekat — jadi kita cuba localStorage dahulu, dan
+// SENTIASA turut simpan sebagai cookie sebagai lapisan sandaran.
+// NOTA: kalau pelayar sekat KEDUA-DUA localStorage & cookie, tiada
+// cara bypass dari kod client-side — itu sekatan platform.
+// =========================================================
+const AUTH_SESSION_KEY = 'primeflix_session_v1';
+
+function setSessionCookie(value) {
   try {
-    const raw = localStorage.getItem('primeflix_session_v1');
-    if (raw && JSON.parse(raw)) return; // sesi wujud — teruskan macam biasa
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('_ac') === '1') {
-      // Penanda "baru log masuk" hadir tapi sesi tetap tiada di sini —
-      // storan (localStorage) tak kekal merentasi navigasi pada
-      // pelayar/peranti ini (selalunya pelayar dalam-app WhatsApp/
-      // Instagram/Facebook/TikTok, atau mod Private/Incognito). Jangan
-      // redirect balik ke login.html (akan loop tanpa henti) — papar
-      // mesej jelas supaya pengguna faham punca sebenar.
-      showAuthStorageBlockedMessage();
-      return;
-    }
-
-    const here = window.location.pathname + window.location.search;
-    window.location.replace('login.html?redirect=' + encodeURIComponent(here));
+    document.cookie = AUTH_SESSION_KEY + '=' + encodeURIComponent(value) + ';path=/;max-age=' + (30 * 24 * 60 * 60) + ';SameSite=Lax';
+    return true;
   } catch (err) {
-    window.location.replace('login.html');
+    return false;
   }
+}
+function getSessionCookie() {
+  try {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + AUTH_SESSION_KEY + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch (err) {
+    return null;
+  }
+}
+function deleteSessionCookie() {
+  try { document.cookie = AUTH_SESSION_KEY + '=;path=/;max-age=0'; } catch (err) { /* abaikan */ }
+}
+
+function readSession() {
+  try {
+    const raw = localStorage.getItem(AUTH_SESSION_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (err) { /* localStorage tak tersedia — cuba cookie */ }
+  try {
+    const cookieRaw = getSessionCookie();
+    return cookieRaw ? JSON.parse(cookieRaw) : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+// Kawalan akses: page ni juga memerlukan log masuk (sesi yang sama
+// disimpan oleh login.js — localStorage atau cookie sandaran). Kalau
+// seseorang buka page ni terus tanpa log masuk (cth. terus taip URL),
+// hantar ke login.html dahulu — bawa URL semasa sebagai ?redirect=
+// supaya selepas berjaya log masuk, pengguna dibawa balik terus ke sini.
+(function requireAuth() {
+  if (readSession()) return; // sesi wujud — teruskan macam biasa
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('_ac') === '1') {
+    // Penanda "baru log masuk" hadir tapi sesi tetap tiada di sini —
+    // KEDUA-DUA localStorage & cookie tak kekal merentasi navigasi pada
+    // pelayar/peranti ini. Jangan redirect balik ke login.html (akan
+    // loop tanpa henti) — papar mesej jelas.
+    showAuthStorageBlockedMessage();
+    return;
+  }
+
+  const here = window.location.pathname + window.location.search;
+  window.location.replace('login.html?redirect=' + encodeURIComponent(here));
 })();
 
 // Papar mesej penuh skrin (gantikan kandungan <body>) apabila sesi
@@ -41,7 +79,7 @@ function showAuthStorageBlockedMessage() {
     '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0a0a0a;color:#fff;font-family:\'Work Sans\',sans-serif;text-align:center;">' +
       '<div style="max-width:420px;">' +
         '<h1 style="font-size:20px;margin:0 0 12px;">Storan sesi disekat</h1>' +
-        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Log masuk berjaya, tetapi pelayar/peranti ini menyekat storan sesi (localStorage) merentasi halaman.</p>' +
+        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Log masuk berjaya, tetapi pelayar/peranti ini menyekat storan sesi (localStorage &amp; cookie) merentasi halaman.</p>' +
         '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Ini biasa berlaku pada pelayar dalam-app (WhatsApp, Instagram, Facebook, TikTok) atau mod Private/Incognito.</p>' +
         '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 18px;">Sila buka laman ini terus dalam Safari/Chrome (bukan dalam app tersebut), pastikan mod Private dimatikan, kemudian cuba log masuk semula.</p>' +
         '<a href="login.html" style="display:inline-block;padding:10px 22px;background:#D9B25C;color:#0a0a0a;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">Kembali ke Log Masuk</a>' +
