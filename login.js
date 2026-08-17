@@ -14,30 +14,62 @@ const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpR
 
 const AUTH_SESSION_KEY = 'primeflix_session_v1';
 
+// =========================================================
+// SESI — storan berlapis (localStorage + cookie fallback)
+// Sesetengah pelayar (mod Private/Incognito, pelayar dalam-app
+// WhatsApp/Instagram/Facebook/TikTok) menyekat localStorage. Cookie
+// biasa (document.cookie) kadangkala masih dibenarkan walaupun
+// localStorage disekat — jadi kita cuba localStorage dahulu, dan
+// SENTIASA turut simpan sebagai cookie sebagai lapisan sandaran.
+// NOTA: kalau pelayar sekat KEDUA-DUA localStorage & cookie (contohnya
+// sesetengah pelayar dalam-app dalam mod storan tidak-berterusan),
+// tiada cara bypass dari kod client-side — itu sekatan platform, bukan
+// sekatan laman web ini.
+// =========================================================
+function setSessionCookie(value) {
+  try {
+    document.cookie = AUTH_SESSION_KEY + '=' + encodeURIComponent(value) + ';path=/;max-age=' + (30 * 24 * 60 * 60) + ';SameSite=Lax';
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+function getSessionCookie() {
+  try {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + AUTH_SESSION_KEY + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch (err) {
+    return null;
+  }
+}
+
 function readSession() {
   try {
     const raw = localStorage.getItem(AUTH_SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (raw) return JSON.parse(raw);
+  } catch (err) { /* localStorage tak tersedia — cuba cookie */ }
+  try {
+    const cookieRaw = getSessionCookie();
+    return cookieRaw ? JSON.parse(cookieRaw) : null;
   } catch (err) {
     return null;
   }
 }
 
 // Pulangkan true/false — BUKAN senyap seperti sebelum ini — supaya
-// pemanggil tahu dengan pasti sama ada sesi betul-betul tersimpan.
-// Pada sesetengah browser mobile (mod Private/Incognito, in-app
-// browser WhatsApp/Instagram/Facebook/TikTok, atau setting Safari
-// "Block All Cookies"), localStorage.setItem() boleh gagal atau
-// "berjaya" tetapi nilai tak kekal — jadi kita baca semula selepas
-// simpan untuk sahkan ia benar-benar tersimpan.
+// pemanggil tahu dengan pasti sama ada sesi betul-betul tersimpan
+// (localStorage ATAU cookie sandaran).
 function writeSession(user) {
+  let localOk = false;
   try {
     localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
     const check = localStorage.getItem(AUTH_SESSION_KEY);
-    return !!check && JSON.parse(check).ID === user.ID;
+    localOk = !!check && JSON.parse(check).ID === user.ID;
   } catch (err) {
-    return false;
+    localOk = false;
   }
+  const cookieOk = setSessionCookie(JSON.stringify(user));
+  return localOk || cookieOk;
 }
 
 // Destinasi selepas log masuk/daftar berjaya. Kalau page ni dibuka
@@ -76,6 +108,27 @@ function withAuthCheckFlag(url) {
     window.location.replace(getRedirectTarget());
   }
 })();
+
+// Kesan pelayar dalam-app (WhatsApp/Instagram/Facebook/Messenger/
+// TikTok) melalui User-Agent — pelayar ni selalunya menyekat
+// localStorage & cookie storan-berterusan, jadi log masuk boleh
+// "berjaya" di server tapi sesi tak kekal (lihat requireAuth() pada
+// index.html/movie.html/watch.html). Papar amaran AWAL supaya
+// pengguna boleh buka terus dalam Safari/Chrome sebelum cuba log
+// masuk, bukan lepas gagal. Ini pengesanan "best effort" sahaja
+// (User-Agent boleh berubah/tak tepat 100%) — bukan bypass, cuma
+// amaran awal.
+function isLikelyInAppBrowser() {
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok|musical_ly|WhatsApp/i.test(ua);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const warningEl = document.getElementById('inAppBrowserWarning');
+  if (warningEl && isLikelyInAppBrowser()) {
+    warningEl.hidden = false;
+  }
+});
 
 function webAppReady() {
   return typeof WEBAPP_URL === 'string' && WEBAPP_URL.indexOf('GANTI_DENGAN') === -1;
@@ -143,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // hantar balik ke login — nampak macam "login pun tak jalan"
         // walhal login sebenarnya berjaya. Jadi berhenti di sini
         // dengan mesej yang jelas, bukan bounce senyap.
-        showFormError(gateLoginForm, 'Login berjaya, tetapi peranti/pelayar ini menyekat storan sesi (localStorage). Sila matikan mod Private/Incognito, benarkan cookies & storan laman web (buka Tetapan Safari/Chrome), atau buka pautan ini terus dalam Safari/Chrome — bukan dalam pelayar dalam-app (WhatsApp/Instagram/Facebook/TikTok).');
+        showFormError(gateLoginForm, 'Login berjaya, tetapi peranti/pelayar ini menyekat KEDUA-DUA storan sesi (localStorage & cookie). Sila matikan mod Private/Incognito, benarkan cookies & storan laman web (buka Tetapan Safari/Chrome), atau buka pautan ini terus dalam Safari/Chrome — bukan dalam pelayar dalam-app (WhatsApp/Instagram/Facebook/TikTok).');
         submitBtn.disabled = false;
         return;
       }
@@ -177,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const user = await apiAuth('register', data);
       const saved = writeSession(user);
       if (!saved) {
-        showFormError(gateRegisterForm, 'Pendaftaran berjaya, tetapi peranti/pelayar ini menyekat storan sesi (localStorage). Sila matikan mod Private/Incognito, benarkan cookies & storan laman web (buka Tetapan Safari/Chrome), atau buka pautan ini terus dalam Safari/Chrome — bukan dalam pelayar dalam-app (WhatsApp/Instagram/Facebook/TikTok).');
+        showFormError(gateRegisterForm, 'Pendaftaran berjaya, tetapi peranti/pelayar ini menyekat KEDUA-DUA storan sesi (localStorage & cookie). Sila matikan mod Private/Incognito, benarkan cookies & storan laman web (buka Tetapan Safari/Chrome), atau buka pautan ini terus dalam Safari/Chrome — bukan dalam pelayar dalam-app (WhatsApp/Instagram/Facebook/TikTok).');
         submitBtn.disabled = false;
         return;
       }
