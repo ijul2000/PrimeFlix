@@ -66,6 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const gateTabs = document.getElementById('authGateTabs');
   const gateLoginForm = document.getElementById('gateLoginForm');
   const gateRegisterForm = document.getElementById('gateRegisterForm');
+  const gateForgotForm = document.getElementById('gateForgotForm');
+  const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+  const backToLoginLink = document.getElementById('backToLoginLink');
 
   if (!gateLoginForm || !gateRegisterForm) return;
 
@@ -74,6 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!errEl) return;
     errEl.textContent = message || '';
     errEl.hidden = !message;
+  }
+
+  function showFormSuccess(form, message) {
+    const okEl = form.querySelector('[data-form-success]');
+    if (!okEl) return;
+    okEl.textContent = message || '';
+    okEl.hidden = !message;
   }
 
   // Tab "Login" / "Register".
@@ -85,8 +95,39 @@ document.addEventListener('DOMContentLoaded', () => {
       gateTabs.querySelectorAll('.auth-gate-tab').forEach(t => t.classList.toggle('active', t === btn));
       gateLoginForm.hidden = tab !== 'login';
       gateRegisterForm.hidden = tab !== 'register';
+      if (gateForgotForm) gateForgotForm.hidden = true;
       showFormError(gateLoginForm, '');
       showFormError(gateRegisterForm, '');
+    });
+  }
+
+  // Pautan "Forgot password?" — sembunyikan tab & borang Login/Register,
+  // papar borang Forgot Password sebaliknya.
+  if (forgotPasswordLink && gateForgotForm) {
+    forgotPasswordLink.addEventListener('click', () => {
+      if (gateTabs) gateTabs.hidden = true;
+      gateLoginForm.hidden = true;
+      gateRegisterForm.hidden = true;
+      gateForgotForm.hidden = false;
+      showFormError(gateLoginForm, '');
+      showFormError(gateForgotForm, '');
+      showFormSuccess(gateForgotForm, '');
+      gateForgotForm.reset();
+    });
+  }
+
+  // Pautan "Kembali ke Login" — balik ke borang Login semula.
+  if (backToLoginLink && gateForgotForm) {
+    backToLoginLink.addEventListener('click', () => {
+      gateForgotForm.hidden = true;
+      showFormError(gateForgotForm, '');
+      showFormSuccess(gateForgotForm, '');
+      if (gateTabs) {
+        gateTabs.hidden = false;
+        gateTabs.querySelectorAll('.auth-gate-tab').forEach(t => t.classList.toggle('active', t.dataset.gateTab === 'login'));
+      }
+      gateLoginForm.hidden = false;
+      gateRegisterForm.hidden = true;
     });
   }
 
@@ -138,4 +179,32 @@ document.addEventListener('DOMContentLoaded', () => {
       submitBtn.disabled = false;
     }
   });
+
+  // Forgot Password — hantar password (teks biasa) ke emel yang
+  // didaftarkan, jika alamat itu wujud dalam sheet Users. Backend
+  // (Code.gs) sengaja pulangkan mesej yang sama ada emel dijumpai
+  // atau tidak, supaya orang tak boleh "scan" emel mana yang berdaftar.
+  if (gateForgotForm) {
+    gateForgotForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showFormError(gateForgotForm, '');
+      showFormSuccess(gateForgotForm, '');
+      if (!webAppReady()) { showFormError(gateForgotForm, 'WEBAPP_URL is not set in login.js.'); return; }
+
+      const submitBtn = gateForgotForm.querySelector('[data-submit-btn]');
+      const fd = new FormData(gateForgotForm);
+      const data = { Email: fd.get('Email') };
+
+      submitBtn.disabled = true;
+      try {
+        await apiAuth('forgotPassword', data);
+        showFormSuccess(gateForgotForm, 'If that email is registered, your password has been sent to it.');
+        gateForgotForm.reset();
+      } catch (err) {
+        showFormError(gateForgotForm, err.message || 'Failed to send. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
 });
