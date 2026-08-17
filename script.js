@@ -489,14 +489,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Papar nama pengguna & butang Logout pada header (desktop & mobile).
     // Sebab requireAuth() dah pastikan sesi wujud sebelum page ini
     // sempat dipaparkan, `session` di sini sepatutnya sentiasa ada.
-    // Butang "Admin" pada header hanya dipaparkan untuk sesi dengan
-    // Role = "admin" — pengguna biasa (Role = "user") tak nampak
-    // langsung butang ini.
+    // Butang "Admin" pada header dibuang TERUS daripada DOM (bukan
+    // sekadar hidden) untuk sesi yang bukan Role = "admin" — jadi
+    // pengguna biasa (Role = "user") tak nampak langsung butang ini,
+    // walaupun cuba buka Elemen/Inspect pada browser.
     function renderAuthArea() {
       const session = readSession();
 
-      if (openAdminBtn) {
-        openAdminBtn.hidden = !(session && session.Role === 'admin');
+      if (openAdminBtn && !(session && session.Role === 'admin')) {
+        openAdminBtn.remove();
       }
 
       [authArea, authAreaMobile].forEach(area => {
