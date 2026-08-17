@@ -990,6 +990,10 @@ body.detail-page .hero-desc{
 @media (max-width: 860px){
   .header-inner{ gap:16px; padding:0 18px; }
   .main-nav{ display:none; }
+  /* Username + Logout dipindah masuk dalam menu hamburger (drawer
+     mobile-nav) sahaja pada mobile & tablet — versi desktop
+     (#authArea) disembunyikan supaya header tak sesak. */
+  .auth-area{ display:none; }
   .search-form{
     width:38px;
     padding:0;
