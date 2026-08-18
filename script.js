@@ -25,7 +25,11 @@ const AUTH_SESSION_KEY = 'primeflix_session_v1';
 function setSessionCookie(value) {
   try {
     document.cookie = AUTH_SESSION_KEY + '=' + encodeURIComponent(value) + ';path=/;max-age=' + (30 * 24 * 60 * 60) + ';SameSite=Lax';
-    return true;
+    // PENTING: document.cookie = ... TIDAK PERNAH throw walaupun browser
+    // diam-diam menolak simpan cookie tu (cth. tetapan "Block cookies"
+    // pada Brave/Chrome untuk site ini). Jadi kita WAJIB baca balik untuk
+    // sahkan ia betul-betul tersimpan — bukan andaikan ia berjaya.
+    return getSessionCookie() === value;
   } catch (err) {
     return false;
   }
