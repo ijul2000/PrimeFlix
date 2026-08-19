@@ -1841,7 +1841,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function buildBrokenLinkItem(entry) {
       const item = document.createElement('div');
       item.className = 'broken-link-item';
-      if (entry.blockedByBot) item.classList.add('is-blocked-note');
+      if (entry.certainty === 'uncertain') item.classList.add('is-blocked-note');
 
       const info = document.createElement('div');
       info.className = 'broken-link-info';
@@ -1870,7 +1870,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const statusRow = document.createElement('div');
       statusRow.className = 'broken-link-status';
-      if (entry.blockedByBot) {
+      if (entry.certainty === 'uncertain') {
         statusRow.classList.add('is-blocked-note');
         statusRow.textContent = `HTTP Status: ${entry.status} — server mungkin sekat pengesanan automatik (bukan pasti rosak). Sila buka link ni manual dalam browser untuk sahkan sebelum tukar/padam.`;
       } else {
@@ -1925,7 +1925,40 @@ document.addEventListener('DOMContentLoaded', () => {
           brokenLinksEmpty.hidden = false;
           return;
         }
-        results.forEach(entry => brokenLinksList.appendChild(buildBrokenLinkItem(entry)));
+
+        // 'broken' = disahkan rosak (404 / 410 / connection gagal).
+        // 'uncertain' = server pulangkan status lain (401/403/406/429/5xx)
+        // — biasanya proteksi anti-bot hos tu, BUKAN bukti link rosak.
+        const confirmed = results.filter(entry => entry.certainty !== 'uncertain');
+        const uncertain = results.filter(entry => entry.certainty === 'uncertain');
+
+        if (confirmed.length === 0 && uncertain.length === 0) {
+          brokenLinksEmpty.hidden = false;
+          return;
+        }
+
+        if (confirmed.length === 0) {
+          brokenLinksEmpty.hidden = false;
+          brokenLinksEmpty.textContent = 'No confirmed broken links found.';
+        }
+
+        confirmed.forEach(entry => brokenLinksList.appendChild(buildBrokenLinkItem(entry)));
+
+        if (uncertain.length > 0) {
+          const details = document.createElement('details');
+          details.className = 'broken-links-uncertain';
+
+          const summary = document.createElement('summary');
+          summary.textContent = `${uncertain.length} link${uncertain.length > 1 ? 's' : ''} could not be auto-verified (likely blocked by the host's anti-bot protection, not necessarily broken) — click to review`;
+          details.appendChild(summary);
+
+          const uncertainList = document.createElement('div');
+          uncertainList.className = 'broken-links-list broken-links-uncertain-list';
+          uncertain.forEach(entry => uncertainList.appendChild(buildBrokenLinkItem(entry)));
+          details.appendChild(uncertainList);
+
+          brokenLinksList.appendChild(details);
+        }
       } catch (err) {
         brokenLinksLoading.hidden = true;
         brokenLinksEmpty.hidden = false;
