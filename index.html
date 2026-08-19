@@ -356,8 +356,12 @@
             <input type="number" name="Season" required placeholder="1" min="1">
           </label>
           <label class="form-field form-field-narrow">
-            <span>Episode <em>*</em></span>
-            <input type="number" name="Episode" required placeholder="8" min="1">
+            <span>Badge</span>
+            <select name="Badge">
+              <option value="HD">HD</option>
+              <option value="4K">4K</option>
+              <option value="New">New</option>
+            </select>
           </label>
         </div>
 
@@ -372,24 +376,16 @@
           </label>
         </div>
 
-        <div class="form-row form-row-split">
-          <label class="form-field">
-            <span>Movie Link URL <em>*</em></span>
-            <input type="url" name="Link" required placeholder="https://...">
-          </label>
-          <label class="form-field form-field-narrow">
-            <span>Badge</span>
-            <select name="Badge">
-              <option value="HD">HD</option>
-              <option value="4K">4K</option>
-              <option value="New">New</option>
-            </select>
-          </label>
-        </div>
-
         <div class="form-preview" data-preview>
           <div class="form-preview-poster" data-preview-poster></div>
           <div class="form-preview-backdrop" data-preview-backdrop></div>
+        </div>
+
+        <div class="form-field">
+          <span>Episodes <em>*</em></span>
+          <div class="episode-list" data-episode-list></div>
+          <button type="button" class="btn btn-secondary btn-sm add-episode-btn" data-add-episode>+ Add Episode</button>
+          <small>One watch link per episode. Poster, Backdrop &amp; other details above are shared by the whole season.</small>
         </div>
 
         <div class="form-error" data-form-error hidden></div>
@@ -429,7 +425,7 @@
         <h3 id="deleteModalTitle">Delete this title?</h3>
         <button class="modal-close" type="button" data-close-modal>&times;</button>
       </div>
-      <p class="delete-confirm-text">This action cannot be undone. The record will be permanently deleted from the Google Sheet.</p>
+      <p class="delete-confirm-text" id="deleteConfirmText">This action cannot be undone. The record will be permanently deleted from the Google Sheet.</p>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
         <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
