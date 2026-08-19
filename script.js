@@ -1107,7 +1107,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('adminSearchForm');
     const searchInput = document.getElementById('adminSearchInput');
 
-    let pendingDelete = null; // { type, id }
+    let pendingDelete = null; // { type, ids: [] }
+    // Rekod episode asal (array) sedang diedit dalam tvForm — null bila
+    // sedang tambah TV Show baharu. Digunakan untuk kesan episode mana
+    // yang dibuang oleh admin (perlu delete() di server) bila disimpan.
+    let editingTvGroup = null;
     const ADMIN_HASH = '#admin';
 
     function webAppConfigured() {
@@ -1299,9 +1303,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chooseTvBtn.addEventListener('click', () => {
       resetForm(tvForm, 'tvGenre');
+      clearEpisodeRows();
+      addEpisodeRow({ Episode: 1, Link: '' });
+      editingTvGroup = null;
       tvModalTitle.textContent = 'Add TV Show';
       tvForm.querySelector('[data-submit-btn]').textContent = 'Save TV Show';
       openModal(tvModalOverlay);
+    });
+
+    /* ---- Episode rows (TV form — satu link untuk setiap episode) ---- */
+    const tvEpisodesList = tvForm.querySelector('[data-episode-list]');
+
+    function createEpisodeRow(data) {
+      data = data || {};
+      const row = document.createElement('div');
+      row.className = 'episode-row';
+      row.setAttribute('data-episode-row', '');
+      row.innerHTML =
+        '<input type="hidden" data-episode-id>' +
+        '<input type="number" class="episode-row-num" data-episode-number placeholder="Ep #" min="1" required>' +
+        '<input type="url" class="episode-row-link" data-episode-link placeholder="https://... (link tonton episod ini)" required>' +
+        '<button type="button" class="episode-row-remove" data-remove-episode aria-label="Buang episod">&times;</button>';
+
+      row.querySelector('[data-episode-id]').value = data.ID || '';
+      row.querySelector('[data-episode-number]').value = data.Episode !== undefined && data.Episode !== null ? data.Episode : '';
+      row.querySelector('[data-episode-link]').value = data.Link || '';
+      row.querySelector('[data-remove-episode]').addEventListener('click', () => {
+        // Jangan benarkan buang baris terakhir — TV show mesti ada
+        // sekurang-kurangnya satu episode.
+        if (tvEpisodesList.querySelectorAll('[data-episode-row]').length <= 1) return;
+        row.remove();
+      });
+      return row;
+    }
+
+    function addEpisodeRow(data) {
+      tvEpisodesList.appendChild(createEpisodeRow(data));
+    }
+
+    function clearEpisodeRows() {
+      tvEpisodesList.innerHTML = '';
+    }
+
+    tvForm.querySelector('[data-add-episode]').addEventListener('click', () => {
+      const nums = Array.from(tvEpisodesList.querySelectorAll('[data-episode-number]'))
+        .map(i => parseInt(i.value, 10))
+        .filter(n => !isNaN(n));
+      const next = nums.length ? Math.max.apply(null, nums) + 1 : 1;
+      addEpisodeRow({ Episode: next, Link: '' });
     });
 
     /* ---- Tag input (genre — boleh banyak) ---- */
@@ -1394,7 +1443,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function fillForm(form, record, tagKey) {
       form.querySelector('[name="ID"]').value = record.ID || '';
-      ['Title', 'Year', 'Description', 'Backdrop', 'Poster', 'Link', 'Badge', 'Season', 'Episode'].forEach(field => {
+      ['Title', 'Year', 'Description', 'Backdrop', 'Poster', 'Link', 'Badge', 'Season'].forEach(field => {
         const el = form.querySelector(`[name="${field}"]`);
         if (el && record[field] !== undefined) el.value = record[field];
       });
@@ -1408,6 +1457,35 @@ document.addEventListener('DOMContentLoaded', () => {
       if (record.Poster) posterPreview.style.backgroundImage = `url("${record.Poster}")`;
       if (record.Backdrop) backdropPreview.style.backgroundImage = `url("${record.Backdrop}")`;
       hideFormError(form);
+    }
+
+    // Isi tvForm daripada satu KUMPULAN rekod (semua episode bagi Title +
+    // Season yang sama). Medan kongsi (Title/Year/Genre/Description/
+    // Backdrop/Poster/Badge/Season) diambil daripada episode pertama;
+    // setiap episode dipaparkan sebagai satu baris dalam senarai Episodes.
+    function fillTvForm(group) {
+      const rep = group[0];
+      tvForm.querySelector('[name="ID"]').value = '';
+      ['Title', 'Year', 'Description', 'Backdrop', 'Poster', 'Badge', 'Season'].forEach(field => {
+        const el = tvForm.querySelector(`[name="${field}"]`);
+        if (el && rep[field] !== undefined) el.value = rep[field];
+      });
+      const genres = String(rep.Genre || '').split(',').map(g => g.trim()).filter(Boolean);
+      tvGenreTags.set(genres);
+
+      tvForm.querySelectorAll('[data-preview] > div').forEach(el => { el.style.backgroundImage = ''; });
+      const posterPreview = tvForm.querySelector('[data-preview-poster]');
+      const backdropPreview = tvForm.querySelector('[data-preview-backdrop]');
+      if (rep.Poster) posterPreview.style.backgroundImage = `url("${rep.Poster}")`;
+      if (rep.Backdrop) backdropPreview.style.backgroundImage = `url("${rep.Backdrop}")`;
+      hideFormError(tvForm);
+
+      clearEpisodeRows();
+      group.slice()
+        .sort((a, b) => (parseFloat(a.Episode) || 0) - (parseFloat(b.Episode) || 0))
+        .forEach(rec => addEpisodeRow(rec));
+
+      editingTvGroup = group;
     }
 
     function showFormError(form, message) {
@@ -1470,7 +1548,97 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     movieForm.addEventListener('submit', (e) => handleSubmit(e, movieForm, 'movie', movieGenreTags));
-    tvForm.addEventListener('submit', (e) => handleSubmit(e, tvForm, 'tvshow', tvGenreTags));
+
+    /* ---- TV form submit (add / edit) — satu season, banyak episode ----
+       Medan kongsi (Title/Year/Genre/Description/Backdrop/Poster/Badge/
+       Season) ditulis pada SETIAP baris episode (sebab setiap episode
+       ialah satu row berasingan pada Google Sheet). Episode yang dibuang
+       oleh admin dalam borang (berbanding kumpulan asal semasa buka Edit)
+       akan di-delete() di server. */
+    async function handleTvSubmit(e) {
+      e.preventDefault();
+      hideFormError(tvForm);
+
+      if (!webAppConfigured()) {
+        showFormError(tvForm, 'WEBAPP_URL is not set in script.js.');
+        return;
+      }
+      if (!tvForm.checkValidity()) {
+        tvForm.reportValidity();
+        return;
+      }
+      if (tvGenreTags.get().length === 0) {
+        showFormError(tvForm, 'Please enter at least one genre.');
+        return;
+      }
+
+      const rows = Array.from(tvEpisodesList.querySelectorAll('[data-episode-row]'));
+      if (rows.length === 0) {
+        showFormError(tvForm, 'Add at least one episode.');
+        return;
+      }
+
+      const episodeEntries = [];
+      for (const row of rows) {
+        const idVal = row.querySelector('[data-episode-id]').value.trim();
+        const epVal = row.querySelector('[data-episode-number]').value.trim();
+        const linkVal = row.querySelector('[data-episode-link]').value.trim();
+        if (!epVal || !linkVal) {
+          showFormError(tvForm, 'Please fill in the episode number and link for every episode row.');
+          return;
+        }
+        episodeEntries.push({ ID: idVal || null, Episode: epVal, Link: linkVal });
+      }
+      const epNums = episodeEntries.map(entry => String(entry.Episode));
+      if (new Set(epNums).size !== epNums.length) {
+        showFormError(tvForm, 'Episode numbers must not repeat within the same season.');
+        return;
+      }
+
+      const fd = new FormData(tvForm);
+      const shared = {};
+      ['Title', 'Year', 'Description', 'Backdrop', 'Poster', 'Badge', 'Season'].forEach(field => {
+        shared[field] = fd.get(field);
+      });
+      shared.Genre = tvGenreTags.get().join(', ');
+
+      const submitBtn = tvForm.querySelector('[data-submit-btn]');
+      const originalLabel = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+
+      try {
+        const originalIds = (editingTvGroup || []).map(r => String(r.ID));
+        const keptIds = episodeEntries.filter(entry => entry.ID).map(entry => String(entry.ID));
+        const removedIds = originalIds.filter(id => keptIds.indexOf(id) === -1);
+
+        for (const entry of episodeEntries) {
+          const data = Object.assign({}, shared, { Episode: entry.Episode, Link: entry.Link });
+          if (entry.ID) {
+            data.ID = entry.ID;
+            await apiMutate('edit', 'tvshow', data);
+          } else {
+            await apiMutate('add', 'tvshow', data);
+          }
+        }
+        for (const id of removedIds) {
+          await apiMutate('delete', 'tvshow', { ID: id });
+        }
+
+        showToast(editingTvGroup ? 'TV show updated successfully.' : 'New TV show added successfully.', 'success');
+        closeAllModals();
+        editingTvGroup = null;
+        loadLibrary();
+        refreshHomeContent();
+      } catch (err) {
+        showFormError(tvForm, err.message || 'Sesuatu tidak kena. Cuba lagi.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+      }
+    }
+
+    tvForm.addEventListener('submit', handleTvSubmit);
 
     /* ---- Library: load / render / filter / search ---- */
     async function loadLibrary() {
@@ -1492,9 +1660,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Kumpulkan rekod TV Shows (satu row per episode dalam Sheet) mengikut
+    // Title + Season supaya senarai admin papar SATU kad (1 poster) bagi
+    // setiap season, bukan satu kad bagi setiap episode. `_group` simpan
+    // semua rekod episode asal (untuk Edit/Delete kumpulan tersebut).
+    function groupTvRecordsForAdmin(list) {
+      const map = new Map();
+      const order = [];
+      (list || []).forEach(record => {
+        const key = `${String(record.Title || '').trim().toLowerCase()}|||${record.Season || ''}`;
+        if (!map.has(key)) {
+          map.set(key, []);
+          order.push(key);
+        }
+        map.get(key).push(record);
+      });
+      return order.map(key => {
+        const records = map.get(key).slice().sort((a, b) => (parseFloat(a.Episode) || 0) - (parseFloat(b.Episode) || 0));
+        return Object.assign({ _type: 'tvshow', _group: records }, records[0]);
+      });
+    }
+
     function combinedRecords() {
       const movies = (library.movie || []).map(r => Object.assign({ _type: 'movie' }, r));
-      const shows = (library.tvshow || []).map(r => Object.assign({ _type: 'tvshow' }, r));
+      const shows = groupTvRecordsForAdmin(library.tvshow || []);
       return movies.concat(shows);
     }
 
@@ -1545,9 +1734,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const meta = document.createElement('div');
       meta.className = 'admin-card-meta';
+      const tvEpisodeCount = record._group ? record._group.length : 0;
       meta.textContent = record._type === 'movie'
         ? [record.Year, record.Badge].filter(Boolean).join(' · ')
-        : [record.Year, record.Season ? `Season ${record.Season}` : '', record.Episode ? `Ep ${record.Episode}` : ''].filter(Boolean).join(' · ');
+        : [
+            record.Year,
+            record.Season ? `Season ${record.Season}` : '',
+            tvEpisodeCount ? `${tvEpisodeCount} Episode${tvEpisodeCount > 1 ? 's' : ''}` : ''
+          ].filter(Boolean).join(' · ');
 
       const genres = document.createElement('div');
       genres.className = 'admin-card-genres';
@@ -1588,7 +1782,7 @@ document.addEventListener('DOMContentLoaded', () => {
         movieForm.querySelector('[data-submit-btn]').textContent = 'Update Movie';
         openModal(movieModalOverlay);
       } else {
-        fillForm(tvForm, record, 'tvGenre');
+        fillTvForm(record._group);
         tvModalTitle.textContent = 'Edit TV Show';
         tvForm.querySelector('[data-submit-btn]').textContent = 'Update TV Show';
         openModal(tvModalOverlay);
@@ -1596,7 +1790,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openDeleteConfirm(record) {
-      pendingDelete = { type: record._type, id: record.ID };
+      const deleteConfirmTextEl = document.getElementById('deleteConfirmText');
+      if (record._type === 'tvshow') {
+        const count = record._group ? record._group.length : 1;
+        pendingDelete = { type: 'tvshow', ids: (record._group || [record]).map(r => r.ID) };
+        if (deleteConfirmTextEl) {
+          deleteConfirmTextEl.textContent = `This will permanently delete this season (Season ${record.Season || '—'}) and all ${count} episode${count > 1 ? 's' : ''} from the Google Sheet. This action cannot be undone.`;
+        }
+      } else {
+        pendingDelete = { type: 'movie', ids: [record.ID] };
+        if (deleteConfirmTextEl) {
+          deleteConfirmTextEl.textContent = 'This action cannot be undone. The record will be permanently deleted from the Google Sheet.';
+        }
+      }
       openModal(deleteModalOverlay);
     }
 
@@ -1605,7 +1811,9 @@ document.addEventListener('DOMContentLoaded', () => {
       confirmDeleteBtn.disabled = true;
       confirmDeleteBtn.textContent = 'Deleting...';
       try {
-        await apiMutate('delete', pendingDelete.type, { ID: pendingDelete.id });
+        for (const id of pendingDelete.ids) {
+          await apiMutate('delete', pendingDelete.type, { ID: id });
+        }
         showToast('Record deleted successfully.', 'success');
         closeAllModals();
         loadLibrary();
