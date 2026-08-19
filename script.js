@@ -1841,6 +1841,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function buildBrokenLinkItem(entry) {
       const item = document.createElement('div');
       item.className = 'broken-link-item';
+      if (entry.blockedByBot) item.classList.add('is-blocked-note');
 
       const info = document.createElement('div');
       info.className = 'broken-link-info';
@@ -1869,9 +1870,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const statusRow = document.createElement('div');
       statusRow.className = 'broken-link-status';
-      statusRow.textContent = entry.status && entry.status > 0
-        ? `HTTP Status: ${entry.status}`
-        : 'Connection failed / invalid link';
+      if (entry.blockedByBot) {
+        statusRow.classList.add('is-blocked-note');
+        statusRow.textContent = `HTTP Status: ${entry.status} — server mungkin sekat pengesanan automatik (bukan pasti rosak). Sila buka link ni manual dalam browser untuk sahkan sebelum tukar/padam.`;
+      } else {
+        statusRow.textContent = entry.status && entry.status > 0
+          ? `HTTP Status: ${entry.status}`
+          : 'Connection failed / invalid link';
+      }
 
       info.appendChild(titleRow);
       info.appendChild(urlRow);
@@ -1882,11 +1888,20 @@ document.addEventListener('DOMContentLoaded', () => {
       editBtn.className = 'broken-link-edit';
       editBtn.textContent = 'Fix';
       editBtn.addEventListener('click', () => {
-        const record = findRecordById(entry.type, entry.id);
-        if (record) {
-          openEdit(Object.assign({ _type: entry.type }, record));
+        if (entry.type === 'movie') {
+          const record = findRecordById('movie', entry.id);
+          if (!record) { showToast('Record not found in the current list.', 'error'); return; }
+          openEdit(Object.assign({ _type: 'movie' }, record));
         } else {
-          showToast('Record not found in the current list.', 'error');
+          const record = findRecordById('tvshow', entry.id);
+          if (!record) { showToast('Record not found in the current list.', 'error'); return; }
+          // Bina semula kumpulan (semua episode Title+Season yang sama)
+          // supaya modal Edit TV Show papar season penuh, bukan 1 episode.
+          const group = (library.tvshow || []).filter(r =>
+            String(r.Title || '').trim().toLowerCase() === String(record.Title || '').trim().toLowerCase() &&
+            String(r.Season || '') === String(record.Season || '')
+          ).sort((a, b) => (parseFloat(a.Episode) || 0) - (parseFloat(b.Episode) || 0));
+          openEdit(Object.assign({ _type: 'tvshow', _group: group.length ? group : [record] }, record));
         }
       });
 
