@@ -1704,6 +1704,19 @@ body.detail-page .hero-desc{
   color:#e88276;
   white-space:nowrap;
 }
+.broken-link-item.is-blocked-note{
+  border-color:rgba(224,178,74,0.4);
+}
+.broken-link-item.is-blocked-note .broken-link-field{
+  color:var(--gold-soft, #e0b24a);
+  background:rgba(224,178,74,0.14);
+  border-color:rgba(224,178,74,0.4);
+}
+.broken-link-status.is-blocked-note{
+  color:var(--gold-soft, #e0b24a);
+  white-space:normal;
+  line-height:1.4;
+}
 .broken-link-edit{
   flex-shrink:0;
   font-size:12px;
