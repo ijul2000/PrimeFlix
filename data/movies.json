@@ -271,5 +271,18 @@
     "Badge": "HD",
     "CreatedAt": "2026-08-24T06:37:19.524Z",
     "UpdatedAt": "2026-08-24T06:37:19.524Z"
+  },
+  {
+    "ID": "ebaabd78-9564-4274-a107-855ce01b61c1",
+    "Title": "Avengers Infinity War",
+    "Year": "2018",
+    "Genre": "Adventure, Action, Science Fiction",
+    "Description": "As the Avengers and their allies have continued to protect the world from threats too large for any one hero to handle, a new danger has emerged from the cosmic shadows: Thanos. A despot of intergalactic infamy, his goal is to collect all six Infinity Stones, artifacts of unimaginable power, and use them to inflict his twisted will on all of reality. Everything the Avengers have fought for has led up to this moment - the fate of Earth and existence itself has never been more uncertain.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/lmZFxXgJE3vgrciwuDib0N8CfQo.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+    "Link": "https://playmogo.com/e/zmsrbikga0a7",
+    "Badge": "HD",
+    "CreatedAt": "2026-08-24T06:41:07.650Z",
+    "UpdatedAt": "2026-08-24T06:41:07.650Z"
   }
 ]
