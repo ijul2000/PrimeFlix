@@ -1,0 +1,11 @@
+[
+  {
+    "ID": "0e379d51-f058-4638-8727-5643fa99064e",
+    "Username": "ijul2001",
+    "Email": "ijul2001@gmail.com",
+    "PasswordHash": "2a963051854e53f3342a2d05cff749ed8027d005749482c4f387a541646bbbbc",
+    "PasswordSalt": "700017a3-1f8e-47a6-89a7-2f6119e58e26",
+    "Role": "admin",
+    "CreatedAt": "2026-08-24T03:16:02.638Z"
+  }
+]
