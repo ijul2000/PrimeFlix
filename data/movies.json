@@ -219,5 +219,18 @@
     "Badge": "HD",
     "CreatedAt": "2026-08-24T05:50:40.197Z",
     "UpdatedAt": "2026-08-24T05:50:40.197Z"
+  },
+  {
+    "ID": "daf35231-ca1b-4d43-95f9-f4522da1da4a",
+    "Title": "The Avengers",
+    "Year": "2012",
+    "Genre": "Science Fiction, Action, Adventure",
+    "Description": "When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!",
+    "Backdrop": "https://image.tmdb.org/t/p/original/9BBTo63ANSmhC4e6r62OJFuK2GL.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/yHdPTs239Cqce1s6y9figbeolR1.jpg",
+    "Link": "https://playmogo.com/e/mgk7pxopvjbm",
+    "Badge": "HD",
+    "CreatedAt": "2026-08-24T05:53:42.151Z",
+    "UpdatedAt": "2026-08-24T05:53:42.151Z"
   }
 ]
