@@ -7,5 +7,14 @@
     "PasswordSalt": "700017a3-1f8e-47a6-89a7-2f6119e58e26",
     "Role": "admin",
     "CreatedAt": "2026-08-24T03:16:02.638Z"
+  },
+  {
+    "ID": "87e0d4ec-a453-4642-b549-b14bc449b7c8",
+    "Username": "ijul2001",
+    "Email": "ijul2001@gmail.com",
+    "PasswordHash": "1b6a346f52d3723703754bdedf93b38661d43a830aeb49e7b3a8f8ff1702e9f4",
+    "PasswordSalt": "8d1024de-2ffc-4880-a524-c9f182a1a22f",
+    "Role": "user",
+    "CreatedAt": "2026-08-24T03:17:06.029Z"
   }
 ]
