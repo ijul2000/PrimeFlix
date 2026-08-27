@@ -453,5 +453,18 @@
     "Badge": "HD",
     "CreatedAt": "2026-08-27T07:11:45.129Z",
     "UpdatedAt": "2026-08-27T07:11:45.129Z"
+  },
+  {
+    "ID": "ba2bf5c9-3387-407f-b54d-188d4fc53a5f",
+    "Title": "Captain Phillips",
+    "Year": "2013",
+    "Genre": "Action, Drama, Thriller",
+    "Description": "The true story of Captain Richard Phillips and the 2009 hijacking by Somali pirates of the US-flagged MV Maersk Alabama, the first American cargo ship to be hijacked in two hundred years.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/ihdFypo7MyfJvDSjK7Sbnsjhu8H.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg",
+    "Link": "https://playmogo.com/e/j82kzqsbjogi",
+    "Badge": "HD",
+    "CreatedAt": "2026-08-27T07:15:10.530Z",
+    "UpdatedAt": "2026-08-27T07:15:10.530Z"
   }
 ]
