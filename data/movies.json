@@ -401,5 +401,18 @@
     "Badge": "HD",
     "CreatedAt": "2026-08-26T02:14:51.120Z",
     "UpdatedAt": "2026-08-26T02:14:51.120Z"
+  },
+  {
+    "ID": "ebbc2fb3-447e-4488-8758-cffa6fb66f90",
+    "Title": "Doctor Strange in the Multiverse of Madness",
+    "Year": "2022",
+    "Genre": "Fantasy, Action, Adventure",
+    "Description": "Doctor Strange, with the help of mystical allies both old and new, traverses the mind-bending and dangerous alternate realities of the Multiverse to confront a mysterious new adversary.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/gUNRlH66yNDH3NQblYMIwgZXJ2u.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/ddJcSKbcp4rKZTmuyWaMhuwcfMz.jpg",
+    "Link": "https://playmogo.com/e/rog6omk0e9wn",
+    "Badge": "HD",
+    "CreatedAt": "2026-08-27T07:01:29.198Z",
+    "UpdatedAt": "2026-08-27T07:01:29.198Z"
   }
 ]
