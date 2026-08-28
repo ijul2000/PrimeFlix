@@ -16,5 +16,14 @@
     "PasswordSalt": "8d1024de-2ffc-4880-a524-c9f182a1a22f",
     "Role": "user",
     "CreatedAt": "2026-08-24T03:17:06.029Z"
+  },
+  {
+    "ID": "1b983092-3d7a-4430-bde4-16996182140a",
+    "Username": "jokerzex92@gmail.com",
+    "Email": "jokerzex92@gmail.com",
+    "PasswordHash": "659776730fdb8f57425eb41030b7151ad18f66e1f4512e58d407dea40009cbb9",
+    "PasswordSalt": "e3a230b7-cad1-4ddf-8abc-d4b8dcc0a138",
+    "Role": "user",
+    "CreatedAt": "2026-08-28T14:01:56.112Z"
   }
 ]
