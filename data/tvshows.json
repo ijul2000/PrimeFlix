@@ -1438,5 +1438,20 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-02T07:48:59.857Z",
     "UpdatedAt": "2026-09-02T07:48:59.857Z"
+  },
+  {
+    "ID": "332e00fa-68f8-4ca7-9934-5d2efdd61200",
+    "Title": "The Good Doctor",
+    "Year": "2017",
+    "Season": "1",
+    "Episode": "5",
+    "Genre": "Drama",
+    "Description": "Shaun Murphy, a young surgeon with autism and savant syndrome, relocates from a quiet country life to join a prestigious hospital's surgical unit. Unable to personally connect with those around him, Shaun uses his extraordinary medical gifts to save lives and challenge the skepticism of his colleagues.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/mZjZgY6ObiKtVuKVDrnS9VnuNlE.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/168rcWbfYVb5SRlzjl98z1J6cQ4.jpg",
+    "Link": "https://playmogo.com/e/yxfbukoccbt0",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-02T07:49:03.518Z",
+    "UpdatedAt": "2026-09-02T07:49:03.518Z"
   }
 ]
