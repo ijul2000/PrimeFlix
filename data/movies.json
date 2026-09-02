@@ -557,5 +557,18 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-01T02:21:58.928Z",
     "UpdatedAt": "2026-09-01T02:21:58.928Z"
+  },
+  {
+    "ID": "b77daa89-c101-489d-924e-04df178b4780",
+    "Title": "Lucy",
+    "Year": "2014",
+    "Genre": "Action, Science Fiction",
+    "Description": "A woman, accidentally caught in a dark deal, turns the tables on her captors and transforms into a merciless warrior evolved beyond human logic.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/qpBZE42SBLMJKNSxgW5wGc8Ip9e.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/kRbpUTRNm6QbLQFPFWUcNC4czEm.jpg",
+    "Link": "https://playmogo.com/e/70nds1igdav2",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-02T07:51:23.508Z",
+    "UpdatedAt": "2026-09-02T07:51:23.508Z"
   }
 ]
