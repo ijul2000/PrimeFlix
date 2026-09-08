@@ -609,5 +609,18 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-08T08:18:51.878Z",
     "UpdatedAt": "2026-09-08T08:18:51.878Z"
+  },
+  {
+    "ID": "9dd97086-8624-485e-a758-950983e495eb",
+    "Title": "Papa Zola: The Movie",
+    "Year": "2025",
+    "Genre": "Animation, Action, Adventure, Comedy, Family, Science Fiction",
+    "Description": "Papa Zola and his gifted daughter Pipi embark on everyday adventures that highlight their close bond and her quick wit.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/ae3pTnzjTssNBuKo2uZK0DMffJl.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/3EmnviuZjIUwuLGdK9SnKjSC64K.jpg",
+    "Link": "https://playmogo.com/e/3stjtdqbezib",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-08T08:22:50.303Z",
+    "UpdatedAt": "2026-09-08T08:22:50.303Z"
   }
 ]
