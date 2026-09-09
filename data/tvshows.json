@@ -1738,5 +1738,20 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-09T03:22:41.939Z",
     "UpdatedAt": "2026-09-09T03:22:41.939Z"
+  },
+  {
+    "ID": "459b1934-f493-43cb-8f4f-abcbd4222ea1",
+    "Title": "The Good Doctor",
+    "Year": "2017",
+    "Season": "2",
+    "Episode": "7",
+    "Genre": "Drama",
+    "Description": "Shaun Murphy, a young surgeon with autism and savant syndrome, relocates from a quiet country life to join a prestigious hospital's surgical unit. Unable to personally connect with those around him, Shaun uses his extraordinary medical gifts to save lives and challenge the skepticism of his colleagues.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/6Ys6koNajP5ld9EIMfOSQrRquki.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/sIq4SFloM0JSeRNAQVqb5g5zAng.jpg",
+    "Link": "https://playmogo.com/e/4pfbkgjjgp2o",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-09T03:22:44.621Z",
+    "UpdatedAt": "2026-09-09T03:22:44.621Z"
   }
 ]
