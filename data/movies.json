@@ -648,5 +648,18 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-08T08:26:48.495Z",
     "UpdatedAt": "2026-09-08T08:26:48.495Z"
+  },
+  {
+    "ID": "fd5c7bf7-b4e2-4f78-b6a1-d4588b68e203",
+    "Title": "Aquaman",
+    "Year": "2018",
+    "Genre": "Action, Adventure, Fantasy",
+    "Description": "Half-human, half-Atlantean Arthur Curry is taken on the journey of his lifetime to discover if he is worth of being a king.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/9QusGjxcYvfPD1THg6oW3RLeNn7.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/xLPffWMhMj1l50ND3KchMjYoKmE.jpg",
+    "Link": "https://playmogo.com/e/86u9kxjjme0x",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-21T07:01:39.780Z",
+    "UpdatedAt": "2026-09-21T07:01:39.780Z"
   }
 ]
