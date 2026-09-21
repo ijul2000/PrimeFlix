@@ -661,5 +661,18 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-21T07:01:39.780Z",
     "UpdatedAt": "2026-09-21T07:01:39.780Z"
+  },
+  {
+    "ID": "b4144b9a-f5c9-4a26-9afd-a759d4b93d6a",
+    "Title": "Aquaman and the Lost Kingdom",
+    "Year": "2023",
+    "Genre": "Action, Adventure, Fantasy",
+    "Description": "Black Manta seeks revenge on Aquaman for his father's death. Wielding the Black Trident's power, he becomes a formidable foe. To defend Atlantis, Arthur (Aquaman) forges an alliance with his imprisoned brother. They must protect the kingdom.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/cnqwv5Uz3UW5f086IWbQKr3ksJr.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/7lTnXOy0iNtBAdRP3TZvaKJ77F6.jpg",
+    "Link": "https://playmogo.com/e/vfhdlaarm0r4",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-21T07:02:54.252Z",
+    "UpdatedAt": "2026-09-21T07:02:54.252Z"
   }
 ]
