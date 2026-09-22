@@ -296,9 +296,6 @@ button.nav-link{
   transition:border-color .2s ease, width .2s ease;
   width:230px;
 }
-.search-form:focus-within{
-  border-color:var(--gold-deep);
-}
 .search-icon-btn{
   background:none;
   border:none;
@@ -308,7 +305,6 @@ button.nav-link{
   padding:4px;
   touch-action:manipulation;
 }
-.search-form:focus-within .search-icon-btn{ color:var(--gold); }
 .search-input{
   background:none;
   border:none;
@@ -1084,7 +1080,7 @@ body.detail-page .hero-desc{
     font-size:16px;
     height:42px;
     background:var(--bg);
-    border:1px solid var(--line);
+    border:none;
     border-radius:8px;
   }
   .search-form.expanded .search-results{
