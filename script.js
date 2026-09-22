@@ -7,6 +7,32 @@
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
 
 // =========================================================
+// AUTO IMAGE RESIZE — bina URL proxy images.weserv.nl supaya
+// backdrop/poster yang admin tampal (link biasa, apa-apa saiz)
+// automatik diresize/dicompress oleh servis luar sebelum
+// dimuat turun pelayar. Admin TAK PERLU buat apa-apa — cukup
+// tampal link asal, fungsi ni yang uruskan bentuk URL.
+// Nota: proxy ni cuma jalan untuk link http/https biasa;
+// data-URL (base64) atau url kosong dikembalikan macam asal.
+// =========================================================
+function resizeImg(url, w, h) {
+  if (!url || typeof url !== 'string') return url;
+  if (url.indexOf('data:') === 0) return url; // base64 — tak boleh proxy
+  // Buang skema (http:// / https://) sebelum hantar ke param `url`,
+  // servis weserv terima domain+path tanpa skema.
+  const stripped = url.replace(/^https?:\/\//i, '');
+  const params = ['url=' + encodeURIComponent(stripped)];
+  if (w) params.push('w=' + w);
+  if (h) params.push('h=' + h);
+  params.push('fit=cover'); // crop mengekalkan nisbah, penuhi kotak
+  params.push('q=80');      // kualiti compress — imbang saiz fail & ketajaman
+  return 'https://images.weserv.nl/?' + params.join('&');
+}
+// Saiz standard ikut konteks paparan.
+function resizeBackdrop(url) { return resizeImg(url, 1920, 1080); }
+function resizePoster(url) { return resizeImg(url, 500, 750); }
+
+// =========================================================
 // SESI — storan berlapis (localStorage + cookie fallback)
 // Sesetengah pelayar (mod Private/Incognito, pelayar dalam-app
 // WhatsApp/Instagram/Facebook/TikTok) menyekat localStorage. Cookie
@@ -220,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const thumb = document.createElement('div');
       thumb.className = 'search-result-thumb';
-      if (record.Poster) thumb.style.backgroundImage = `url("${record.Poster}")`;
+      if (record.Poster) thumb.style.backgroundImage = `url("${resizePoster(record.Poster)}")`;
 
       const info = document.createElement('div');
       info.className = 'search-result-info';
@@ -692,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentIndex = index;
       currentRecord = record;
 
-      heroBackdropImg.style.backgroundImage = record.Backdrop ? `url("${record.Backdrop}")` : 'none';
+      heroBackdropImg.style.backgroundImage = record.Backdrop ? `url("${resizeBackdrop(record.Backdrop)}")` : 'none';
       heroTitle.textContent = record.Title || '';
       heroMeta.textContent = formatMeta(record);
       heroDesc.textContent = record.Description || '';
@@ -986,7 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const art = document.createElement('div');
       art.className = 'poster-art';
       if (record.Poster) {
-        art.style.backgroundImage = `url("${record.Poster}")`;
+        art.style.backgroundImage = `url("${resizePoster(record.Poster)}")`;
         art.style.backgroundSize = 'cover';
         art.style.backgroundPosition = 'center';
       } else {
@@ -1454,8 +1480,8 @@ document.addEventListener('DOMContentLoaded', () => {
       form.querySelectorAll('[data-preview] > div').forEach(el => { el.style.backgroundImage = ''; });
       const posterPreview = form.querySelector('[data-preview-poster]');
       const backdropPreview = form.querySelector('[data-preview-backdrop]');
-      if (record.Poster) posterPreview.style.backgroundImage = `url("${record.Poster}")`;
-      if (record.Backdrop) backdropPreview.style.backgroundImage = `url("${record.Backdrop}")`;
+      if (record.Poster) posterPreview.style.backgroundImage = `url("${resizePoster(record.Poster)}")`;
+      if (record.Backdrop) backdropPreview.style.backgroundImage = `url("${resizeBackdrop(record.Backdrop)}")`;
       hideFormError(form);
     }
 
@@ -1476,8 +1502,8 @@ document.addEventListener('DOMContentLoaded', () => {
       tvForm.querySelectorAll('[data-preview] > div').forEach(el => { el.style.backgroundImage = ''; });
       const posterPreview = tvForm.querySelector('[data-preview-poster]');
       const backdropPreview = tvForm.querySelector('[data-preview-backdrop]');
-      if (rep.Poster) posterPreview.style.backgroundImage = `url("${rep.Poster}")`;
-      if (rep.Backdrop) backdropPreview.style.backgroundImage = `url("${rep.Backdrop}")`;
+      if (rep.Poster) posterPreview.style.backgroundImage = `url("${resizePoster(rep.Poster)}")`;
+      if (rep.Backdrop) backdropPreview.style.backgroundImage = `url("${resizeBackdrop(rep.Backdrop)}")`;
       hideFormError(tvForm);
 
       clearEpisodeRows();
@@ -1718,7 +1744,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const art = document.createElement('div');
       art.className = 'admin-card-art';
-      if (record.Poster) art.style.backgroundImage = `url("${record.Poster}")`;
+      if (record.Poster) art.style.backgroundImage = `url("${resizePoster(record.Poster)}")`;
 
       const typeTag = document.createElement('span');
       typeTag.className = 'admin-card-type';
@@ -2066,7 +2092,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const art = document.createElement('div');
       art.className = 'poster-art';
       if (record.Poster) {
-        art.style.backgroundImage = `url("${record.Poster}")`;
+        art.style.backgroundImage = `url("${resizePoster(record.Poster)}")`;
         art.style.backgroundSize = 'cover';
         art.style.backgroundPosition = 'center';
       } else {
