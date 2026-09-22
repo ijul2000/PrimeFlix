@@ -6,6 +6,25 @@
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
 
 // =========================================================
+// AUTO IMAGE RESIZE — sama seperti script.js: bina URL proxy
+// images.weserv.nl supaya backdrop yang admin tampal (link biasa,
+// apa-apa saiz) automatik diresize/dicompress sebelum dimuat turun.
+// =========================================================
+function resizeImg(url, w, h) {
+  if (!url || typeof url !== 'string') return url;
+  if (url.indexOf('data:') === 0) return url;
+  const stripped = url.replace(/^https?:\/\//i, '');
+  const params = ['url=' + encodeURIComponent(stripped)];
+  if (w) params.push('w=' + w);
+  if (h) params.push('h=' + h);
+  params.push('fit=cover');
+  params.push('q=80');
+  return 'https://images.weserv.nl/?' + params.join('&');
+}
+function resizeBackdrop(url) { return resizeImg(url, 1920, 1080); }
+function resizePoster(url) { return resizeImg(url, 500, 750); }
+
+// =========================================================
 // SESI — storan berlapis (localStorage + cookie fallback)
 // Sesetengah pelayar (mod Private/Incognito, pelayar dalam-app
 // WhatsApp/Instagram/Facebook/TikTok) menyekat localStorage. Cookie
@@ -409,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderDetail(record, fullList) {
     currentDetailRecord = record;
-    backdropImg.style.backgroundImage = record.Backdrop ? `url("${record.Backdrop}")` : 'none';
+    backdropImg.style.backgroundImage = record.Backdrop ? `url("${resizeBackdrop(record.Backdrop)}")` : 'none';
     titleEl.textContent = record.Title || '';
     // Maklumat musim/episod kini dipilih melalui butang Musim & Episod
     // (bukan dipaparkan statik di sini).
