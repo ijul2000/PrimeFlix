@@ -2173,5 +2173,20 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-22T07:52:28.433Z",
     "UpdatedAt": "2026-09-22T07:52:28.433Z"
+  },
+  {
+    "ID": "0c0065b2-7135-4df5-b49f-04af73136d57",
+    "Title": "The Flash",
+    "Year": "2014",
+    "Season": "1",
+    "Episode": "18",
+    "Genre": "Drama, Sci-Fi, Fantasy",
+    "Description": "After being struck by lightning, CSI investigator Barry Allen awakens from a nine-month coma to discover he has been granted the gift of super speed. Teaming up with S.T.A.R. Labs, Barry takes on the persona of The Flash, the Fastest Man Alive, to protect his city.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/z59kJfcElR9eHO9rJbWp4qWMuee.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/kHyXbcb2JGWIe1fyZa6PqBwlNJN.jpg",
+    "Link": "https://playmogo.com/e/vjdh5psvrhrr",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-22T07:52:31.097Z",
+    "UpdatedAt": "2026-09-22T07:52:31.097Z"
   }
 ]
