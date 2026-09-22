@@ -1183,8 +1183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const meta = document.createElement('div');
       meta.className = 'poster-meta';
-      const sub = [record.Year, record.Genre].filter(Boolean).join(' · ');
-      meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
+      meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div>`;
 
       card.appendChild(art);
       card.appendChild(meta);
