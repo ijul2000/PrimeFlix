@@ -1114,17 +1114,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function buildSkeletonCard() {
       const card = document.createElement('div');
-      card.className = 'poster-card skeleton';
+      card.className = 'poster-card suggestion-card skeleton';
 
       const art = document.createElement('div');
       art.className = 'poster-art skeleton-shimmer';
 
-      const meta = document.createElement('div');
-      meta.className = 'poster-meta';
-      meta.innerHTML = '<div class="poster-title skeleton-shimmer"></div><div class="poster-sub skeleton-shimmer"></div>';
-
       card.appendChild(art);
-      card.appendChild(meta);
       return card;
     }
 
@@ -1140,7 +1135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // melibatkan TV Show).
     function buildPosterCard(record) {
       const card = document.createElement('div');
-      card.className = 'poster-card';
+      card.className = 'poster-card suggestion-card';
       card.tabIndex = 0;
       card.setAttribute('role', 'button');
       card.setAttribute('aria-label', `View details for ${record.Title || 'movie'}`);
@@ -1178,15 +1173,18 @@ document.addEventListener('DOMContentLoaded', () => {
           <path d="M18 14v16l13-8-13-8Z" fill="#F3D27A"/>
         </svg>`;
 
+      // Tajuk diletak SEBAGAI OVERLAY di dalam border kad (atas
+      // gambar poster, bahagian bawah) — bukan dalam poster-meta di
+      // bawah kad macam Trending Movies.
+      const titleOverlay = document.createElement('div');
+      titleOverlay.className = 'poster-title-overlay';
+      titleOverlay.textContent = record.Title || '';
+
       art.appendChild(badgeEl);
       art.appendChild(play);
-
-      const meta = document.createElement('div');
-      meta.className = 'poster-meta';
-      meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div>`;
+      art.appendChild(titleOverlay);
 
       card.appendChild(art);
-      card.appendChild(meta);
       return card;
     }
 
