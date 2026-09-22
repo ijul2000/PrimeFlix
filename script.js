@@ -370,9 +370,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const movieSection = document.getElementById('movies');
     const tvSection = document.getElementById('tvshows');
     const suggestionSection = document.getElementById('suggestions');
+    const tvSuggestionSection = document.getElementById('tvSuggestions');
     if (movieSection) movieSection.hidden = category !== 'movie';
     if (tvSection) tvSection.hidden = category !== 'tvshow';
     if (suggestionSection) suggestionSection.hidden = category !== 'movie';
+    if (tvSuggestionSection) tvSuggestionSection.hidden = category !== 'tvshow';
 
     // Simpan kategori aktif — supaya bila page di-refresh, ia kekal pada
     // tab yang sama (Movie kekal Movie, TV Show kekal TV Show), bukan
@@ -973,12 +975,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const art = document.createElement('div');
       art.className = 'poster-art skeleton-shimmer';
 
-      const meta = document.createElement('div');
-      meta.className = 'poster-meta';
-      meta.innerHTML = '<div class="poster-title skeleton-shimmer"></div><div class="poster-sub skeleton-shimmer"></div>';
-
       card.appendChild(art);
-      card.appendChild(meta);
+
+      // Trending Movies pakai tajuk overlay (tiada poster-meta di
+      // bawah kad lagi), jadi skeleton pun tak perlu blok meta itu.
+      if (category !== 'movie') {
+        const meta = document.createElement('div');
+        meta.className = 'poster-meta';
+        meta.innerHTML = '<div class="poster-title skeleton-shimmer"></div><div class="poster-sub skeleton-shimmer"></div>';
+        card.appendChild(meta);
+      }
+
       return card;
     }
 
@@ -1034,6 +1041,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       art.appendChild(badgeEl);
       art.appendChild(play);
+
+      // Trending Movies: tajuk sebagai overlay DALAM border kad (atas
+      // gambar poster, bahagian bawah) — gaya sama seperti Suggestion
+      // Movie/TV Show, bukan poster-meta berasingan di bawah kad.
+      if (category === 'movie') {
+        const titleOverlay = document.createElement('div');
+        titleOverlay.className = 'poster-title-overlay';
+        titleOverlay.textContent = record.Title || '';
+        art.appendChild(titleOverlay);
+
+        card.appendChild(art);
+        return card;
+      }
 
       const meta = document.createElement('div');
       meta.className = 'poster-meta';
@@ -1216,6 +1236,139 @@ document.addEventListener('DOMContentLoaded', () => {
 
     homeRefreshCallbacks.push(loadSuggestions);
     loadSuggestions();
+  })();
+
+  /* =========================================================
+     SUGGESTION TV SHOW — sama seperti Suggestion Movie di atas,
+     tetapi untuk TV Show: 14 kad musim TV rawak dari SEMUA TV show
+     dalam simpanan. Rekod TV disimpan SATU bagi SETIAP episod, jadi
+     dikumpul dahulu ikut Tajuk + Musim (satu poster bagi satu musim)
+     sebelum diacak & dihadkan kepada 14 kad. Acak semula (Fisher-
+     Yates) setiap kali dipanggil, sama seperti Suggestion Movie.
+     ========================================================= */
+  (function initTvSuggestionSection() {
+    const grid = document.getElementById('tvSuggestionGrid');
+    if (!grid) return;
+    if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) return;
+
+    const MAX_ITEMS = 14;
+
+    function shuffle(list) {
+      const arr = (list || []).slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // Satu rekod disimpan bagi SETIAP episod — kumpulkan ikut Tajuk +
+    // Musim supaya hanya SATU poster dipaparkan bagi setiap musim
+    // (sama seperti dedupeByTitleSeason dalam initTrendingSection).
+    function dedupeByTitleSeason(list) {
+      const seen = new Set();
+      const result = [];
+      (list || []).forEach(record => {
+        const key = `${(record.Title || '').trim().toLowerCase()}|||${record.Season || ''}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        result.push(record);
+      });
+      return result;
+    }
+
+    function buildSkeletonCard() {
+      const card = document.createElement('div');
+      card.className = 'poster-card suggestion-card skeleton';
+
+      const art = document.createElement('div');
+      art.className = 'poster-art skeleton-shimmer';
+
+      card.appendChild(art);
+      return card;
+    }
+
+    function renderSkeletonGrid() {
+      grid.innerHTML = '';
+      for (let i = 0; i < MAX_ITEMS; i++) {
+        grid.appendChild(buildSkeletonCard());
+      }
+    }
+
+    function buildPosterCard(record) {
+      const card = document.createElement('div');
+      card.className = 'poster-card suggestion-card';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `View details for ${record.Title || 'TV show'}`);
+
+      function goToDetail() {
+        if (!record.ID) return;
+        window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}&type=tvshow`;
+      }
+      card.addEventListener('click', goToDetail);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goToDetail();
+        }
+      });
+
+      const art = document.createElement('div');
+      art.className = 'poster-art';
+      if (record.Poster) {
+        art.style.backgroundImage = `url("${resizePoster(record.Poster)}")`;
+        art.style.backgroundSize = 'cover';
+        art.style.backgroundPosition = 'center';
+      } else {
+        art.style.background = 'linear-gradient(160deg, #1c1a15 0%, #141414 55%, #0a0a0a 100%)';
+      }
+
+      const badgeEl = document.createElement('span');
+      badgeEl.className = 'poster-badge';
+      badgeEl.textContent = record.Badge || 'HD';
+
+      const play = document.createElement('div');
+      play.className = 'poster-play';
+      play.innerHTML = `<svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <circle cx="22" cy="22" r="21" stroke="#F3D27A" stroke-width="1.5" opacity="0.7"/>
+          <path d="M18 14v16l13-8-13-8Z" fill="#F3D27A"/>
+        </svg>`;
+
+      const titleOverlay = document.createElement('div');
+      titleOverlay.className = 'poster-title-overlay';
+      titleOverlay.textContent = record.Title || '';
+
+      art.appendChild(badgeEl);
+      art.appendChild(play);
+      art.appendChild(titleOverlay);
+
+      card.appendChild(art);
+      return card;
+    }
+
+    async function loadTvSuggestions() {
+      const cached = readContentCache();
+      const cachedList = cached ? cached.tvshow : null;
+      if (cachedList && cachedList.length) {
+        grid.innerHTML = '';
+        shuffle(dedupeByTitleSeason(cachedList)).slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
+      } else {
+        renderSkeletonGrid();
+      }
+
+      try {
+        const data = await fetchContentOnce();
+        const list = shuffle(dedupeByTitleSeason(data.tvshow || [])).slice(0, MAX_ITEMS);
+        grid.innerHTML = '';
+        list.forEach(record => grid.appendChild(buildPosterCard(record)));
+      } catch (err) {
+        if (!(cachedList && cachedList.length)) grid.innerHTML = '';
+      }
+    }
+
+    homeRefreshCallbacks.push(loadTvSuggestions);
+    loadTvSuggestions();
   })();
 
 
