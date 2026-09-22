@@ -369,8 +369,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const movieSection = document.getElementById('movies');
     const tvSection = document.getElementById('tvshows');
+    const suggestionSection = document.getElementById('suggestions');
     if (movieSection) movieSection.hidden = category !== 'movie';
     if (tvSection) tvSection.hidden = category !== 'tvshow';
+    if (suggestionSection) suggestionSection.hidden = category !== 'movie';
 
     // Simpan kategori aktif — supaya bila page di-refresh, ia kekal pada
     // tab yang sama (Movie kekal Movie, TV Show kekal TV Show), bukan
