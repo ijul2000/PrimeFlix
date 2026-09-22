@@ -1085,6 +1085,140 @@ document.addEventListener('DOMContentLoaded', () => {
   initTrendingSection('trendingGrid', 'movie');
   initTrendingSection('tvTrendingGrid', 'tvshow');
 
+  /* =========================================================
+     SUGGESTION MOVIE — 14 kad movie rawak dari SEMUA movie dalam
+     simpanan (bukan hanya 35 trending teratas). Guna gaya kad yang
+     sama seperti Trending Movies. Susunan kad diacak semula (Fisher-
+     Yates shuffle) setiap kali fungsi ni dipanggil — sebab fungsi ni
+     dipanggil semula pada setiap "page load" (script.js dimuat
+     semula bila page di-refresh), kad yang dipaparkan automatik
+     bertukar-tukar secara rawak pada setiap refresh, walaupun data
+     asal (movies.json / Google Sheet) sama.
+     ========================================================= */
+  (function initSuggestionSection() {
+    const grid = document.getElementById('suggestionGrid');
+    if (!grid) return;
+    if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) return;
+
+    const MAX_ITEMS = 14;
+
+    // Fisher-Yates shuffle — tak ubah array asal (guna salinan).
+    function shuffle(list) {
+      const arr = (list || []).slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function buildSkeletonCard() {
+      const card = document.createElement('div');
+      card.className = 'poster-card skeleton';
+
+      const art = document.createElement('div');
+      art.className = 'poster-art skeleton-shimmer';
+
+      const meta = document.createElement('div');
+      meta.className = 'poster-meta';
+      meta.innerHTML = '<div class="poster-title skeleton-shimmer"></div><div class="poster-sub skeleton-shimmer"></div>';
+
+      card.appendChild(art);
+      card.appendChild(meta);
+      return card;
+    }
+
+    function renderSkeletonGrid() {
+      grid.innerHTML = '';
+      for (let i = 0; i < MAX_ITEMS; i++) {
+        grid.appendChild(buildSkeletonCard());
+      }
+    }
+
+    // Kad sama seperti buildPosterCard() dalam initTrendingSection,
+    // tetapi khusus untuk Movie sahaja (Suggestion Movie tak
+    // melibatkan TV Show).
+    function buildPosterCard(record) {
+      const card = document.createElement('div');
+      card.className = 'poster-card';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `View details for ${record.Title || 'movie'}`);
+
+      function goToDetail() {
+        if (!record.ID) return;
+        window.location.href = `movie.html?id=${encodeURIComponent(record.ID)}`;
+      }
+      card.addEventListener('click', goToDetail);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goToDetail();
+        }
+      });
+
+      const art = document.createElement('div');
+      art.className = 'poster-art';
+      if (record.Poster) {
+        art.style.backgroundImage = `url("${resizePoster(record.Poster)}")`;
+        art.style.backgroundSize = 'cover';
+        art.style.backgroundPosition = 'center';
+      } else {
+        art.style.background = 'linear-gradient(160deg, #1c1a15 0%, #141414 55%, #0a0a0a 100%)';
+      }
+
+      const badgeEl = document.createElement('span');
+      badgeEl.className = 'poster-badge';
+      badgeEl.textContent = record.Badge || 'HD';
+
+      const play = document.createElement('div');
+      play.className = 'poster-play';
+      play.innerHTML = `<svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <circle cx="22" cy="22" r="21" stroke="#F3D27A" stroke-width="1.5" opacity="0.7"/>
+          <path d="M18 14v16l13-8-13-8Z" fill="#F3D27A"/>
+        </svg>`;
+
+      art.appendChild(badgeEl);
+      art.appendChild(play);
+
+      const meta = document.createElement('div');
+      meta.className = 'poster-meta';
+      const sub = [record.Year, record.Genre].filter(Boolean).join(' · ');
+      meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
+
+      card.appendChild(art);
+      card.appendChild(meta);
+      return card;
+    }
+
+    async function loadSuggestions() {
+      // 1) Cache dulu (kalau ada) supaya tak nampak kosong/lambat.
+      const cached = readContentCache();
+      const cachedList = cached ? cached.movie : null;
+      if (cachedList && cachedList.length) {
+        grid.innerHTML = '';
+        shuffle(cachedList).slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
+      } else {
+        renderSkeletonGrid();
+      }
+
+      // 2) Fetch data terkini (SEMUA movie, bukan hanya 35 trending
+      //    teratas) — dikongsi dengan Hero & Trending (satu request
+      //    sahaja) — lalu acak & had kepada 14 kad.
+      try {
+        const data = await fetchContentOnce();
+        const list = shuffle(data.movie || []).slice(0, MAX_ITEMS);
+        grid.innerHTML = '';
+        list.forEach(record => grid.appendChild(buildPosterCard(record)));
+      } catch (err) {
+        if (!(cachedList && cachedList.length)) grid.innerHTML = '';
+      }
+    }
+
+    homeRefreshCallbacks.push(loadSuggestions);
+    loadSuggestions();
+  })();
+
 
   /* =========================================================
      ADMIN PANEL
