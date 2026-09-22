@@ -793,6 +793,16 @@ button.nav-link{
   text-align:center;
 }
 
+/* ---- Baris "Season X" di bawah tajuk dalam poster-title-overlay —
+   guna oleh Suggestion TV Show & New TV Show Added. Font lebih kecil
+   & warna lebih malap supaya tajuk kekal fokus utama. ---- */
+.poster-season-overlay{
+  margin-top:3px;
+  font-size:12px;
+  font-weight:500;
+  color:rgba(255,255,255,0.72);
+}
+
 /* ---- Skeleton loading (poster belum sampai lagi) ---- */
 @keyframes primeflixShimmer{
   0%{ background-position:200% 0; }
