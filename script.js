@@ -1042,6 +1042,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const titleOverlay = document.createElement('div');
       titleOverlay.className = 'poster-title-overlay';
       titleOverlay.textContent = record.Title || '';
+      if (category === 'tvshow' && record.Season) {
+        const seasonEl = document.createElement('div');
+        seasonEl.className = 'poster-season-overlay';
+        seasonEl.textContent = `Season ${record.Season}`;
+        titleOverlay.appendChild(seasonEl);
+      }
       art.appendChild(titleOverlay);
 
       card.appendChild(art);
@@ -1314,6 +1320,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const titleOverlay = document.createElement('div');
       titleOverlay.className = 'poster-title-overlay';
       titleOverlay.textContent = record.Title || '';
+      if (record.Season) {
+        const seasonEl = document.createElement('div');
+        seasonEl.className = 'poster-season-overlay';
+        seasonEl.textContent = `Season ${record.Season}`;
+        titleOverlay.appendChild(seasonEl);
+      }
 
       art.appendChild(badgeEl);
       art.appendChild(play);
