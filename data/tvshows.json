@@ -2518,5 +2518,20 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-22T14:45:04.677Z",
     "UpdatedAt": "2026-09-22T14:45:04.677Z"
+  },
+  {
+    "ID": "7bf50ad2-bb75-4901-a33b-3d850d511142",
+    "Title": "The Flash",
+    "Year": "2015",
+    "Season": "2",
+    "Episode": "18",
+    "Genre": "Drama, Sci-Fi, Fantasy",
+    "Description": "Following the dramatic events of season 1, Team Flash quickly turns their attention to a threat high above Central City. Armed with the heart of a hero and the ability to move at super speeds, will Barry be able to save his city from impending doom?",
+    "Backdrop": "https://image.tmdb.org/t/p/original/goqjRP9UBEf6ztinVt46FdoUwDC.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/820LbkHQrsCDBEGza371FxhI61N.jpg",
+    "Link": "https://playmogo.com/e/576qx8foi6po",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-22T14:45:07.665Z",
+    "UpdatedAt": "2026-09-22T14:45:07.665Z"
   }
 ]
