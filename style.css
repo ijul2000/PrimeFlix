@@ -433,7 +433,7 @@ button.nav-link{
    ========================================================= */
 .hero{
   position:relative;
-  min-height:78vh;
+  min-height:84vh;
   display:flex;
   align-items:flex-end;
   overflow:hidden;
@@ -446,7 +446,7 @@ button.nav-link{
   position:absolute;
   inset:0;
   background-size:cover;
-  background-position:center;
+  background-position:center 20%;
   background-repeat:no-repeat;
   background-color:#141414;
   transition:background-image 0.5s ease;
