@@ -33,6 +33,64 @@ function resizeBackdrop(url) { return resizeImg(url, 1920, 1080); }
 function resizePoster(url) { return resizeImg(url, 500, 750); }
 
 // =========================================================
+// PUSINGAN RAWAK BERKALA (Suggestion Movie / Suggestion TV Show)
+// — sebelum ni acakan (Fisher-Yates + Math.random()) berlaku pada
+// SETIAP refresh page. Sekarang kita nak susunan rawak tu kekal
+// STABIL selama N hari (default 3 hari), dan hanya tukar bila
+// tempoh tu dah tamat — bukan setiap kali page dimuat semula.
+//
+// Caranya: guna PRNG "seeded" (mulberry32) — bukan Math.random()
+// yang sentiasa lain setiap panggilan. Seed dikira daripada
+// "bucket hari" semasa (Date.now() dibahagi tempoh N hari dalam
+// milisaat, dibundarkan ke bawah), digabung dengan satu "salt"
+// (string unik, cth. 'suggestion-movie' / 'suggestion-tvshow')
+// supaya Suggestion Movie & Suggestion TV Show dapat susunan
+// rawak yang BERBEZA walaupun dalam bucket hari yang sama.
+// Selagi bucket sama (dalam tempoh N hari yang sama), seed sama
+// -> susunan kad yang terhasil SAMA setiap kali function dipanggil
+// (setiap refresh), dan hanya bertukar bila bucket hari berubah.
+// =========================================================
+function mulberry32(seed) {
+  let a = seed | 0;
+  return function () {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function getRotationSeed(bucketDays, salt) {
+  const bucketMs = bucketDays * 24 * 60 * 60 * 1000;
+  const bucket = Math.floor(Date.now() / bucketMs);
+  // Gabungkan nombor bucket dengan salt (string) jadi satu seed
+  // integer — teknik hash ringkas (djb2-style), cukup untuk tujuan
+  // "pusingan rawak", bukan untuk keperluan kriptografi.
+  let hash = bucket | 0;
+  for (let i = 0; i < salt.length; i++) {
+    hash = (Math.imul(hash, 31) + salt.charCodeAt(i)) | 0;
+  }
+  return hash;
+}
+
+// Fisher-Yates shuffle guna PRNG seeded — susunan STABIL selagi
+// seed sama, tak ubah array asal (guna salinan).
+function seededShuffle(list, seed) {
+  const arr = (list || []).slice();
+  const rand = mulberry32(seed);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Bilangan hari sebelum susunan Suggestion Movie / Suggestion TV
+// Show ditukar rawak semula. Tukar nombor ni sahaja kalau nak
+// laraskan tempoh pusingan (cth. 1 = setiap hari, 7 = setiap minggu).
+const SUGGESTION_ROTATION_DAYS = 3;
+
+// =========================================================
 // SESI — storan berlapis (localStorage + cookie fallback)
 // Sesetengah pelayar (mod Private/Incognito, pelayar dalam-app
 // WhatsApp/Instagram/Facebook/TikTok) menyekat localStorage. Cookie
@@ -1106,14 +1164,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const MAX_ITEMS = 14;
 
-    // Fisher-Yates shuffle — tak ubah array asal (guna salinan).
+    // Bukan lagi Math.random() setiap kali dipanggil — guna seed
+    // yang hanya bertukar setiap SUGGESTION_ROTATION_DAYS hari, jadi
+    // susunan kad kekal sama sepanjang tempoh tu walaupun page
+    // di-refresh berkali-kali, dan hanya tukar rawak lepas tempoh
+    // tamat.
     function shuffle(list) {
-      const arr = (list || []).slice();
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
+      return seededShuffle(list, getRotationSeed(SUGGESTION_ROTATION_DAYS, 'suggestion-movie'));
     }
 
     function buildSkeletonCard() {
@@ -1235,13 +1292,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const MAX_ITEMS = 14;
 
+    // Sama seperti Suggestion Movie — seed hanya bertukar setiap
+    // SUGGESTION_ROTATION_DAYS hari (salt lain -> susunan berbeza
+    // daripada Suggestion Movie walaupun dalam bucket hari sama).
     function shuffle(list) {
-      const arr = (list || []).slice();
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
+      return seededShuffle(list, getRotationSeed(SUGGESTION_ROTATION_DAYS, 'suggestion-tvshow'));
     }
 
     // Satu rekod disimpan bagi SETIAP episod — kumpulkan ikut Tajuk +
