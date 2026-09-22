@@ -976,16 +976,9 @@ document.addEventListener('DOMContentLoaded', () => {
       art.className = 'poster-art skeleton-shimmer';
 
       card.appendChild(art);
-
-      // Trending Movies pakai tajuk overlay (tiada poster-meta di
-      // bawah kad lagi), jadi skeleton pun tak perlu blok meta itu.
-      if (category !== 'movie') {
-        const meta = document.createElement('div');
-        meta.className = 'poster-meta';
-        meta.innerHTML = '<div class="poster-title skeleton-shimmer"></div><div class="poster-sub skeleton-shimmer"></div>';
-        card.appendChild(meta);
-      }
-
+      // Trending Movies & Trending TV Shows kini pakai tajuk overlay
+      // (gaya sama macam Suggestion Movie / Suggestion TV Show),
+      // jadi skeleton tak perlu blok poster-meta lagi.
       return card;
     }
 
@@ -1042,33 +1035,16 @@ document.addEventListener('DOMContentLoaded', () => {
       art.appendChild(badgeEl);
       art.appendChild(play);
 
-      // Trending Movies: tajuk sebagai overlay DALAM border kad (atas
-      // gambar poster, bahagian bawah) — gaya sama seperti Suggestion
-      // Movie/TV Show, bukan poster-meta berasingan di bawah kad.
-      if (category === 'movie') {
-        const titleOverlay = document.createElement('div');
-        titleOverlay.className = 'poster-title-overlay';
-        titleOverlay.textContent = record.Title || '';
-        art.appendChild(titleOverlay);
-
-        card.appendChild(art);
-        return card;
-      }
-
-      const meta = document.createElement('div');
-      meta.className = 'poster-meta';
-      // TV Show tiada Genre — papar Tahun · Musim sahaja (tiada
-      // maklumat episod pada poster, sebab satu poster mewakili
-      // keseluruhan musim, bukan episod tertentu).
-      const subParts = category === 'tvshow' ? [record.Year] : [record.Year, record.Genre];
-      if (category === 'tvshow' && record.Season) {
-        subParts.push(`Season ${record.Season}`);
-      }
-      const sub = subParts.filter(Boolean).join(' · ');
-      meta.innerHTML = `<div class="poster-title">${record.Title || ''}</div><div class="poster-sub">${sub}</div>`;
+      // Trending Movies & Trending TV Shows: tajuk sebagai overlay
+      // DALAM border kad (atas gambar poster, bahagian bawah) — gaya
+      // sama seperti Suggestion Movie / Suggestion TV Show, bukan
+      // poster-meta berasingan di bawah kad.
+      const titleOverlay = document.createElement('div');
+      titleOverlay.className = 'poster-title-overlay';
+      titleOverlay.textContent = record.Title || '';
+      art.appendChild(titleOverlay);
 
       card.appendChild(art);
-      card.appendChild(meta);
       return card;
     }
 
