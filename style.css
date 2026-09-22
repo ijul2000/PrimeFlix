@@ -781,13 +781,14 @@ button.nav-link{
   bottom:0;
   padding:26px 10px 10px;
   background:linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.78) 45%, rgba(0,0,0,0) 100%);
-  font-size:13px;
+  font-size:15.5px;
   font-weight:600;
   color:#fff;
   white-space:normal;
   overflow-wrap:break-word;
   word-break:break-word;
   line-height:1.3;
+  text-align:center;
 }
 
 /* ---- Skeleton loading (poster belum sampai lagi) ---- */
