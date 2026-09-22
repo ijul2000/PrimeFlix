@@ -770,6 +770,25 @@ button.nav-link{
   margin-top:2px;
 }
 
+/* ---- Suggestion Movie — tajuk overlay DALAM border kad (atas
+   gambar poster, bahagian bawah), bukan di bawah kad macam
+   Trending. Gradient gelap supaya teks kekal jelas dibaca atas
+   apa jua warna poster. ---- */
+.suggestion-card .poster-title-overlay{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:22px 10px 10px;
+  background:linear-gradient(to top, rgba(10,10,10,0.88) 0%, rgba(10,10,10,0.55) 55%, rgba(10,10,10,0) 100%);
+  font-size:13px;
+  font-weight:600;
+  color:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
 /* ---- Skeleton loading (poster belum sampai lagi) ---- */
 @keyframes primeflixShimmer{
   0%{ background-position:200% 0; }
