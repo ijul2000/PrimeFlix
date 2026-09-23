@@ -2758,5 +2758,20 @@
     "Badge": "HD",
     "CreatedAt": "2026-09-23T07:10:43.803Z",
     "UpdatedAt": "2026-09-23T07:10:43.803Z"
+  },
+  {
+    "ID": "59f51f1e-92c7-4b46-b90f-45d185e524dd",
+    "Title": "The Idaho Murders: College Nightmare",
+    "Year": "2026",
+    "Season": "1",
+    "Episode": "1",
+    "Genre": "Documentary, Crime",
+    "Description": "Through bodycam footage, texts and interviews with loved ones, this documentary investigates the horrifying murder of four University of Idaho students.",
+    "Backdrop": "https://image.tmdb.org/t/p/original/1BosXOwTUudCrE77ayEJSROW8sL.jpg",
+    "Poster": "https://image.tmdb.org/t/p/original/2Fjgxlv2ishFAaYYZLa6jccswbq.jpg",
+    "Link": "https://playmogo.com/e/du7bq5yq2owk",
+    "Badge": "HD",
+    "CreatedAt": "2026-09-23T07:14:31.855Z",
+    "UpdatedAt": "2026-09-23T07:14:31.855Z"
   }
 ]
