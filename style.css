@@ -654,21 +654,7 @@ button.nav-link{
 }
 .row-section{ margin-top:44px; }
 
-/* Filter negara (halaman utama) */
-.country-filter-bar{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-top:28px;
-}
-.country-filter-bar[hidden]{ display:none; }
-.country-filter-label{
-  font-size:12px;
-  font-weight:600;
-  letter-spacing:1.2px;
-  text-transform:uppercase;
-  color:var(--text-muted);
-}
+/* Filter negara (navbar, sebelah kanan Watch List) */
 .country-filter-select{
   appearance:auto;
   background:var(--bg-raised);
@@ -677,24 +663,29 @@ button.nav-link{
   color:var(--text);
   font-family:inherit;
   font-size:13.5px;
-  padding:9px 14px;
-  min-width:190px;
+  font-weight:500;
+  padding:7px 12px;
+  max-width:180px;
   outline:none;
   cursor:pointer;
   transition:border-color .2s ease;
 }
+.country-filter-select[hidden]{ display:none; }
 .country-filter-select:hover,
 .country-filter-select:focus{ border-color:var(--gold-deep); }
+.mobile-nav .country-filter-mobile{
+  margin-top:12px;
+  width:100%;
+  max-width:none;
+  padding:11px 12px;
+}
 .grid-empty{
   grid-column:1 / -1;
   padding:36px 0;
   font-size:14px;
   color:var(--text-dim);
 }
-@media (max-width:640px){
-  .country-filter-bar{ margin-top:20px; }
-  .country-filter-select{ flex:1; min-width:0; }
-}
+
 .row-head{
   display:flex;
   align-items:baseline;
