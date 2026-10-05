@@ -38,6 +38,11 @@
       <a href="#movies" class="nav-link active">Movie</a>
       <a href="#tvshows" class="nav-link">TV Show</a>
       <button type="button" class="nav-link" id="watchListBtn">Watch List</button>
+      <!-- Filter negara — diisi automatik daripada negara yang didaftarkan
+           pada movie & TV show (script.js). Tersembunyi selagi belum ada data. -->
+      <select class="country-filter-select" data-country-filter aria-label="Filter by country" hidden>
+        <option value="">All Countries</option>
+      </select>
     </nav>
 
     <div class="header-actions">
@@ -70,6 +75,9 @@
     <a href="#movies" class="nav-link">Movie</a>
     <a href="#tvshows" class="nav-link">TV Show</a>
     <button type="button" class="nav-link" id="watchListBtnMobile">Watch List</button>
+    <select class="country-filter-select country-filter-mobile" data-country-filter aria-label="Filter by country" hidden>
+      <option value="">All Countries</option>
+    </select>
     <div class="auth-area auth-area-mobile" id="authAreaMobile">
       <button type="button" class="nav-link" id="loginNavBtnMobile">Login</button>
     </div>
@@ -98,16 +106,6 @@
 
 <!-- CONTENT ROWS -->
 <main class="content">
-
-  <!-- Filter negara — pilihan diisi automatik daripada negara yang
-       telah didaftarkan pada movie & TV show (script.js). Tersembunyi
-       selagi belum ada sebarang rekod yang ada negara. -->
-  <div class="country-filter-bar" id="countryFilterBar" hidden>
-    <label class="country-filter-label" for="countryFilter">Country</label>
-    <select class="country-filter-select" id="countryFilter" aria-label="Filter by country">
-      <option value="">All Countries</option>
-    </select>
-  </div>
 
   <section class="row-section" id="suggestions">
     <div class="row-head">
