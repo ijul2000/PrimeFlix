@@ -597,11 +597,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const countryFilterBar = document.getElementById('countryFilterBar');
-  const countryFilterSelect = document.getElementById('countryFilter');
+  // Dua dropdown (navbar desktop + drawer mobile) — sentiasa disegerakkan.
+  const countryFilterSelects = Array.from(document.querySelectorAll('[data-country-filter]'));
 
   function renderCountryFilterOptions(data) {
-    if (!countryFilterSelect || !data) return;
+    if (!countryFilterSelects.length || !data) return;
     const found = new Map();
     [].concat(data.movie || [], data.tvshow || []).forEach(record => {
       const name = cleanCountry(record.Country);
@@ -618,21 +618,23 @@ document.addEventListener('DOMContentLoaded', () => {
       countryFilterCallbacks.forEach(fn => fn());
     }
 
-    countryFilterSelect.innerHTML = '';
-    const allOpt = document.createElement('option');
-    allOpt.value = '';
-    allOpt.textContent = 'All Countries';
-    countryFilterSelect.appendChild(allOpt);
-    names.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      countryFilterSelect.appendChild(opt);
-    });
     const match = names.find(n => n.toLowerCase() === selectedCountry.toLowerCase());
-    countryFilterSelect.value = match || '';
     if (match) selectedCountry = match;
-    if (countryFilterBar) countryFilterBar.hidden = names.length === 0;
+    countryFilterSelects.forEach(select => {
+      select.innerHTML = '';
+      const allOpt = document.createElement('option');
+      allOpt.value = '';
+      allOpt.textContent = 'All Countries';
+      select.appendChild(allOpt);
+      names.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+      select.value = match || '';
+      select.hidden = names.length === 0;
+    });
   }
 
   async function loadCountryFilter() {
@@ -643,16 +645,17 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) { /* biarkan penapis tersembunyi kalau data gagal dimuat */ }
   }
 
-  if (countryFilterSelect) {
-    countryFilterSelect.addEventListener('change', () => {
-      selectedCountry = countryFilterSelect.value;
+  countryFilterSelects.forEach(select => {
+    select.addEventListener('change', () => {
+      selectedCountry = select.value;
+      countryFilterSelects.forEach(other => { other.value = selectedCountry; });
       try {
         if (selectedCountry) sessionStorage.setItem(COUNTRY_FILTER_KEY, selectedCountry);
         else sessionStorage.removeItem(COUNTRY_FILTER_KEY);
       } catch (err) { /* abaikan */ }
       countryFilterCallbacks.forEach(fn => fn());
     });
-  }
+  });
   homeRefreshCallbacks.push(loadCountryFilter);
   loadCountryFilter();
 
