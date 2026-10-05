@@ -99,6 +99,16 @@
 <!-- CONTENT ROWS -->
 <main class="content">
 
+  <!-- Filter negara — pilihan diisi automatik daripada negara yang
+       telah didaftarkan pada movie & TV show (script.js). Tersembunyi
+       selagi belum ada sebarang rekod yang ada negara. -->
+  <div class="country-filter-bar" id="countryFilterBar" hidden>
+    <label class="country-filter-label" for="countryFilter">Country</label>
+    <select class="country-filter-select" id="countryFilter" aria-label="Filter by country">
+      <option value="">All Countries</option>
+    </select>
+  </div>
+
   <section class="row-section" id="suggestions">
     <div class="row-head">
       <h2>Suggestion Movie</h2>
@@ -288,6 +298,11 @@
           <small>You can add more than one genre.</small>
         </label>
 
+        <label class="form-field">
+          <span>Country <em>*</em></span>
+          <input type="text" name="Country" required list="countryOptions" placeholder="e.g.: Malaysia" autocomplete="off" data-country-input>
+        </label>
+
         <div class="form-row form-row-split">
           <label class="form-field">
             <span>Backdrop Image URL <em>*</em></span>
@@ -362,6 +377,11 @@
             <input type="text" class="tag-input-field" placeholder="Type genre &amp; press Enter (e.g.: Drama)">
           </div>
           <small>You can add more than one genre.</small>
+        </label>
+
+        <label class="form-field">
+          <span>Country <em>*</em></span>
+          <input type="text" name="Country" required list="countryOptions" placeholder="e.g.: Malaysia" autocomplete="off" data-country-input>
         </label>
 
         <div class="form-row form-row-split">
@@ -449,6 +469,10 @@
 
 
 </div>
+
+<!-- Cadangan negara untuk borang Admin — diisi automatik daripada
+     negara yang sudah didaftarkan (script.js), supaya ejaan konsisten. -->
+<datalist id="countryOptions"></datalist>
 
 <div class="toast" id="toast" hidden></div>
 
