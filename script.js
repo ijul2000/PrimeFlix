@@ -547,6 +547,116 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* =========================================================
+     FILTER NEGARA — pilih negara yang telah didaftarkan pada
+     tajuk (medan "Country" dalam borang Admin). Senarai pilihan
+     dibina daripada negara yang BENAR-BENAR ada dalam data movie
+     & TV show, jadi negara tanpa tajuk tak akan muncul. Pilihan
+     disimpan dalam sessionStorage (kekal bila refresh). Filter
+     dikenakan pada grid Suggestion & New Added (Movie + TV Show);
+     Hero & carian tak ditapis.
+     ========================================================= */
+  const COUNTRY_FILTER_KEY = 'primeflix_country_filter';
+  const countryFilterCallbacks = [];
+  let selectedCountry = '';
+  try { selectedCountry = sessionStorage.getItem(COUNTRY_FILTER_KEY) || ''; } catch (err) { /* abaikan */ }
+
+  function cleanCountry(value) {
+    return String(value || '').trim();
+  }
+
+  function filterByCountry(list) {
+    if (!selectedCountry) return list || [];
+    const target = selectedCountry.toLowerCase();
+    return (list || []).filter(record => cleanCountry(record.Country).toLowerCase() === target);
+  }
+
+  // Isi grid dengan kad; kalau penapis aktif tapi tiada tajuk padan,
+  // papar mesej kosong (bukan grid kosong tanpa penjelasan).
+  function renderGridCards(grid, list, buildCard) {
+    grid.innerHTML = '';
+    if (!list.length && selectedCountry) {
+      const empty = document.createElement('div');
+      empty.className = 'grid-empty';
+      empty.textContent = `No titles from ${selectedCountry} yet.`;
+      grid.appendChild(empty);
+      return;
+    }
+    list.forEach(record => grid.appendChild(buildCard(record)));
+  }
+
+  // Cadangan (datalist) untuk medan Country dalam borang Admin —
+  // hanya negara yang sudah pernah diisi pada tajuk sedia ada.
+  const countryDatalist = document.getElementById('countryOptions');
+  function renderCountrySuggestions(names) {
+    if (!countryDatalist) return;
+    countryDatalist.innerHTML = '';
+    names.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      countryDatalist.appendChild(opt);
+    });
+  }
+
+  const countryFilterBar = document.getElementById('countryFilterBar');
+  const countryFilterSelect = document.getElementById('countryFilter');
+
+  function renderCountryFilterOptions(data) {
+    if (!countryFilterSelect || !data) return;
+    const found = new Map();
+    [].concat(data.movie || [], data.tvshow || []).forEach(record => {
+      const name = cleanCountry(record.Country);
+      if (name) found.set(name.toLowerCase(), name);
+    });
+    const names = Array.from(found.values()).sort((a, b) => a.localeCompare(b));
+    renderCountrySuggestions(names);
+
+    // Negara yang dipilih tadi dah tiada dalam data (cth. tajuk dipadam) -> reset.
+    const stillExists = names.some(n => n.toLowerCase() === selectedCountry.toLowerCase());
+    if (selectedCountry && !stillExists) {
+      selectedCountry = '';
+      try { sessionStorage.removeItem(COUNTRY_FILTER_KEY); } catch (err) { /* abaikan */ }
+      countryFilterCallbacks.forEach(fn => fn());
+    }
+
+    countryFilterSelect.innerHTML = '';
+    const allOpt = document.createElement('option');
+    allOpt.value = '';
+    allOpt.textContent = 'All Countries';
+    countryFilterSelect.appendChild(allOpt);
+    names.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      countryFilterSelect.appendChild(opt);
+    });
+    const match = names.find(n => n.toLowerCase() === selectedCountry.toLowerCase());
+    countryFilterSelect.value = match || '';
+    if (match) selectedCountry = match;
+    if (countryFilterBar) countryFilterBar.hidden = names.length === 0;
+  }
+
+  async function loadCountryFilter() {
+    const cached = readContentCache();
+    if (cached) renderCountryFilterOptions(cached);
+    try {
+      renderCountryFilterOptions(await fetchContentOnce());
+    } catch (err) { /* biarkan penapis tersembunyi kalau data gagal dimuat */ }
+  }
+
+  if (countryFilterSelect) {
+    countryFilterSelect.addEventListener('change', () => {
+      selectedCountry = countryFilterSelect.value;
+      try {
+        if (selectedCountry) sessionStorage.setItem(COUNTRY_FILTER_KEY, selectedCountry);
+        else sessionStorage.removeItem(COUNTRY_FILTER_KEY);
+      } catch (err) { /* abaikan */ }
+      countryFilterCallbacks.forEach(fn => fn());
+    });
+  }
+  homeRefreshCallbacks.push(loadCountryFilter);
+  loadCountryFilter();
+
+  /* =========================================================
      SENARAI SAYA (Watch List) — disimpan dalam localStorage
      (kekal walaupun tab ditutup), diasingkan ikut kategori
      'movie' & 'tvshow'. Digunakan oleh butang "+ Senarai Saya"
@@ -1118,8 +1228,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cached = readContentCache();
       const cachedList = cached ? cached[category] : null;
       if (cachedList && cachedList.length) {
-        grid.innerHTML = '';
-        dedupeByTitleSeason(cachedList).slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
+        renderGridCards(grid, dedupeByTitleSeason(filterByCountry(cachedList)).slice(0, MAX_ITEMS), buildPosterCard);
       } else {
         // Tiada cache lagi (lawatan pertama) -> papar skeleton dahulu
         // supaya ada maklum balas visual serta-merta semasa data dimuat.
@@ -1131,9 +1240,8 @@ document.addEventListener('DOMContentLoaded', () => {
       //    grid bila siap.
       try {
         const data = await fetchContentOnce();
-        const list = dedupeByTitleSeason(data[category] || []).slice(0, MAX_ITEMS);
-        grid.innerHTML = '';
-        list.forEach(record => grid.appendChild(buildPosterCard(record)));
+        const list = dedupeByTitleSeason(filterByCountry(data[category] || [])).slice(0, MAX_ITEMS);
+        renderGridCards(grid, list, buildPosterCard);
       } catch (err) {
         // Jika gagal muatkan dan tiada cache, biarkan grid kosong tanpa ranap laman.
         if (!(cachedList && cachedList.length)) grid.innerHTML = '';
@@ -1141,6 +1249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     homeRefreshCallbacks.push(loadTrending);
+    countryFilterCallbacks.push(loadTrending);
     loadTrending();
   }
 
@@ -1254,8 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cached = readContentCache();
       const cachedList = cached ? cached.movie : null;
       if (cachedList && cachedList.length) {
-        grid.innerHTML = '';
-        shuffle(cachedList).slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
+        renderGridCards(grid, shuffle(filterByCountry(cachedList)).slice(0, MAX_ITEMS), buildPosterCard);
       } else {
         renderSkeletonGrid();
       }
@@ -1265,15 +1373,15 @@ document.addEventListener('DOMContentLoaded', () => {
       //    sahaja) — lalu acak & had kepada 14 kad.
       try {
         const data = await fetchContentOnce();
-        const list = shuffle(data.movie || []).slice(0, MAX_ITEMS);
-        grid.innerHTML = '';
-        list.forEach(record => grid.appendChild(buildPosterCard(record)));
+        const list = shuffle(filterByCountry(data.movie || [])).slice(0, MAX_ITEMS);
+        renderGridCards(grid, list, buildPosterCard);
       } catch (err) {
         if (!(cachedList && cachedList.length)) grid.innerHTML = '';
       }
     }
 
     homeRefreshCallbacks.push(loadSuggestions);
+    countryFilterCallbacks.push(loadSuggestions);
     loadSuggestions();
   })();
 
@@ -1394,23 +1502,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const cached = readContentCache();
       const cachedList = cached ? cached.tvshow : null;
       if (cachedList && cachedList.length) {
-        grid.innerHTML = '';
-        shuffle(dedupeByTitleSeason(cachedList)).slice(0, MAX_ITEMS).forEach(record => grid.appendChild(buildPosterCard(record)));
+        renderGridCards(grid, shuffle(dedupeByTitleSeason(filterByCountry(cachedList))).slice(0, MAX_ITEMS), buildPosterCard);
       } else {
         renderSkeletonGrid();
       }
 
       try {
         const data = await fetchContentOnce();
-        const list = shuffle(dedupeByTitleSeason(data.tvshow || [])).slice(0, MAX_ITEMS);
-        grid.innerHTML = '';
-        list.forEach(record => grid.appendChild(buildPosterCard(record)));
+        const list = shuffle(dedupeByTitleSeason(filterByCountry(data.tvshow || []))).slice(0, MAX_ITEMS);
+        renderGridCards(grid, list, buildPosterCard);
       } catch (err) {
         if (!(cachedList && cachedList.length)) grid.innerHTML = '';
       }
     }
 
     homeRefreshCallbacks.push(loadTvSuggestions);
+    countryFilterCallbacks.push(loadTvSuggestions);
     loadTvSuggestions();
   })();
 
@@ -1802,6 +1909,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = form.querySelector(`[name="${field}"]`);
         if (el && record[field] !== undefined) el.value = record[field];
       });
+      const countryEl = form.querySelector('[name="Country"]');
+      if (countryEl) countryEl.value = cleanCountry(record.Country);
       const genres = String(record.Genre || '').split(',').map(g => g.trim()).filter(Boolean);
       if (tagKey === 'movieGenre') movieGenreTags.set(genres);
       if (tagKey === 'tvGenre') tvGenreTags.set(genres);
@@ -1825,6 +1934,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = tvForm.querySelector(`[name="${field}"]`);
         if (el && rep[field] !== undefined) el.value = rep[field];
       });
+      const tvCountryEl = tvForm.querySelector('[name="Country"]');
+      if (tvCountryEl) tvCountryEl.value = cleanCountry(rep.Country);
       const genres = String(rep.Genre || '').split(',').map(g => g.trim()).filter(Boolean);
       tvGenreTags.set(genres);
 
@@ -1860,6 +1971,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = {};
       fd.forEach((value, key) => { data[key] = value; });
       data.Genre = genreTags.get().join(', ');
+      data.Country = cleanCountry(data.Country);
       if (!data.ID) delete data.ID;
       return data;
     }
@@ -1952,10 +2064,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const fd = new FormData(tvForm);
       const shared = {};
-      ['Title', 'Year', 'Description', 'Backdrop', 'Poster', 'Badge', 'Season'].forEach(field => {
+      ['Title', 'Year', 'Country', 'Description', 'Backdrop', 'Poster', 'Badge', 'Season'].forEach(field => {
         shared[field] = fd.get(field);
       });
       shared.Genre = tvGenreTags.get().join(', ');
+      shared.Country = cleanCountry(shared.Country);
 
       const submitBtn = tvForm.querySelector('[data-submit-btn]');
       const originalLabel = submitBtn.textContent;
@@ -2091,9 +2204,10 @@ document.addEventListener('DOMContentLoaded', () => {
       meta.className = 'admin-card-meta';
       const tvEpisodeCount = record._group ? record._group.length : 0;
       meta.textContent = record._type === 'movie'
-        ? [record.Year, record.Badge].filter(Boolean).join(' · ')
+        ? [record.Year, record.Badge, record.Country].filter(Boolean).join(' · ')
         : [
             record.Year,
+            record.Country,
             record.Season ? `Season ${record.Season}` : '',
             tvEpisodeCount ? `${tvEpisodeCount} Episode${tvEpisodeCount > 1 ? 's' : ''}` : ''
           ].filter(Boolean).join(' · ');
