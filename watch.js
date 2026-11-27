@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const descEl = document.getElementById('watchDesc');
   const backLink = document.getElementById('backLink');
   const watchlistBtn = document.getElementById('watchWatchlistBtn');
+  const saveEpisodeBtn = document.getElementById('watchSaveEpisodeBtn');
   const prevEpisodeBtn = document.getElementById('prevEpisodeBtn');
   const nextEpisodeBtn = document.getElementById('nextEpisodeBtn');
 
@@ -105,85 +106,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const type = params.get('type') || 'movie';
 
   /* =========================================================
-     SENARAI SAYA (Watch List) — sama seperti movie.js/script.js,
-     disimpan dalam localStorage supaya dikongsi merentasi halaman.
+     SENARAI SAYA (Watch List) — logik kongsi dalam watchlist.js (PFWL).
+     TV show: butang ini menyimpan EPISOD yang sedang ditonton.
      ========================================================= */
-  const WATCHLIST_KEY = 'primeflix_watchlist_v1';
-
-  function readWatchlist() {
-    try {
-      const raw = localStorage.getItem(WATCHLIST_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-      return {
-        movie: Array.isArray(parsed && parsed.movie) ? parsed.movie : [],
-        tvshow: Array.isArray(parsed && parsed.tvshow) ? parsed.tvshow : []
-      };
-    } catch (err) {
-      return { movie: [], tvshow: [] };
-    }
-  }
-
-  function writeWatchlist(data) {
-    try {
-      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(data));
-    } catch (err) {
-      // localStorage tak tersedia / penuh — abaikan, tak kritikal.
-    }
-  }
-
-  function isInWatchlist(wlType, wlId) {
-    if (!wlId) return false;
-    const wl = readWatchlist();
-    return (wl[wlType] || []).some(r => String(r.ID) === String(wlId));
-  }
-
-  function addToWatchlist(wlType, record) {
-    if (!record || !record.ID) return;
-    const wl = readWatchlist();
-    if (!wl[wlType]) wl[wlType] = [];
-    if (wl[wlType].some(r => String(r.ID) === String(record.ID))) return;
-    wl[wlType].unshift({
-      ID: record.ID,
-      Title: record.Title || '',
-      Year: record.Year || '',
-      Genre: record.Genre || '',
-      Season: record.Season || '',
-      Poster: record.Poster || '',
-      Badge: record.Badge || ''
-    });
-    writeWatchlist(wl);
-  }
-
-  function removeFromWatchlist(wlType, wlId) {
-    const wl = readWatchlist();
-    wl[wlType] = (wl[wlType] || []).filter(r => String(r.ID) !== String(wlId));
-    writeWatchlist(wl);
-  }
-
-  function toggleWatchlist(wlType, record) {
-    if (!record || !record.ID) return;
-    if (isInWatchlist(wlType, record.ID)) {
-      removeFromWatchlist(wlType, record.ID);
-    } else {
-      addToWatchlist(wlType, record);
-    }
-  }
-
-  function syncWatchlistBtn(btn, wlType, wlId) {
-    if (!btn) return;
-    const saved = isInWatchlist(wlType, wlId);
-    btn.textContent = saved ? '✓ In My List' : '+ My List';
-    btn.classList.toggle('in-watchlist', saved);
-  }
-
   let currentDetailRecord = null;
+
+  // Butang "+ My List" = tambah / buang tajuk dari senarai. Untuk TV show,
+  // butang berasingan "Save This Episode" yang menyimpan episod semasa
+  // (tambah ke senarai kalau belum ada, atau kemas kini episod tersimpan).
+  const WL_OPTS = type === 'tvshow' ? { keepEpisode: true } : undefined;
+
+  function syncWatchlistButtons(record) {
+    PFWL.syncBtn(watchlistBtn, type, record, WL_OPTS);
+    if (!saveEpisodeBtn) return;
+    if (type !== 'tvshow' || !record) {
+      saveEpisodeBtn.hidden = true;
+      return;
+    }
+    const entry = PFWL.getEntry('tvshow', record);
+    const sameEpisode = !!entry && String(entry.ID) === String(record.ID);
+    saveEpisodeBtn.hidden = false;
+    saveEpisodeBtn.textContent = sameEpisode ? '✓ Episode Saved' : 'Save This Episode';
+    saveEpisodeBtn.classList.toggle('in-watchlist', sameEpisode);
+  }
+
   if (watchlistBtn) {
     watchlistBtn.addEventListener('click', () => {
       if (!currentDetailRecord) return;
-      toggleWatchlist(type, currentDetailRecord);
-      syncWatchlistBtn(watchlistBtn, type, currentDetailRecord.ID);
+      PFWL.toggle(type, currentDetailRecord, WL_OPTS);
+      syncWatchlistButtons(currentDetailRecord);
     });
   }
+  if (saveEpisodeBtn) {
+    saveEpisodeBtn.addEventListener('click', () => {
+      if (!currentDetailRecord || type !== 'tvshow') return;
+      PFWL.save('tvshow', currentDetailRecord);
+      syncWatchlistButtons(currentDetailRecord);
+    });
+  }
+
+  // Titik mula (saat) — dihantar dari Senarai Saya bila pengguna pilih
+  // "Continue". Tiada parameter t = mula dari awal.
+  const startAt = Math.max(0, Number(params.get('t')) || 0);
 
   // Butang "Kembali" bawa balik ke halaman butiran movie/TV show yang sama.
   backLink.href = id
@@ -265,8 +229,120 @@ document.addEventListener('DOMContentLoaded', () => {
     return { kind: 'iframe', src: url, original: url };
   }
 
+  function getYouTubeId(url) {
+    let m = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/);
+    if (m) return m[1];
+    m = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
+    if (m && url.indexOf('youtube.com') !== -1) return m[1];
+    m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+    return m ? m[1] : null;
+  }
+
+  function loadYouTubeApi(cb) {
+    if (window.YT && window.YT.Player) { cb(); return; }
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function () {
+      if (typeof prev === 'function') prev();
+      cb();
+    };
+    if (!document.getElementById('ytIframeApi')) {
+      const s = document.createElement('script');
+      s.id = 'ytIframeApi';
+      s.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(s);
+    }
+  }
+
+  // Simpan kemajuan tontonan (untuk "Continue" dalam Senarai Saya).
+  // Hanya boleh dikesan untuk video terus (.mp4 dll) dan YouTube.
+  // Pemain iframe lain (cth. Google Drive) tak benarkan akses masa
+  // tontonan dari luar — untuk itu kemajuan tak dapat disimpan.
+  let stopTracking = null;
+
+  function trackVideo(video) {
+    let last = 0;
+    function saveNow(force) {
+      const now = Date.now();
+      if (!force && now - last < 5000) return;
+      last = now;
+      PFWL.setProgress(id, video.currentTime, video.duration);
+    }
+    const onTime = () => saveNow(false);
+    const onFlush = () => saveNow(true);
+    const onHide = () => { if (document.visibilityState === 'hidden') saveNow(true); };
+    video.addEventListener('timeupdate', onTime);
+    video.addEventListener('pause', onFlush);
+    video.addEventListener('ended', onFlush);
+    window.addEventListener('pagehide', onFlush);
+    document.addEventListener('visibilitychange', onHide);
+    stopTracking = () => {
+      video.removeEventListener('timeupdate', onTime);
+      video.removeEventListener('pause', onFlush);
+      video.removeEventListener('ended', onFlush);
+      window.removeEventListener('pagehide', onFlush);
+      document.removeEventListener('visibilitychange', onHide);
+    };
+  }
+
+  function renderYouTube(ytId) {
+    const holder = document.createElement('div');
+    playerWrap.appendChild(holder);
+    let player = null;
+    let timer = null;
+    let cancelled = false;
+
+    function saveNow() {
+      if (!player || typeof player.getCurrentTime !== 'function') return;
+      try { PFWL.setProgress(id, player.getCurrentTime(), player.getDuration()); } catch (err) { /* abaikan */ }
+    }
+    const onHide = () => { if (document.visibilityState === 'hidden') saveNow(); };
+
+    function fallbackIframe() {
+      if (cancelled || player) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${ytId}` + (startAt > 0 ? `?start=${Math.floor(startAt)}` : '');
+      iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+      iframe.allowFullscreen = true;
+      holder.replaceWith(iframe);
+    }
+    // Kalau API YouTube gagal dimuat (cth. disekat), papar iframe biasa.
+    const fallbackTimer = setTimeout(fallbackIframe, 6000);
+
+    loadYouTubeApi(() => {
+      if (cancelled) return;
+      clearTimeout(fallbackTimer);
+      player = new YT.Player(holder, {
+        width: '100%',
+        height: '100%',
+        videoId: ytId,
+        playerVars: { autoplay: 1, playsinline: 1, rel: 0, start: Math.floor(startAt) || 0 },
+        events: {
+          onStateChange: (e) => {
+            if (e.data === 1) { // playing
+              if (!timer) timer = setInterval(saveNow, 5000);
+            } else {
+              if (timer) { clearInterval(timer); timer = null; }
+              if (e.data === 2 || e.data === 0) saveNow(); // paused / ended
+            }
+          }
+        }
+      });
+    });
+
+    window.addEventListener('pagehide', saveNow);
+    document.addEventListener('visibilitychange', onHide);
+    stopTracking = () => {
+      cancelled = true;
+      clearTimeout(fallbackTimer);
+      if (timer) clearInterval(timer);
+      window.removeEventListener('pagehide', saveNow);
+      document.removeEventListener('visibilitychange', onHide);
+    };
+  }
+
   function renderPlayer(record) {
     const link = record.Link;
+    if (stopTracking) { stopTracking(); stopTracking = null; }
     playerWrap.innerHTML = '';
 
     if (!link) {
@@ -285,6 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
       video.autoplay = true;
       video.playsInline = true;
       video.src = resolved.src;
+      video.addEventListener('loadedmetadata', () => {
+        if (startAt > 0 && (!video.duration || startAt < video.duration - 5)) {
+          try { video.currentTime = startAt; } catch (err) { /* abaikan */ }
+        }
+      });
       video.addEventListener('error', () => {
         playerWrap.innerHTML = '';
         const state = document.createElement('div');
@@ -293,6 +374,13 @@ document.addEventListener('DOMContentLoaded', () => {
         playerWrap.appendChild(state);
       });
       playerWrap.appendChild(video);
+      trackVideo(video);
+      return;
+    }
+
+    const ytId = getYouTubeId(String(link).trim());
+    if (ytId) {
+      renderYouTube(ytId);
       return;
     }
 
@@ -357,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentDetailRecord = record;
     renderInfo(record);
     renderPlayer(record);
-    syncWatchlistBtn(watchlistBtn, type, record.ID);
+    syncWatchlistButtons(record);
     updateEpisodeNav(record, fullList);
   }
 
@@ -396,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (shown && currentDetailRecord && String(currentDetailRecord.ID) === String(record.ID)) {
         updateEpisodeNav(record, json.data);
-        syncWatchlistBtn(watchlistBtn, type, record.ID);
+        syncWatchlistButtons(record);
       } else {
         renderRecord(record, json.data);
       }
