@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const episodeSelectLabel = document.getElementById('episodeSelectLabel');
   const episodeDropdown = document.getElementById('episodeDropdown');
   const tvWatchlistBtn = document.getElementById('tvWatchlistBtn');
+  const tvPlayBtn = document.getElementById('tvPlayBtn');
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
@@ -140,77 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* =========================================================
-     SENARAI SAYA (Watch List) — sama seperti script.js, disimpan
-     dalam localStorage supaya dikongsi merentasi halaman.
-     ========================================================= */
-  const WATCHLIST_KEY = 'primeflix_watchlist_v1';
-
-  function readWatchlist() {
-    try {
-      const raw = localStorage.getItem(WATCHLIST_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-      return {
-        movie: Array.isArray(parsed && parsed.movie) ? parsed.movie : [],
-        tvshow: Array.isArray(parsed && parsed.tvshow) ? parsed.tvshow : []
-      };
-    } catch (err) {
-      return { movie: [], tvshow: [] };
-    }
-  }
-
-  function writeWatchlist(data) {
-    try {
-      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(data));
-    } catch (err) {
-      // localStorage tak tersedia / penuh — abaikan, tak kritikal.
-    }
-  }
-
-  function isInWatchlist(wlType, wlId) {
-    if (!wlId) return false;
-    const wl = readWatchlist();
-    return (wl[wlType] || []).some(r => String(r.ID) === String(wlId));
-  }
-
-  function addToWatchlist(wlType, record) {
-    if (!record || !record.ID) return;
-    const wl = readWatchlist();
-    if (!wl[wlType]) wl[wlType] = [];
-    if (wl[wlType].some(r => String(r.ID) === String(record.ID))) return;
-    wl[wlType].unshift({
-      ID: record.ID,
-      Title: record.Title || '',
-      Year: record.Year || '',
-      Genre: record.Genre || '',
-      Season: record.Season || '',
-      Poster: record.Poster || '',
-      Badge: record.Badge || ''
-    });
-    writeWatchlist(wl);
-  }
-
-  function removeFromWatchlist(wlType, wlId) {
-    const wl = readWatchlist();
-    wl[wlType] = (wl[wlType] || []).filter(r => String(r.ID) !== String(wlId));
-    writeWatchlist(wl);
-  }
-
-  function toggleWatchlist(wlType, record) {
-    if (!record || !record.ID) return;
-    if (isInWatchlist(wlType, record.ID)) {
-      removeFromWatchlist(wlType, record.ID);
-    } else {
-      addToWatchlist(wlType, record);
-    }
-  }
-
-  function syncWatchlistBtn(btn, wlType, wlId) {
-    if (!btn) return;
-    const saved = isInWatchlist(wlType, wlId);
-    btn.textContent = saved ? '✓ In My List' : '+ My List';
-    btn.classList.toggle('in-watchlist', saved);
-  }
+  /* SENARAI SAYA — logik kongsi dalam watchlist.js (PFWL). */
 
   // Butang "Tonton Sekarang" (movie sahaja) — bawa ke pemain (watch.html)
   // dengan id yang sama.
@@ -221,20 +152,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Butang "+ Senarai Saya" — movie & TV show diasingkan ikut `type`.
+  // Butang "+ My List" — movie & TV show diasingkan ikut `type`.
+  // TV show: menyimpan EPISOD yang dipilih (lihat tvSelectedRecord).
   let currentDetailRecord = null;
+  let tvSelectedRecord = null;
   if (movieWatchlistBtn) {
     movieWatchlistBtn.addEventListener('click', () => {
       if (!currentDetailRecord) return;
-      toggleWatchlist(type, currentDetailRecord);
-      syncWatchlistBtn(movieWatchlistBtn, type, currentDetailRecord.ID);
+      PFWL.toggle(type, currentDetailRecord);
+      PFWL.syncBtn(movieWatchlistBtn, type, currentDetailRecord);
     });
   }
   if (tvWatchlistBtn) {
     tvWatchlistBtn.addEventListener('click', () => {
-      if (!currentDetailRecord) return;
-      toggleWatchlist(type, currentDetailRecord);
-      syncWatchlistBtn(tvWatchlistBtn, type, currentDetailRecord.ID);
+      const rec = tvSelectedRecord || currentDetailRecord;
+      if (!rec) return;
+      PFWL.toggle(type, rec);
+      PFWL.syncBtn(tvWatchlistBtn, type, rec);
     });
   }
 
@@ -353,9 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
         episodeDropdown.appendChild(buildDropdownOption(
           `Episode ${epNum}`,
           () => {
-            episodeSelectLabel.textContent = epNum;
+            tvSelectedRecord = ep;
+            renderEpisodeDropdown(epNum);
             toggleDropdown(episodeSelectBtn, episodeDropdown, false);
-            playEpisode(ep);
+            PFWL.syncBtn(tvWatchlistBtn, type, ep);
           },
           epNum === activeEpisodeNum
         ));
@@ -368,8 +303,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // bukan episod rekod yang dipautkan dari kad poster trending —
     // sebab dedupeByTitleSeason() dalam script.js boleh pilih mana-mana
     // episod sebagai rekod "wakil" bagi musim tu.
-    const defaultEpisodeNum = episodes.length ? (Number(episodes[0].Episode) || 0) : (Number(record.Episode) || 0);
+    // Kalau musim ini dah ada dalam My List, papar episod yang disimpan.
+    let defaultEp = episodes[0];
+    const prevSelected = tvSelectedRecord
+      ? episodes.find(ep => String(ep.ID) === String(tvSelectedRecord.ID))
+      : null;
+    const savedEntry = PFWL.getEntry('tvshow', record);
+    if (savedEntry) {
+      const match = episodes.find(ep => String(ep.ID) === String(savedEntry.ID)) ||
+        episodes.find(ep => savedEntry.Episode && (Number(ep.Episode) || 0) === (Number(savedEntry.Episode) || 0));
+      if (match) defaultEp = match;
+    }
+    if (prevSelected) defaultEp = prevSelected;
+    tvSelectedRecord = defaultEp;
+    const defaultEpisodeNum = defaultEp ? (Number(defaultEp.Episode) || 0) : (Number(record.Episode) || 0);
     renderEpisodeDropdown(defaultEpisodeNum);
+
+    if (tvPlayBtn) {
+      tvPlayBtn.onclick = () => playEpisode(tvSelectedRecord || episodes[0]);
+    }
 
     episodeSelectBtn.onclick = (e) => {
       e.stopPropagation();
@@ -439,9 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (type === 'tvshow') {
       initTvPicker(record, fullList);
-      syncWatchlistBtn(tvWatchlistBtn, type, record.ID);
+      PFWL.syncBtn(tvWatchlistBtn, type, tvSelectedRecord || record);
     } else {
-      syncWatchlistBtn(movieWatchlistBtn, type, record.ID);
+      PFWL.syncBtn(movieWatchlistBtn, type, record);
     }
   }
 
