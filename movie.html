@@ -1,421 +1,83 @@
-// =========================================================
-// PRIME FLIX — page butiran movie (movie.html)
-// =========================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime Flix — Movie Details</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#0a0a0a">
+</head>
+<body class="detail-page">
 
-// Guna URL Web App yang sama seperti script.js
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbydLAqC63yo3LXJXMXpRyJNH4KYc5wtmstaewPa-NAnklQvV2JSCv28JdfWNiJsma51fQ/exec';
+<!-- HEADER (ringkas — logo & pautan kembali) -->
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
 
-// =========================================================
-// AUTO IMAGE RESIZE — sama seperti script.js: bina URL proxy
-// images.weserv.nl supaya backdrop yang admin tampal (link biasa,
-// apa-apa saiz) automatik diresize/dicompress sebelum dimuat turun.
-// =========================================================
-function resizeImg(url, w, h) {
-  if (!url || typeof url !== 'string') return url;
-  if (url.indexOf('data:') === 0) return url;
-  const stripped = url.replace(/^https?:\/\//i, '');
-  const params = ['url=' + encodeURIComponent(stripped)];
-  if (w) params.push('w=' + w);
-  if (h) params.push('h=' + h);
-  params.push('fit=cover');
-  params.push('q=80');
-  return 'https://images.weserv.nl/?' + params.join('&');
-}
-function resizeBackdrop(url) { return resizeImg(url, 1920, 1080); }
-function resizePoster(url) { return resizeImg(url, 500, 750); }
+    <a href="index.html" class="logo" aria-label="Prime Flix - Home">
+      <svg class="logo-mark" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17 0C7.6 0 0 7.6 0 17s7.6 17 17 17 17-7.6 17-17S26.4 0 17 0Z" fill="url(#pfGrad)"/>
+        <path d="M13 9.5 25 17l-12 7.5V9.5Z" fill="#0A0A0A"/>
+        <defs>
+          <linearGradient id="pfGrad" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#F3D27A"/>
+            <stop offset="1" stop-color="#B9862F"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="logo-word">PRIME<span class="logo-word-accent">FLIX</span></span>
+    </a>
 
-// =========================================================
-// SESI — storan berlapis (localStorage + cookie fallback)
-// Sesetengah pelayar (mod Private/Incognito, pelayar dalam-app
-// WhatsApp/Instagram/Facebook/TikTok) menyekat localStorage. Cookie
-// biasa (document.cookie) kadangkala masih dibenarkan walaupun
-// localStorage disekat — jadi kita cuba localStorage dahulu, dan
-// SENTIASA turut simpan sebagai cookie sebagai lapisan sandaran.
-// NOTA: kalau pelayar sekat KEDUA-DUA localStorage & cookie, tiada
-// cara bypass dari kod client-side — itu sekatan platform.
-// =========================================================
-const AUTH_SESSION_KEY = 'primeflix_session_v1';
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-secondary btn-sm" id="backToSiteLink">&larr; Back to Site</a>
+    </div>
 
-function setSessionCookie(value) {
-  try {
-    document.cookie = AUTH_SESSION_KEY + '=' + encodeURIComponent(value) + ';path=/;max-age=' + (30 * 24 * 60 * 60) + ';SameSite=Lax';
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
-function getSessionCookie() {
-  try {
-    const match = document.cookie.match(new RegExp('(?:^|; )' + AUTH_SESSION_KEY + '=([^;]*)'));
-    return match ? decodeURIComponent(match[1]) : null;
-  } catch (err) {
-    return null;
-  }
-}
-function deleteSessionCookie() {
-  try { document.cookie = AUTH_SESSION_KEY + '=;path=/;max-age=0'; } catch (err) { /* abaikan */ }
-}
+  </div>
+</header>
 
-function readSession() {
-  try {
-    const raw = localStorage.getItem(AUTH_SESSION_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (err) { /* localStorage tak tersedia — cuba cookie */ }
-  try {
-    const cookieRaw = getSessionCookie();
-    return cookieRaw ? JSON.parse(cookieRaw) : null;
-  } catch (err) {
-    return null;
-  }
-}
+<!-- BUTIRAN MOVIE — backdrop penuh halaman -->
+<section class="hero hero-fullpage" id="movieDetailHero">
+  <div class="hero-backdrop-img" id="detailBackdropImg"></div>
+  <div class="hero-backdrop"></div>
+  <div class="hero-content">
+    <h1 class="hero-title" id="detailTitle">Loading...</h1>
+    <p class="hero-meta" id="detailMeta"></p>
+    <p class="hero-desc" id="detailDesc"></p>
+    <div class="hero-actions" id="movieActions">
+      <button class="btn btn-primary" id="watchNowBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
+        Watch Now
+      </button>
+      <button class="btn btn-secondary" id="movieWatchlistBtn" type="button">+ My List</button>
+    </div>
 
-// Kawalan akses: page ni juga memerlukan log masuk (sesi yang sama
-// disimpan oleh login.js — localStorage atau cookie sandaran). Kalau
-// seseorang buka page ni terus tanpa log masuk (cth. terus taip URL),
-// hantar ke login.html dahulu — bawa URL semasa sebagai ?redirect=
-// supaya selepas berjaya log masuk, pengguna dibawa balik terus ke sini.
-(function requireAuth() {
-  if (readSession()) return; // sesi wujud — teruskan macam biasa
+    <div class="hero-actions tv-select-actions is-hidden" id="tvActions" hidden>
+      <div class="season-badge" id="seasonBadge">
+        Season <span id="seasonSelectLabel">—</span>
+      </div>
+      <div class="select-btn-wrap">
+        <button class="btn btn-secondary select-btn" id="episodeSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+          Episode <span id="episodeSelectLabel">—</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="select-dropdown" id="episodeDropdown" role="listbox" hidden></div>
+      </div>
+      <button class="btn btn-primary" id="tvPlayBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9.5-5.5L4 2.5Z"/></svg>
+        Play
+      </button>
+      <button class="btn btn-secondary" id="tvWatchlistBtn" type="button">+ My List</button>
+    </div>
+  </div>
+</section>
 
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('_ac') === '1') {
-    // Penanda "baru log masuk" hadir tapi sesi tetap tiada di sini —
-    // KEDUA-DUA localStorage & cookie tak kekal merentasi navigasi pada
-    // pelayar/peranti ini. Jangan redirect balik ke login.html (akan
-    // loop tanpa henti) — papar mesej jelas.
-    showAuthStorageBlockedMessage();
-    return;
-  }
-
-  const here = window.location.pathname + window.location.search;
-  window.location.replace('login.html?redirect=' + encodeURIComponent(here));
-})();
-
-// Papar mesej penuh skrin (gantikan kandungan <body>) apabila sesi
-// hilang selepas log masuk berjaya — lihat nota di dalam requireAuth().
-function showAuthStorageBlockedMessage() {
-  document.body.innerHTML =
-    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0a0a0a;color:#fff;font-family:\'Work Sans\',sans-serif;text-align:center;">' +
-      '<div style="max-width:420px;">' +
-        '<h1 style="font-size:20px;margin:0 0 12px;">Storan sesi disekat</h1>' +
-        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Log masuk berjaya, tetapi pelayar/peranti ini menyekat storan sesi (localStorage &amp; cookie) merentasi halaman.</p>' +
-        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 10px;">Ini biasa berlaku pada pelayar dalam-app (WhatsApp, Instagram, Facebook, TikTok) atau mod Private/Incognito.</p>' +
-        '<p style="font-size:14px;line-height:1.6;color:#c9c9c9;margin:0 0 18px;">Sila buka laman ini terus dalam Safari/Chrome (bukan dalam app tersebut), pastikan mod Private dimatikan, kemudian cuba log masuk semula.</p>' +
-        '<a href="login.html" style="display:inline-block;padding:10px 22px;background:#D9B25C;color:#0a0a0a;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">Kembali ke Log Masuk</a>' +
-      '</div>' +
-    '</div>';
-}
-
-document.addEventListener('DOMContentLoaded', function startMovieDetail() {
-
-  // movie.js bergantung pada watchlist.js (PFWL). Kalau movie.html tak ada
-  // tag <script src="watchlist.js">, muatkan sendiri di sini supaya butang
-  // tak mati. Kalau gagal juga, papar mesej jelas (bukan senyap).
-  if (typeof PFWL === 'undefined') {
-    function showMissing() {
-      const te = document.getElementById('detailTitle');
-      const de = document.getElementById('detailDesc');
-      if (te) te.textContent = 'watchlist.js not loaded.';
-      if (de) de.textContent = 'Upload watchlist.js to the same folder as movie.html, then hard-refresh (Ctrl+Shift+R).';
-    }
-    if (window.__pfwlLoading) { showMissing(); return; }
-    window.__pfwlLoading = true;
-    const s = document.createElement('script');
-    s.src = 'watchlist.js?v=2';
-    s.onload = startMovieDetail;
-    s.onerror = showMissing;
-    document.head.appendChild(s);
-    return;
-  }
-
-  const backdropImg = document.getElementById('detailBackdropImg');
-  const metaEl = document.getElementById('detailMeta');
-  const titleEl = document.getElementById('detailTitle');
-  const descEl = document.getElementById('detailDesc');
-
-  const movieActions = document.getElementById('movieActions');
-  const watchNowBtn = document.getElementById('watchNowBtn');
-  const movieWatchlistBtn = document.getElementById('movieWatchlistBtn');
-
-  const tvActions = document.getElementById('tvActions');
-  const seasonSelectLabel = document.getElementById('seasonSelectLabel');
-  const episodeSelectBtn = document.getElementById('episodeSelectBtn');
-  const episodeSelectLabel = document.getElementById('episodeSelectLabel');
-  const episodeDropdown = document.getElementById('episodeDropdown');
-  const tvWatchlistBtn = document.getElementById('tvWatchlistBtn');
-  const tvPlayBtn = document.getElementById('tvPlayBtn');
-
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  const type = params.get('type') || 'movie';
-
-  // Butang "Back to Site" — simpan kategori (movie/tvshow) dalam
-  // sessionStorage dengan key yang sama seperti script.js, supaya
-  // index.html terus buka pada tab navbar yang sepadan.
-  const backToSiteLink = document.getElementById('backToSiteLink');
-  if (backToSiteLink) {
-    backToSiteLink.addEventListener('click', () => {
-      try {
-        sessionStorage.setItem('primeflix_active_category', type === 'tvshow' ? 'tvshow' : 'movie');
-      } catch (err) { /* abaikan */ }
-    });
-  }
-
-  /* SENARAI SAYA — logik kongsi dalam watchlist.js (PFWL). */
-
-  // Butang "Tonton Sekarang" (movie sahaja) — bawa ke pemain (watch.html)
-  // dengan id yang sama.
-  if (watchNowBtn) {
-    watchNowBtn.addEventListener('click', () => {
-      if (!id) return;
-      window.location.href = `watch.html?id=${encodeURIComponent(id)}`;
-    });
-  }
-
-  // Butang "+ My List" — movie & TV show diasingkan ikut `type`.
-  // TV show: menyimpan EPISOD yang dipilih (lihat tvSelectedRecord).
-  let currentDetailRecord = null;
-  let tvSelectedRecord = null;
-  if (movieWatchlistBtn) {
-    movieWatchlistBtn.addEventListener('click', () => {
-      if (!currentDetailRecord) return;
-      PFWL.toggle(type, currentDetailRecord);
-      PFWL.syncBtn(movieWatchlistBtn, type, currentDetailRecord);
-    });
-  }
-  if (tvWatchlistBtn) {
-    tvWatchlistBtn.addEventListener('click', () => {
-      const rec = tvSelectedRecord || currentDetailRecord;
-      if (!rec) return;
-      PFWL.toggle(type, rec);
-      PFWL.syncBtn(tvWatchlistBtn, type, rec);
-    });
-  }
-
-  if (!id) {
-    titleEl.textContent = 'Record not found.';
-    descEl.textContent = 'No ID provided in the link.';
-    return;
-  }
-
-  if (typeof WEBAPP_URL !== 'string' || WEBAPP_URL.indexOf('GANTI_DENGAN') !== -1) {
-    titleEl.textContent = 'WEBAPP_URL is not set.';
-    descEl.textContent = 'Please set WEBAPP_URL in movie.js to display movie details.';
-    return;
-  }
-
-  // Cache yang sama dipakai oleh index.html (Hero & kedua-dua grid
-  // Trending). Bila pengguna klik poster dari halaman utama, data ni
-  // biasanya dah ada dalam sessionStorage — jadi butiran movie/TV show
-  // boleh terpapar serta-merta tanpa tunggu fetch baharu ke Apps Script.
-  const CONTENT_CACHE_KEY = 'primeflix_content_cache_v1';
-
-  function readContentCache() {
-    try {
-      const raw = sessionStorage.getItem(CONTENT_CACHE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') return null;
-      const movie = Array.isArray(parsed.movie) ? parsed.movie : [];
-      const tvshow = Array.isArray(parsed.tvshow) ? parsed.tvshow : [];
-      if (!movie.length && !tvshow.length) return null;
-      return { movie: movie, tvshow: tvshow };
-    } catch (err) {
-      return null;
-    }
-  }
-
-  function writeContentCache(data) {
-    try {
-      sessionStorage.setItem(CONTENT_CACHE_KEY, JSON.stringify(data));
-    } catch (err) {
-      // sessionStorage tak tersedia / penuh — abaikan, tak kritikal.
-    }
-  }
-
-  /* =========================================================
-     TV SHOW — pilih Musim & Episod
-     Setiap episod disimpan sebagai satu rekod berasingan dalam Sheet.
-     Kumpulkan semua rekod dengan Tajuk yang sama, susun ikut Musim,
-     supaya pengguna boleh pilih musim & episod mana nak ditonton.
-     ========================================================= */
-  let closeOpenDropdown = null;
-
-  function normalizeTitle(t) {
-    return String(t || '').trim().toLowerCase();
-  }
-
-  function toggleDropdown(btn, dropdown, openIt) {
-    const willOpen = openIt !== undefined ? openIt : dropdown.hidden;
-    if (closeOpenDropdown) closeOpenDropdown();
-    if (!willOpen) return;
-    dropdown.hidden = false;
-    btn.setAttribute('aria-expanded', 'true');
-    closeOpenDropdown = () => {
-      dropdown.hidden = true;
-      btn.setAttribute('aria-expanded', 'false');
-      closeOpenDropdown = null;
-    };
-  }
-
-  document.addEventListener('click', (e) => {
-    if (!closeOpenDropdown) return;
-    if (e.target.closest('.select-btn-wrap')) return;
-    closeOpenDropdown();
-  });
-
-  function buildDropdownOption(label, onSelect, isActive) {
-    const opt = document.createElement('button');
-    opt.type = 'button';
-    opt.className = 'select-option' + (isActive ? ' active' : '');
-    opt.setAttribute('role', 'option');
-    opt.textContent = label;
-    opt.addEventListener('click', () => onSelect());
-    return opt;
-  }
-
-  function initTvPicker(record, fullList) {
-    if (!tvActions) return;
-    if (movieActions) {
-      movieActions.hidden = true;
-      movieActions.classList.add('is-hidden');
-    }
-    tvActions.hidden = false;
-    tvActions.classList.remove('is-hidden');
-
-    // Setiap poster mewakili SATU musim sahaja (lihat dedupeByTitleSeason
-    // dalam script.js), jadi di sini musim hanya dipaparkan sebagai kotak
-    // statik (bukan dropdown boleh tukar musim) — hanya episod yang boleh
-    // dipilih, terhad kepada musim semasa sahaja.
-    const currentSeason = Number(record.Season) || 0;
-    seasonSelectLabel.textContent = currentSeason || '—';
-
-    const episodes = (fullList || [])
-      .filter(r => normalizeTitle(r.Title) === normalizeTitle(record.Title) && (Number(r.Season) || 0) === currentSeason)
-      .sort((a, b) => (Number(a.Episode) || 0) - (Number(b.Episode) || 0));
-    if (!episodes.length) episodes.push(record);
-
-    function playEpisode(ep) {
-      if (!ep || !ep.ID) return;
-      window.location.href = `watch.html?id=${encodeURIComponent(ep.ID)}&type=tvshow`;
-    }
-
-    function renderEpisodeDropdown(activeEpisodeNum) {
-      episodeDropdown.innerHTML = '';
-      episodes.forEach(ep => {
-        const epNum = Number(ep.Episode) || 0;
-        episodeDropdown.appendChild(buildDropdownOption(
-          `Episode ${epNum}`,
-          () => {
-            tvSelectedRecord = ep;
-            renderEpisodeDropdown(epNum);
-            toggleDropdown(episodeSelectBtn, episodeDropdown, false);
-            PFWL.syncBtn(tvWatchlistBtn, type, ep);
-          },
-          epNum === activeEpisodeNum
-        ));
-      });
-      const active = episodes.find(ep => (Number(ep.Episode) || 0) === activeEpisodeNum) || episodes[0];
-      episodeSelectLabel.textContent = active ? (Number(active.Episode) || 0) : '—';
-    }
-
-    // Default dropdown papar Episode 1 (episod pertama dalam musim ini),
-    // bukan episod rekod yang dipautkan dari kad poster trending —
-    // sebab dedupeByTitleSeason() dalam script.js boleh pilih mana-mana
-    // episod sebagai rekod "wakil" bagi musim tu.
-    // Kalau musim ini dah ada dalam My List, papar episod yang disimpan.
-    let defaultEp = episodes[0];
-    const prevSelected = tvSelectedRecord
-      ? episodes.find(ep => String(ep.ID) === String(tvSelectedRecord.ID))
-      : null;
-    const savedEntry = PFWL.getEntry('tvshow', record);
-    if (savedEntry) {
-      const match = episodes.find(ep => String(ep.ID) === String(savedEntry.ID)) ||
-        episodes.find(ep => savedEntry.Episode && (Number(ep.Episode) || 0) === (Number(savedEntry.Episode) || 0));
-      if (match) defaultEp = match;
-    }
-    if (prevSelected) defaultEp = prevSelected;
-    tvSelectedRecord = defaultEp;
-    const defaultEpisodeNum = defaultEp ? (Number(defaultEp.Episode) || 0) : (Number(record.Episode) || 0);
-    renderEpisodeDropdown(defaultEpisodeNum);
-
-    if (tvPlayBtn) {
-      tvPlayBtn.onclick = () => playEpisode(tvSelectedRecord || episodes[0]);
-    }
-
-    episodeSelectBtn.onclick = (e) => {
-      e.stopPropagation();
-      toggleDropdown(episodeSelectBtn, episodeDropdown, episodeDropdown.hidden);
-    };
-  }
-
-  async function loadDetail() {
-    // 1) Cuba papar terus dari cache (kalau ada) — biasanya ada, sebab
-    //    pengguna baru sahaja klik poster dari halaman utama.
-    let shownFromCache = false;
-    const cached = readContentCache();
-    if (cached) {
-      const list = cached[type] || [];
-      const cachedRecord = list.find(r => String(r.ID) === String(id));
-      if (cachedRecord) {
-        renderDetail(cachedRecord, list);
-        shownFromCache = true;
-      }
-    }
-
-    // 2) Tetap fetch data terkini di latar belakang — untuk kemaskan
-    //    butiran (jika ada perubahan) dan sebagai fallback bila cache
-    //    tiada (cth. pautan dibuka terus tanpa lalui halaman utama).
-    try {
-      const res = await fetch(`${WEBAPP_URL}?action=list&type=${encodeURIComponent(type)}`);
-      const json = await res.json();
-      if (!json.ok || !Array.isArray(json.data)) {
-        throw new Error(json.error || 'Failed to load data.');
-      }
-
-      // Kemaskan cache bagi kategori ini sahaja, kekalkan kategori lain.
-      writeContentCache(Object.assign(
-        { movie: [], tvshow: [] },
-        cached,
-        { [type]: json.data }
-      ));
-
-      const record = json.data.find(r => String(r.ID) === String(id));
-      if (!record) {
-        if (!shownFromCache) {
-          titleEl.textContent = 'Record not found.';
-          descEl.textContent = type === 'tvshow' ? 'The TV show you are looking for may have been deleted.' : 'The movie you are looking for may have been deleted.';
-        }
-        return;
-      }
-
-      renderDetail(record, json.data);
-    } catch (err) {
-      if (!shownFromCache) {
-        titleEl.textContent = 'Failed to load details.';
-        descEl.textContent = 'Please try again shortly.';
-      }
-    }
-  }
-
-  function renderDetail(record, fullList) {
-    currentDetailRecord = record;
-    backdropImg.style.backgroundImage = record.Backdrop ? `url("${resizeBackdrop(record.Backdrop)}")` : 'none';
-    titleEl.textContent = record.Title || '';
-    // Maklumat musim/episod kini dipilih melalui butang Musim & Episod
-    // (bukan dipaparkan statik di sini).
-    const metaParts = [record.Year, record.Genre];
-    metaEl.textContent = metaParts.filter(Boolean).join(' · ');
-    descEl.textContent = record.Description || '';
-    document.title = `${record.Title || 'Movie Details'} — Prime Flix`;
-
-    if (type === 'tvshow') {
-      initTvPicker(record, fullList);
-      PFWL.syncBtn(tvWatchlistBtn, type, tvSelectedRecord || record);
-    } else {
-      PFWL.syncBtn(movieWatchlistBtn, type, record);
-    }
-  }
-
-  loadDetail();
-});
+<script src="watchlist.js?v=2"></script>
+<script src="movie.js?v=2"></script>
+</body>
+</html>
