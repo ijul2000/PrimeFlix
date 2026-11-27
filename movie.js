@@ -106,7 +106,27 @@ function showAuthStorageBlockedMessage() {
     '</div>';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function startMovieDetail() {
+
+  // movie.js bergantung pada watchlist.js (PFWL). Kalau movie.html tak ada
+  // tag <script src="watchlist.js">, muatkan sendiri di sini supaya butang
+  // tak mati. Kalau gagal juga, papar mesej jelas (bukan senyap).
+  if (typeof PFWL === 'undefined') {
+    function showMissing() {
+      const te = document.getElementById('detailTitle');
+      const de = document.getElementById('detailDesc');
+      if (te) te.textContent = 'watchlist.js not loaded.';
+      if (de) de.textContent = 'Upload watchlist.js to the same folder as movie.html, then hard-refresh (Ctrl+Shift+R).';
+    }
+    if (window.__pfwlLoading) { showMissing(); return; }
+    window.__pfwlLoading = true;
+    const s = document.createElement('script');
+    s.src = 'watchlist.js?v=2';
+    s.onload = startMovieDetail;
+    s.onerror = showMissing;
+    document.head.appendChild(s);
+    return;
+  }
 
   const backdropImg = document.getElementById('detailBackdropImg');
   const metaEl = document.getElementById('detailMeta');
